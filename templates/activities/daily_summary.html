@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Summary{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-4xl font-bold text-white">
+                <i class="fas fa-chart-bar mr-3"></i>
+                Daily Summary - {{ daily_activity.date|date:"F j, Y" }}
+            </h1>
+            <a href="{% url 'dashboard:index' %}" 
+               class="bg-nft-gradient hover:bg-nft-gradient-hover text-white px-6 py-3 rounded-lg transition-all duration-300 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                <i class="fas fa-info-circle text-blue-400 mr-3"></i>
+                Today's Status
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Check-in Status -->
+                <div class="bg-white/5 rounded-lg p-4 text-center">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center
+                        {% if daily_activity.checkin_time %}bg-green-500/20{% else %}bg-gray-500/20{% endif %}">
+                        <i class="fas fa-sign-in-alt text-xl
+                            {% if daily_activity.checkin_time %}text-green-400{% else %}text-gray-400{% endif %}"></i>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Check-in</h3>
+                    {% if daily_activity.checkin_time %}
+                        <p class="text-green-400 font-medium">{{ daily_activity.checkin_time|time:"H:i" }}</p>
+                        <p class="text-sm text-gray-400">
+                            {% if daily_activity.attendance_status == 'late' %}
+                                <span class="text-yellow-400">Late</span>
+                            {% else %}
+                                <span class="text-green-400">On Time</span>
+                            {% endif %}
+                        </p>
+                    {% else %}
+                        <p class="text-gray-400">Not checked in</p>
+                    {% endif %}
+                </div>
+
+                <!-- Check-out Status -->
+                <div class="bg-white/5 rounded-lg p-4 text-center">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center
+                        {% if daily_activity.checkout_time %}bg-blue-500/20{% else %}bg-gray-500/20{% endif %}">
+                        <i class="fas fa-sign-out-alt text-xl
+                            {% if daily_activity.checkout_time %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Check-out</h3>
+                    {% if daily_activity.checkout_time %}
+                        <p class="text-blue-400 font-medium">{{ daily_activity.checkout_time|time:"H:i" }}</p>
+                        <p class="text-sm text-green-400">Completed</p>
+                    {% else %}
+                        <p class="text-gray-400">Not checked out</p>
+                    {% endif %}
+                </div>
+
+                <!-- Work Duration -->
+                <div class="bg-white/5 rounded-lg p-4 text-center">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center
+                        {% if daily_activity.work_duration %}bg-purple-500/20{% else %}bg-gray-500/20{% endif %}">
+                        <i class="fas fa-clock text-xl
+                            {% if daily_activity.work_duration %}text-purple-400{% else %}text-gray-400{% endif %}"></i>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Duration</h3>
+                    {% if daily_activity.work_duration %}
+                        <p class="text-purple-400 font-medium">{{ daily_activity.work_duration }}</p>
+                        <p class="text-sm text-green-400">Total time</p>
+                    {% else %}
+                        <p class="text-gray-400">In progress</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        {% if can_check_in or can_check_out %}
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                <i class="fas fa-play text-green-400 mr-3"></i>
+                Quick Actions
+            </h2>
+            
+            <div class="flex flex-wrap gap-4">
+                {% if can_check_in %}
+                <a href="{% url 'activities:check_in' %}" 
+                   class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Check In Now
+                </a>
+                {% endif %}
+                
+                {% if can_check_out %}
+                <a href="{% url 'activities:check_out' %}" 
+                   class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Check Out Now
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if daily_activity.checkin_time %}
+        <!-- Planned Activities Summary -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                <i class="fas fa-list-ul text-green-400 mr-3"></i>
+                Planned Activities
+                <span class="ml-3 text-sm bg-green-500/20 text-green-400 px-3 py-1 rounded-full">
+                    {{ planned_activities.count }} Total
+                </span>
+            </h2>
+            
+            {% if planned_activities %}
+                <div class="space-y-4">
+                    {% for activity in planned_activities %}
+                    <div class="bg-white/5 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-white font-medium">{{ activity.title }}</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm px-2 py-1 rounded-full
+                                    {% if activity.priority == 1 %}bg-gray-500/20 text-gray-400
+                                    {% elif activity.priority == 2 %}bg-blue-500/20 text-blue-400
+                                    {% elif activity.priority == 3 %}bg-yellow-500/20 text-yellow-400
+                                    {% else %}bg-red-500/20 text-red-400{% endif %}">
+                                    {{ activity.get_priority_display }}
+                                </span>
+                                {% if activity.status != 'pending' %}
+                                <span class="text-sm px-2 py-1 rounded-full
+                                    {% if activity.status == 'completed' %}bg-green-500/20 text-green-400
+                                    {% elif activity.status == 'in_progress' %}bg-blue-500/20 text-blue-400
+                                    {% elif activity.status == 'not_completed' %}bg-red-500/20 text-red-400
+                                    {% elif activity.status == 'cancelled' %}bg-gray-500/20 text-gray-400
+                                    {% elif activity.status == 'deferred' %}bg-yellow-500/20 text-yellow-400
+                                    {% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                                    {{ activity.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if activity.description %}
+                            <p class="text-gray-400 text-sm mb-2">{{ activity.description }}</p>
+                        {% endif %}
+                        {% if activity.reasons %}
+                            <div class="mt-2 p-2 bg-orange-500/10 rounded border-l-4 border-orange-500">
+                                <p class="text-orange-300 text-sm">{{ activity.reasons }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-400 text-center py-8">No planned activities recorded for today.</p>
+            {% endif %}
+        </div>
+
+        <!-- Daily Goals Summary -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                <i class="fas fa-bullseye text-yellow-400 mr-3"></i>
+                Daily Goals
+                <span class="ml-3 text-sm bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full">
+                    {{ daily_goals.count }} Total
+                </span>
+            </h2>
+            
+            {% if daily_goals %}
+                <div class="space-y-4">
+                    {% for goal in daily_goals %}
+                    <div class="bg-white/5 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-white font-medium">{{ goal.title }}</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm px-2 py-1 rounded-full
+                                    {% if goal.priority == 1 %}bg-gray-500/20 text-gray-400
+                                    {% elif goal.priority == 2 %}bg-blue-500/20 text-blue-400
+                                    {% elif goal.priority == 3 %}bg-yellow-500/20 text-yellow-400
+                                    {% else %}bg-red-500/20 text-red-400{% endif %}">
+                                    {{ goal.get_priority_display }}
+                                </span>
+                                {% if goal.status != 'pending' %}
+                                <span class="text-sm px-2 py-1 rounded-full
+                                    {% if goal.status == 'completed' %}bg-green-500/20 text-green-400
+                                    {% elif goal.status == 'partially_completed' %}bg-yellow-500/20 text-yellow-400
+                                    {% elif goal.status == 'not_achieved' %}bg-red-500/20 text-red-400
+                                    {% elif goal.status == 'in_progress' %}bg-blue-500/20 text-blue-400
+                                    {% elif goal.status == 'deferred' %}bg-gray-500/20 text-gray-400
+                                    {% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                                    {{ goal.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 text-sm">
+                            <div>
+                                <span class="text-gray-400">Target:</span>
+                                <span class="text-blue-300 ml-1">{{ goal.target_value|default:"Not set" }}</span>
+                            </div>
+                            {% if goal.achieved_value %}
+                            <div>
+                                <span class="text-gray-400">Achieved:</span>
+                                <span class="text-green-300 ml-1">{{ goal.achieved_value }}</span>
+                            </div>
+                            {% endif %}
+                            {% if goal.completion_percentage > 0 %}
+                            <div>
+                                <span class="text-gray-400">Progress:</span>
+                                <span class="text-yellow-300 ml-1">{{ goal.completion_percentage }}%</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if goal.reasons %}
+                            <div class="mt-2 p-2 bg-orange-500/10 rounded border-l-4 border-orange-500">
+                                <p class="text-orange-300 text-sm">{{ goal.reasons }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-400 text-center py-8">No daily goals recorded for today.</p>
+            {% endif %}
+        </div>
+
+        <!-- Additional Activities Summary -->
+        {% if additional_activities %}
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                <i class="fas fa-plus-circle text-purple-400 mr-3"></i>
+                Additional Activities
+                <span class="ml-3 text-sm bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full">
+                    {{ additional_activities.count }} Total
+                </span>
+            </h2>
+            
+            <div class="space-y-4">
+                {% for activity in additional_activities %}
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white font-medium">{{ activity.title }}</h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm px-2 py-1 rounded-full bg-purple-500/20 text-purple-400">
+                                {{ activity.get_category_display }}
+                            </span>
+                            <span class="text-sm px-2 py-1 rounded-full
+                                {% if activity.status == 'completed' %}bg-green-500/20 text-green-400
+                                {% elif activity.status == 'in_progress' %}bg-blue-500/20 text-blue-400
+                                {% else %}bg-red-500/20 text-red-400{% endif %}">
+                                {{ activity.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if activity.description %}
+                        <p class="text-gray-400 text-sm mb-2">{{ activity.description }}</p>
+                    {% endif %}
+                    {% if activity.duration %}
+                        <p class="text-blue-300 text-sm mb-2">
+                            <i class="fas fa-clock mr-1"></i>Duration: {{ activity.duration }}
+                        </p>
+                    {% endif %}
+                    {% if activity.impact_on_planned_work %}
+                        <div class="mt-2 p-2 bg-yellow-500/10 rounded border-l-4 border-yellow-500">
+                            <p class="text-sm text-gray-400 font-medium">Impact on Planned Work:</p>
+                            <p class="text-yellow-300 text-sm">{{ activity.impact_on_planned_work }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Problems & Notes -->
+        {% if daily_activity.morning_problems or daily_activity.afternoon_problems or daily_activity.notes %}
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                <i class="fas fa-sticky-note text-orange-400 mr-3"></i>
+                Notes & Issues
+            </h2>
+            
+            <div class="space-y-4">
+                {% if daily_activity.morning_problems %}
+                <div class="bg-white/5 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-white mb-2">Morning Problems/Blockers</h3>
+                    <p class="text-blue-300">{{ daily_activity.morning_problems|linebreaks }}</p>
+                </div>
+                {% endif %}
+                
+                {% if daily_activity.afternoon_problems %}
+                <div class="bg-white/5 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-white mb-2">Afternoon Problems/Issues</h3>
+                    <p class="text-blue-300">{{ daily_activity.afternoon_problems|linebreaks }}</p>
+                </div>
+                {% endif %}
+                
+                {% if daily_activity.notes %}
+                <div class="bg-white/5 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-white mb-2">Additional Notes</h3>
+                    <p class="text-blue-300">{{ daily_activity.notes|linebreaks }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Navigation -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+            <h3 class="text-xl font-semibold text-white mb-4">More Options</h3>
+            <div class="flex flex-wrap gap-4">
+                <a href="{% url 'activities:activity_list' %}" 
+                   class="bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center">
+                    <i class="fas fa-list mr-2"></i>
+                    All Activities
+                </a>
+                <a href="{% url 'activities:history' %}" 
+                   class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center">
+                    <i class="fas fa-history mr-2"></i>
+                    Activity History
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

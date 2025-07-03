@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Arnatech Employee Daily Activity Tracker{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .nft-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .nft-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .nft-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        
+        .nft-gradient-hover:hover {
+            background: linear-gradient(135deg, #5855f3 0%, #7c3aed 100%);
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-nav a {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-nav a:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 4px solid #6366f1;
+        }
+        
+        .sidebar-nav a.active {
+            background: rgba(99, 102, 241, 0.2);
+            border-left: 4px solid #6366f1;
+        }
+    </style>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'nft-primary': '#6366f1',
+                        'nft-secondary': '#8b5cf6',
+                        'nft-dark': '#0f172a',
+                        'nft-darker': '#020617',
+                        'nft-gray': '#1e293b',
+                        'nft-light': '#334155',
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'nft': '0 4px 6px -1px rgba(99, 102, 241, 0.1), 0 2px 4px -1px rgba(99, 102, 241, 0.06)',
+                        'nft-lg': '0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-nft-darker text-gray-100 font-inter">
+    <!-- Navigation -->
+    {% if user.is_authenticated %}
+    <nav class="glass-effect fixed top-0 left-0 right-0 z-50 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-8">
+                <h1 class="text-xl font-bold text-nft-primary">
+                    <i class="fas fa-clipboard-check mr-2"></i>
+                    Arnatech Activity Tracker
+                </h1>
+                
+                <div class="hidden md:flex space-x-6">
+                    <a href="{% url 'dashboard:index' %}" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-nft-gray transition-colors">
+                        <i class="fas fa-home text-sm"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    
+                    <a href="{% url 'activities:activity_list' %}" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-nft-gray transition-colors">
+                        <i class="fas fa-history text-sm"></i>
+                        <span>History</span>
+                    </a>
+                    
+                    {% if user.is_staff %}
+                    <a href="{% url 'dashboard:admin' %}" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-nft-gray transition-colors">
+                        <i class="fas fa-chart-bar text-sm"></i>
+                        <span>Admin</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-nft-gradient rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-xs"></i>
+                    </div>
+                    <div class="hidden md:block">
+                        <p class="text-sm font-medium">{{ user.get_full_name|default:user.username }}</p>
+                        {% if user.employee_profile %}
+                        <p class="text-xs text-gray-400">{{ user.employee_profile.position }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <button class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-nft-gray transition-colors" onclick="toggleUserMenu()">
+                        <i class="fas fa-chevron-down text-sm"></i>
+                    </button>
+                    
+                    <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 nft-card rounded-lg shadow-lg z-50">
+                        <a href="{% url 'authentication:profile' %}" class="block px-4 py-2 text-sm hover:bg-nft-gray rounded-t-lg">
+                            <i class="fas fa-user mr-2"></i>
+                            Profile
+                        </a>
+                        <a href="{% url 'authentication:logout' %}" class="block px-4 py-2 text-sm hover:bg-nft-gray rounded-b-lg">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="{% if user.is_authenticated %}pt-20{% else %}pt-8{% endif %} min-h-screen">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="fixed top-20 right-4 z-50 space-y-2">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} nft-card p-4 rounded-lg shadow-lg max-w-md">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        {% if message.tags == 'success' %}
+                        <i class="fas fa-check-circle text-green-400"></i>
+                        {% elif message.tags == 'error' %}
+                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                        {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        {% else %}
+                        <i class="fas fa-info-circle text-blue-400"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium">{{ message }}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-nft-dark border-t border-nft-light mt-16">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <i class="fas fa-copyright text-gray-400"></i>
+                    <span class="text-gray-400">2025 <a href="https://arnatech.id" target="blank" class="text-nft-primary">Arnatech</a>. All rights reserved.</span>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-nft-primary transition-colors">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="ml-1">Help</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script>
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('userMenu');
+            const button = event.target.closest('button');
+            
+            if (!menu.contains(event.target) && !button) {
+                menu.classList.add('hidden');
+            }
+        });
+        
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            const messages = document.querySelectorAll('.alert');
+            messages.forEach(msg => {
+                msg.style.opacity = '0';
+                msg.style.transition = 'opacity 0.5s';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

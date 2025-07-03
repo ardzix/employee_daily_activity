@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Activity History{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-4xl font-bold text-white">
+                <i class="fas fa-history mr-3"></i>
+                Activity History
+            </h1>
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'activities:check_in' %}" 
+                   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    Start New Activity
+                </a>
+                <a href="{% url 'dashboard:index' %}" 
+                   class="bg-nft-gradient hover:bg-nft-gradient-hover text-white px-6 py-3 rounded-lg transition-all duration-300 flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Activities List -->
+        {% if activities %}
+        <div class="space-y-6">
+            {% for activity in activities %}
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center
+                            {% if activity.status == 'completed' %}bg-green-500/20{% elif activity.status == 'pending' %}bg-yellow-500/20{% else %}bg-gray-500/20{% endif %}">
+                            <i class="fas fa-calendar-day text-xl
+                                {% if activity.status == 'completed' %}text-green-400{% elif activity.status == 'pending' %}text-yellow-400{% else %}text-gray-400{% endif %}"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-white">
+                                {{ activity.date|date:"F j, Y" }}
+                                {% if activity.date == today %}
+                                    <span class="text-sm bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full ml-2">Today</span>
+                                {% endif %}
+                            </h2>
+                            <p class="text-gray-400 text-sm">
+                                {{ activity.date|date:"l" }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold
+                            {% if activity.status == 'completed' %}bg-green-500/20 text-green-400
+                            {% elif activity.status == 'pending' %}bg-yellow-500/20 text-yellow-400
+                            {% else %}bg-gray-500/20 text-gray-400
+                            {% endif %}">
+                            {{ activity.get_status_display }}
+                        </span>
+                        <a href="{% url 'activities:daily_summary' activity.id %}" 
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center">
+                            <i class="fas fa-eye mr-2"></i>
+                            View Details
+                        </a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Check-in Status -->
+                    <div class="bg-white/5 rounded-lg p-4 text-center">
+                        <div class="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center
+                            {% if activity.checkin_time %}bg-green-500/20{% else %}bg-gray-500/20{% endif %}">
+                            <i class="fas fa-sign-in-alt text-sm
+                                {% if activity.checkin_time %}text-green-400{% else %}text-gray-400{% endif %}"></i>
+                        </div>
+                        <p class="text-sm text-gray-400">Check-in</p>
+                        {% if activity.checkin_time %}
+                            <p class="text-green-400 font-medium text-sm">{{ activity.checkin_time|time:"H:i" }}</p>
+                        {% else %}
+                            <p class="text-gray-400 text-sm">Not checked in</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Check-out Status -->
+                    <div class="bg-white/5 rounded-lg p-4 text-center">
+                        <div class="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center
+                            {% if activity.checkout_time %}bg-blue-500/20{% else %}bg-gray-500/20{% endif %}">
+                            <i class="fas fa-sign-out-alt text-sm
+                                {% if activity.checkout_time %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
+                        </div>
+                        <p class="text-sm text-gray-400">Check-out</p>
+                        {% if activity.checkout_time %}
+                            <p class="text-blue-400 font-medium text-sm">{{ activity.checkout_time|time:"H:i" }}</p>
+                        {% else %}
+                            <p class="text-gray-400 text-sm">Not checked out</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Activities Count -->
+                    <div class="bg-white/5 rounded-lg p-4 text-center">
+                        <div class="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center bg-purple-500/20">
+                            <i class="fas fa-list text-sm text-purple-400"></i>
+                        </div>
+                        <p class="text-sm text-gray-400">Activities</p>
+                        <p class="text-purple-400 font-medium text-sm">{{ activity.planned_activities.count }}</p>
+                    </div>
+
+                    <!-- Goals Count -->
+                    <div class="bg-white/5 rounded-lg p-4 text-center">
+                        <div class="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center bg-yellow-500/20">
+                            <i class="fas fa-bullseye text-sm text-yellow-400"></i>
+                        </div>
+                        <p class="text-sm text-gray-400">Goals</p>
+                        <p class="text-yellow-400 font-medium text-sm">{{ activity.daily_goals.count }}</p>
+                    </div>
+                </div>
+
+                <!-- Quick Summary -->
+                {% if activity.planned_activities.count > 0 or activity.daily_goals.count > 0 %}
+                <div class="mt-4 pt-4 border-t border-white/10">
+                    <div class="flex flex-wrap gap-2 mb-2">
+                        {% if activity.planned_activities.count > 0 %}
+                            <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full">
+                                {{ activity.planned_activities.count }} Activities
+                            </span>
+                        {% endif %}
+                        {% if activity.daily_goals.count > 0 %}
+                            <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">
+                                {{ activity.daily_goals.count }} Goals
+                            </span>
+                        {% endif %}
+                        {% if activity.additional_activities.count > 0 %}
+                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
+                                {{ activity.additional_activities.count }} Additional
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if activity.checkin_time and activity.checkout_time %}
+                        <p class="text-sm text-gray-400">
+                            <i class="fas fa-clock mr-1"></i>
+                            Work Duration: 
+                            <span class="text-green-400">{{ activity.work_duration|default:"Not calculated" }}</span>
+                        </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination could be added here if needed -->
+        
+        {% else %}
+        <!-- No Activities -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20 shadow-xl text-center">
+            <div class="w-20 h-20 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-calendar-times text-gray-400 text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">No Activities Yet</h3>
+            <p class="text-gray-400 mb-8 max-w-md mx-auto">
+                You haven't started any activities yet. Click the button below to get started with your first activity tracking.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="{% url 'activities:check_in' %}" 
+                   class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-300 inline-flex items-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    Start Your First Activity
+                </a>
+                <a href="{% url 'dashboard:index' %}" 
+                   class="bg-nft-gradient hover:bg-nft-gradient-hover text-white px-6 py-3 rounded-lg transition-all duration-300 inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
