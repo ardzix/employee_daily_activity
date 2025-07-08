@@ -30,7 +30,7 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 # Set environment variables
-ENV DJANGO_SETTINGS_MODULE=gaspack_rwa.settings
+ENV DJANGO_SETTINGS_MODULE=employee_activity_tracker.settings
 ENV PYTHONUNBUFFERED=1
 
 # Expose port for uWSGI/Django

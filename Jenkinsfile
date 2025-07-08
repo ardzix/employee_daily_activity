@@ -3,10 +3,10 @@ pipeline {
 
     environment {
         DEPLOY = 'true'
-        DOCKER_IMAGE = 'ardzix/gaspack_rwa'
+        DOCKER_IMAGE = 'ardzix/employee_activity_tracker'
         DOCKER_REGISTRY_CREDENTIALS = 'ard-dockerhub'
-        NAMESPACE = 'gaspack_rwa'
-        STACK_NAME = 'gaspack_rwa'
+        NAMESPACE = 'employee_activity_tracker'
+        STACK_NAME = 'employee_activity_tracker'
         REPLICAS = '1'
         NETWORK_NAME = 'production'
     }
@@ -27,7 +27,7 @@ pipeline {
                         mv Jenkinsfile ../Jenkinsfile.tmp
                         rm -rf ./*
                         rm -rf ./.??*
-                        git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/ardzix/gaspack_rwa.git .
+                        git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/ardzix/employee_daily_activity.git .
                         mv ../Jenkinsfile.tmp Jenkinsfile
                     '''
                 }
@@ -37,7 +37,7 @@ pipeline {
         stage('Inject Environment Variables') {
             steps {
                 withCredentials([
-                    file(credentialsId: 'gaspack-rwa-env', variable: 'ENV_FILE'),
+                    file(credentialsId: 'employee-activity-tracker-env', variable: 'ENV_FILE'),
                     string(credentialsId: 'ms-arnatech-storage-access', variable: 'AWS_ACCESS_KEY_ID'),
                     string(credentialsId: 'ms-arnatech-storage-secret', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
@@ -79,24 +79,24 @@ pipeline {
                 ]) {
                     sh '''
                         echo "[INFO] Preparing VPS deployment..."
-                        ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no root@172.105.124.43 "mkdir -p /root/gaspack_rwa"
+                        ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no root@172.105.124.43 "mkdir -p /root/employee_activity_tracker"
 
                         echo "[INFO] Copying .env and supervisord config to VPS..."
-                        scp -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no .env root@172.105.124.43:/root/gaspack_rwa/.env
-                        scp -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no supervisord.conf root@172.105.124.43:/root/gaspack_rwa/supervisord.conf
+                        scp -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no .env root@172.105.124.43:/root/employee_activity_tracker/.env
+                        scp -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no supervisord.conf root@172.105.124.43:/root/employee_activity_tracker/supervisord.conf
 
                         echo "[INFO] Deploying Docker service to Swarm..."
                         ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no root@172.105.124.43 bash -c '
                             docker swarm init || true
                             docker network create --driver overlay production || true
-                            docker service rm gaspack_rwa || true
+                            docker service rm employee_activity_tracker || true
 
-                            docker service create --name gaspack_rwa \
+                            docker service create --name employee_activity_tracker \
                                 --replicas 1 \
                                 --network production \
-                                --env-file /root/gaspack_rwa/.env \
-                                --mount type=bind,src=/root/gaspack_rwa/supervisord.conf,dst=/etc/supervisor/conf.d/supervisord.conf,ro=true \
-                                ardzix/gaspack_rwa:latest
+                                --env-file /root/employee_activity_tracker/.env \
+                                --mount type=bind,src=/root/employee_activity_tracker/supervisord.conf,dst=/etc/supervisor/conf.d/supervisord.conf,ro=true \
+                                ardzix/employee_activity_tracker:latest
                         '
                     '''
                 }
