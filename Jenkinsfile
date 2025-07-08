@@ -34,18 +34,20 @@ pipeline {
             }
         }
 
-        stage('Inject Environment Variables') {
+        stage('Inject Environment Variables and PEM Files') {
             steps {
                 withCredentials([
                     file(credentialsId: 'employee-activity-tracker-env', variable: 'ENV_FILE'),
                     string(credentialsId: 'ms-arnatech-storage-access', variable: 'AWS_ACCESS_KEY_ID'),
                     string(credentialsId: 'ms-arnatech-storage-secret', variable: 'AWS_SECRET_ACCESS_KEY')
+                    file(credentialsId: 'sso_public_pem', variable: 'PUBLIC_PEM_FILE')
                 ]) {
                     sh """
                         cp "${ENV_FILE}" .env.tmp
                         sed -i "s|^AWS_ACCESS_KEY_ID=.*|AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}|" .env.tmp
                         sed -i "s|^AWS_SECRET_ACCESS_KEY=.*|AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}|" .env.tmp
                         mv .env.tmp .env
+                        cp "${PUBLIC_PEM_FILE}" public.pem
                     """
                 }
             }
