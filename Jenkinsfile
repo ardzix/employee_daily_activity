@@ -39,7 +39,7 @@ pipeline {
                 withCredentials([
                     file(credentialsId: 'employee-activity-tracker-env', variable: 'ENV_FILE'),
                     string(credentialsId: 'ms-arnatech-storage-access', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'ms-arnatech-storage-secret', variable: 'AWS_SECRET_ACCESS_KEY')
+                    string(credentialsId: 'ms-arnatech-storage-secret', variable: 'AWS_SECRET_ACCESS_KEY'),
                     file(credentialsId: 'sso_public_pem', variable: 'PUBLIC_PEM_FILE')
                 ]) {
                     sh """
