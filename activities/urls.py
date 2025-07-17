@@ -19,12 +19,7 @@ urlpatterns = [
     # Check-in and check-out
     path('check-in/', views.check_in_view, name='check_in'),
     path('check-out/', views.check_out_view, name='check_out'),
-    
-    # History view
-    path('history/', views.activity_history_view, name='history'),
-    
-    # Legacy detail URL (keeping for backwards compatibility)
-    path('detail/<int:activity_id>/', views.activity_detail_view, name='detail'),
+
     
     # API endpoints for all users
     path('api/check-in/', views.check_in_api, name='check_in_api'),

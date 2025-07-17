@@ -1,22 +1,24 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard - Employee Daily Activity Tracker{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-8">
+<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div class="container mx-auto px-6 py-8">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-white">Good {{ greeting|default:"day" }}, {{ employee.full_name }}!</h1>
-        <p class="text-gray-400 mt-2">
+            <h1 class="text-4xl font-bold text-white mb-2">Good {{ greeting|default:"day" }}, {{ employee.full_name }}!</h1>
+            <p class="text-blue-300 mt-2">
             <i class="fas fa-building mr-1"></i>
             {{ employee.company.name }} • {{ employee.position }}
         </p>
     </div>
-    
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Check-in Card -->
-        <div class="nft-card p-6 rounded-xl">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col justify-between">
+                <div>
             <div class="flex items-center justify-between mb-4">
                 <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-sign-in-alt text-green-400 text-xl"></i>
@@ -33,25 +35,25 @@
                 </span>
                 {% endif %}
             </div>
-            <h3 class="text-lg font-semibold text-white mb-2">Check-in</h3>
-            <p class="text-gray-400 text-sm mb-4">
+            <h3 class="text-lg font-semibold text-white mb-2">Clock in</h3>
+                    <p class="text-blue-300 text-sm mb-4">
                 {% if today_activity.is_checked_in %}
                     Checked in at {{ today_activity.checkin_time|time:"H:i" }}
                 {% else %}
                     Start your day with morning check-in
                 {% endif %}
             </p>
-            {% if not today_activity.is_checked_in %}
-            <a href="{% url 'activities:check_in' %}" 
-               class="w-full bg-nft-gradient hover:bg-nft-gradient-hover text-white py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center">
+                </div>
+            
+            <button id="check-in-btn" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center mt-2 hover:shadow-lg">
                 <i class="fas fa-play mr-2"></i>
-                Check In
-            </a>
-            {% endif %}
+                Clock In
+            </button>
+            
         </div>
-        
         <!-- Check-out Card -->
-        <div class="nft-card p-6 rounded-xl">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col justify-between">
+                <div>
             <div class="flex items-center justify-between mb-4">
                 <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-sign-out-alt text-blue-400 text-xl"></i>
@@ -73,8 +75,8 @@
                 </span>
                 {% endif %}
             </div>
-            <h3 class="text-lg font-semibold text-white mb-2">Check-out</h3>
-            <p class="text-gray-400 text-sm mb-4">
+            <h3 class="text-lg font-semibold text-white mb-2">Clock out</h3>
+                    <p class="text-blue-300 text-sm mb-4">
                 {% if today_activity.is_checked_out %}
                     Checked out at {{ today_activity.checkout_time|time:"H:i" }}
                 {% elif today_activity.is_checked_in %}
@@ -83,17 +85,17 @@
                     Check-in first to unlock
                 {% endif %}
             </p>
-            {% if today_activity.is_checked_in and not today_activity.is_checked_out %}
-            <a href="{% url 'activities:check_out' %}" 
-               class="w-full bg-nft-gradient hover:bg-nft-gradient-hover text-white py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center">
+                </div>
+            
+            <button id="check-out-btn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center mt-2 hover:shadow-lg">
                 <i class="fas fa-stop mr-2"></i>
-                Check Out
-            </a>
-            {% endif %}
+                Clock Out
+            </button>
+            
         </div>
-        
         <!-- Today's Goals -->
-        <div class="nft-card p-6 rounded-xl">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col justify-between">
+                <div>
             <div class="flex items-center justify-between mb-4">
                 <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-bullseye text-purple-400 text-xl"></i>
@@ -103,22 +105,23 @@
                 </span>
             </div>
             <h3 class="text-lg font-semibold text-white mb-2">Today's Goals</h3>
-            <p class="text-gray-400 text-sm mb-4">
+                    <p class="text-blue-300 text-sm mb-4">
                 {% if today_activity.goals.count %}
                     {{ today_activity.goals.count }} goal{{ today_activity.goals.count|pluralize }} set
                 {% else %}
                     No goals set yet
                 {% endif %}
             </p>
+                </div>
             <a href="{% url 'activities:activity_data' %}" 
-               class="w-full bg-nft-gray hover:bg-nft-light text-white py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center">
+                   class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center mt-2 hover:shadow-lg">
                 <i class="fas fa-eye mr-2"></i>
                 View Details
             </a>
         </div>
-        
         <!-- Activity History -->
-        <div class="nft-card p-6 rounded-xl">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col justify-between">
+                <div>
             <div class="flex items-center justify-between mb-4">
                 <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                     <i class="fas fa-history text-yellow-400 text-xl"></i>
@@ -128,57 +131,54 @@
                 </span>
             </div>
             <h3 class="text-lg font-semibold text-white mb-2">History</h3>
-            <p class="text-gray-400 text-sm mb-4">
+                    <p class="text-blue-300 text-sm mb-4">
                 {{ recent_activities.count }} recent activit{{ recent_activities.count|pluralize:"y,ies" }}
             </p>
-            <a href="{% url 'activities:history' %}" 
-               class="w-full bg-nft-gray hover:bg-nft-light text-white py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center">
+                </div>
+            <a href="{% url 'activities:activity_list' %}" 
+                   class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center mt-2 hover:shadow-lg">
                 <i class="fas fa-list mr-2"></i>
                 View History
             </a>
         </div>
     </div>
-    
     <!-- Statistics -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Weekly Stats -->
-        <div class="lg:col-span-2 nft-card p-6 rounded-xl">
+            <div class="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
             <h3 class="text-xl font-semibold text-white mb-6">
                 <i class="fas fa-chart-line mr-2"></i>
                 This Week's Performance
             </h3>
-            
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="text-center">
                     <div class="text-2xl font-bold text-green-400">{{ stats.completed_this_week }}</div>
-                    <div class="text-sm text-gray-400">Completed Days</div>
+                        <div class="text-sm text-blue-300">Completed Days</div>
                 </div>
                 <div class="text-center">
                     <div class="text-2xl font-bold text-blue-400">{{ stats.on_time_this_week }}</div>
-                    <div class="text-sm text-gray-400">On Time</div>
+                        <div class="text-sm text-blue-300">On Time</div>
                 </div>
                 <div class="text-center">
                     <div class="text-2xl font-bold text-orange-400">{{ stats.late_this_week }}</div>
-                    <div class="text-sm text-gray-400">Late Arrivals</div>
+                        <div class="text-sm text-blue-300">Late Arrivals</div>
                 </div>
                 <div class="text-center">
                     <div class="text-2xl font-bold text-purple-400">{{ stats.total_activities }}</div>
-                    <div class="text-sm text-gray-400">Total Activities</div>
+                        <div class="text-sm text-blue-300">Total Activities</div>
+                    </div>
                 </div>
             </div>
-        </div>
-        
         <!-- Quick Status -->
-        <div class="nft-card p-6 rounded-xl">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
             <h3 class="text-xl font-semibold text-white mb-6">
                 <i class="fas fa-clock mr-2"></i>
                 Today's Status
             </h3>
-            
             {% if today_activity %}
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <span class="text-gray-400">Status:</span>
+                        <span class="text-blue-300">Status:</span>
                     <span class="px-2 py-1 rounded-full text-xs
                         {% if today_activity.status == 'completed' %}bg-green-500/20 text-green-400
                         {% elif today_activity.status == 'pending' %}bg-orange-500/20 text-orange-400
@@ -187,9 +187,8 @@
                         {{ today_activity.get_status_display }}
                     </span>
                 </div>
-                
                 <div class="flex items-center justify-between">
-                    <span class="text-gray-400">Attendance:</span>
+                        <span class="text-blue-300">Attendance:</span>
                     <span class="px-2 py-1 rounded-full text-xs
                         {% if today_activity.attendance_status == 'on_time' %}bg-green-500/20 text-green-400
                         {% elif today_activity.attendance_status == 'late' %}bg-red-500/20 text-red-400
@@ -198,38 +197,35 @@
                         {{ today_activity.get_attendance_status_display }}
                     </span>
                 </div>
-                
                 {% if today_activity.work_duration %}
                 <div class="flex items-center justify-between">
-                    <span class="text-gray-400">Work Duration:</span>
+                        <span class="text-blue-300">Work Duration:</span>
                     <span class="text-white font-medium">{{ today_activity.work_duration }}</span>
                 </div>
                 {% endif %}
             </div>
             {% else %}
-            <p class="text-gray-400 text-center py-8">No activity recorded for today.</p>
+                <p class="text-blue-300 text-center py-8">No activity recorded for today.</p>
             {% endif %}
         </div>
     </div>
-    
     <!-- Recent Activities -->
-    <div class="nft-card p-6 rounded-xl">
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
         <h3 class="text-xl font-semibold text-white mb-6">
             <i class="fas fa-calendar-alt mr-2"></i>
             Recent Activities
         </h3>
-        
         {% if recent_activities %}
         <div class="space-y-4">
             {% for activity in recent_activities %}
-            <div class="flex items-center justify-between p-4 bg-nft-gray/50 rounded-lg">
+                <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                 <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 bg-nft-gradient rounded-full flex items-center justify-center">
+                        <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
                         <i class="fas fa-calendar text-white text-sm"></i>
                     </div>
                     <div>
                         <h4 class="font-medium text-white">{{ activity.date|date:"F j, Y" }}</h4>
-                        <p class="text-sm text-gray-400">
+                            <p class="text-sm text-blue-300">
                             {% if activity.checkin_time %}
                                 Check-in: {{ activity.checkin_time|time:"H:i" }}
                             {% endif %}
@@ -247,7 +243,7 @@
                         {% endif %}">
                         {{ activity.get_status_display }}
                     </span>
-                    <a href="{% url 'activities:detail' activity.id %}" 
+                    <a href="{% url 'activities:daily_summary' activity.id %}" 
                        class="text-nft-primary hover:text-nft-secondary transition-colors">
                         <i class="fas fa-eye"></i>
                     </a>
@@ -256,10 +252,9 @@
             {% endfor %}
         </div>
         {% else %}
-        <p class="text-gray-400 text-center py-8">No recent activities found.</p>
+            <p class="text-blue-300 text-center py-8">No recent activities found.</p>
         {% endif %}
     </div>
-    
     <!-- Admin Panel Link -->
     {% if is_admin %}
     <div class="mt-8 text-center">
@@ -270,5 +265,7 @@
         </a>
     </div>
     {% endif %}
+    </div>
 </div>
+
 {% endblock %} 
