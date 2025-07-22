@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load math_filters %}
+
+{% block title %}Admin Dashboard - Employee Activity Tracker{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div class="container mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
+            <p class="text-blue-300">
+                <i class="fas fa-chart-bar mr-1"></i>
+                Analytics and Management
+            </p>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl mb-8">
+            <h3 class="text-xl font-semibold text-white mb-4">
+                <i class="fas fa-filter mr-2"></i>
+                Filter Data
+            </h3>
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-blue-300 mb-2">Company</label>
+                    <select name="company" class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" class="bg-gray-800">All Companies</option>
+                        {% for company in companies %}
+                        <option value="{{ company.id }}" class="bg-gray-800" {% if selected_company == company.id|stringformat:"s" %}selected{% endif %}>
+                            {{ company.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-blue-300 mb-2">Employee</label>
+                    <select name="employee" class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" class="bg-gray-800">All Employees</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.id }}" class="bg-gray-800" {% if selected_employee == employee.id|stringformat:"s" %}selected{% endif %}>
+                            {{ employee.user.get_full_name|default:employee.user.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-blue-300 mb-2">Date Range</label>
+                    <select name="date_range" class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="today" class="bg-gray-800" {% if selected_date_range == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" class="bg-gray-800" {% if selected_date_range == 'week' %}selected{% endif %}>This Week</option>
+                        <option value="month" class="bg-gray-800" {% if selected_date_range == 'month' %}selected{% endif %}>This Month</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg">
+                        <i class="fas fa-sync mr-2"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- Total Employees -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-users text-purple-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white">{{ total_employees }}</div>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Total Employees</h3>
+                <p class="text-blue-300 text-sm">
+                    <i class="fas fa-user-check mr-1"></i>
+                    {{ total_active_users }} active users
+                </p>
+            </div>
+
+            <!-- Today's Attendance -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-calendar-check text-green-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white">{{ today_stats.checked_in|default:"0" }}/{{ today_stats.total_expected|default:"0" }}</div>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Today's Attendance</h3>
+                <p class="text-blue-300 text-sm">
+                    <i class="fas fa-clock mr-1"></i>
+                    {{ today_stats.on_time|default:"0" }} on time, {{ today_stats.late|default:"0" }} late
+                </p>
+            </div>
+
+            <!-- Completed Activities -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clipboard-list text-blue-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white">{{ attendance_stats.completed|default:"0" }}</div>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Completed Activities</h3>
+                <p class="text-blue-300 text-sm">
+                    <i class="fas fa-clipboard mr-1"></i>
+                    {{ attendance_stats.total_activities|default:"0" }} total activities
+                </p>
+            </div>
+
+            <!-- Late & Absent -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-orange-400 text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-white">{{ today_stats.late|default:"0" }}/{{ today_stats.absent|default:"0" }}</div>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Late & Absent</h3>
+                <p class="text-blue-300 text-sm">
+                    <i class="fas fa-user-slash mr-1"></i>
+                    {{ today_stats.absent|default:"0" }} absent today
+                </p>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Attendance Stats -->
+            <div class="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <h3 class="text-xl font-semibold text-white mb-6">
+                    <i class="fas fa-chart-pie mr-2"></i>
+                    Attendance Statistics
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center p-4 bg-white/5 rounded-lg">
+                        <div class="text-2xl font-bold text-green-400">{{ today_stats.on_time|default:"0" }}</div>
+                        <div class="text-sm text-blue-300">On Time Today</div>
+                    </div>
+                    <div class="text-center p-4 bg-white/5 rounded-lg">
+                        <div class="text-2xl font-bold text-orange-400">{{ today_stats.late|default:"0" }}</div>
+                        <div class="text-sm text-blue-300">Late Today</div>
+                    </div>
+                    <div class="text-center p-4 bg-white/5 rounded-lg">
+                        <div class="text-2xl font-bold text-red-400">{{ today_stats.absent|default:"0" }}</div>
+                        <div class="text-sm text-blue-300">Absent Today</div>
+                    </div>
+                    <div class="text-center p-4 bg-white/5 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-400">{{ attendance_stats.on_time|default:"0" }}</div>
+                        <div class="text-sm text-blue-300">On Time Total</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Stats -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <h3 class="text-xl font-semibold text-white mb-6">
+                    <i class="fas fa-tasks mr-2"></i>
+                    Activity Statistics
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span class="text-blue-300">Total Activities:</span>
+                        <span class="text-white font-medium">{{ attendance_stats.total_activities|default:"0" }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span class="text-blue-300">Completed Activities:</span>
+                        <span class="text-white font-medium">{{ attendance_stats.completed|default:"0" }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span class="text-blue-300">Completion Rate:</span>
+                        <span class="text-white font-medium">
+                            {% if attendance_stats.total_activities and attendance_stats.completed %}
+                                {% with numerator=attendance_stats.completed denominator=attendance_stats.total_activities %}
+                                    {{ numerator|mul:100|div:denominator|floatformat:2 }}%
+                                {% endwith %}
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Late & Absent Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Late Today -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <h3 class="text-xl font-semibold text-white mb-6">
+                    <i class="fas fa-running mr-2"></i>
+                    Late Arrivals Today
+                </h3>
+                {% if late_today %}
+                <div class="space-y-3">
+                    {% for activity in late_today %}
+                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 bg-gradient-to-r from-orange-600 to-red-600 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clock text-white text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-white">{{ activity.user.get_full_name|default:activity.user.username }}</h4>
+                                <p class="text-sm text-blue-300">
+                                    {{ activity.user.employee_profile.position|default:"No position" }} • 
+                                    {{ activity.checkin_time|time:"H:i" }}
+                                </p>
+                            </div>
+                        </div>
+                        <span class="text-orange-400 text-sm">
+                            {{ activity.get_attendance_status_display }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-blue-300 text-center py-4">No late arrivals today.</p>
+                {% endif %}
+            </div>
+            
+            <!-- Absent Today -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <h3 class="text-xl font-semibold text-white mb-6">
+                    <i class="fas fa-user-slash mr-2"></i>
+                    Absent Today
+                </h3>
+                {% if absent_today %}
+                <div class="space-y-3">
+                    {% for user in absent_today %}
+                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 bg-gradient-to-r from-red-600 to-pink-600 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-times text-white text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-white">{{ user.get_full_name|default:user.username }}</h4>
+                                <p class="text-sm text-blue-300">
+                                    {{ user.employee_profile.position|default:"No position" }} • 
+                                    {{ user.employee_profile.company|default:"No company" }}
+                                </p>
+                            </div>
+                        </div>
+                        <span class="text-red-400 text-sm">
+                            Absent
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-blue-300 text-center py-4">No absent employees today.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Activities Table -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-white">
+                    <i class="fas fa-history mr-2"></i>
+                    Recent Activities
+                </h3>
+                <span class="text-blue-300 text-sm">
+                    {{ recent_activities|length }} activities
+                </span>
+            </div>
+            
+            {% if recent_activities %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-white">
+                    <thead class="bg-white/10 text-left">
+                        <tr>
+                            <th class="p-4">Employee</th>
+                            <th class="p-4">Date</th>
+                            <th class="p-4">Check In</th>
+                            <th class="p-4">Check Out</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Attendance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in recent_activities %}
+                        <tr class="border-b border-white/10 hover:bg-white/5">
+                            <td class="p-4">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center mr-3">
+                                        <i class="fas fa-user text-white text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium">{{ activity.user.get_full_name|default:activity.user.username }}</div>
+                                        <div class="text-sm text-blue-300">{{ activity.user.employee_profile.position|default:"No position" }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="p-4">{{ activity.date|date:"M j, Y" }}</td>
+                            <td class="p-4">
+                                {% if activity.checkin_time %}
+                                    {{ activity.checkin_time|time:"H:i" }}
+                                {% else %}
+                                    <span class="text-red-400">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4">
+                                {% if activity.checkout_time %}
+                                    {{ activity.checkout_time|time:"H:i" }}
+                                {% else %}
+                                    <span class="text-orange-400">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-full text-xs
+                                    {% if activity.status == 'completed' %}bg-green-500/20 text-green-400
+                                    {% elif activity.status == 'pending' %}bg-orange-500/20 text-orange-400
+                                    {% else %}bg-gray-500/20 text-gray-400
+                                    {% endif %}">
+                                    {{ activity.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-full text-xs
+                                    {% if activity.attendance_status == 'on_time' %}bg-green-500/20 text-green-400
+                                    {% elif activity.attendance_status == 'late' %}bg-red-500/20 text-red-400
+                                    {% else %}bg-gray-500/20 text-gray-400
+                                    {% endif %}">
+                                    {{ activity.get_attendance_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-blue-300 text-center py-8">No recent activities found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
