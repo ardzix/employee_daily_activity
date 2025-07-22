@@ -78,6 +78,7 @@ def admin_dashboard_view(request):
     
     # Get filter parameters
     company_filter = request.GET.get('company', '')
+    employee_filter = request.GET.get('employee', '')
     date_filter = request.GET.get('date_range', 'week')
     
     # Base queryset
@@ -89,6 +90,10 @@ def admin_dashboard_view(request):
         activities_qs = activities_qs.filter(user__employee_profile__company_id=company_filter)
         employees_qs = employees_qs.filter(company_id=company_filter)
     
+    # Apply employee filter
+    if employee_filter:
+        activities_qs = activities_qs.filter(user__employee_profile__id=employee_filter)
+    
     # Apply date filter
     if date_filter == 'today':
         activities_qs = activities_qs.filter(date=today)
@@ -99,7 +104,15 @@ def admin_dashboard_view(request):
     
     # Calculate statistics
     total_employees = employees_qs.count()
-    total_active_users = User.objects.filter(is_active=True).count()
+    
+    # Calculate total active users based on filters
+    if company_filter:
+        total_active_users = User.objects.filter(
+            is_active=True,
+            employee_profile__company_id=company_filter
+        ).count()
+    else:
+        total_active_users = User.objects.filter(is_active=True).count()
     
     # Today's attendance
     today_activities = activities_qs.filter(date=today)
@@ -134,9 +147,20 @@ def admin_dashboard_view(request):
     
     absent_today = User.objects.filter(is_active=True).exclude(id__in=checked_in_user_ids)
     
+    if company_filter:
+        absent_today = absent_today.filter(
+            employee_profile__company_id=company_filter
+        )
+    
+    if employee_filter:
+        absent_today = absent_today.filter(
+            employee_profile__id=employee_filter
+        )
+    
     # Companies for filter
     companies = Company.objects.filter(is_active=True)
     
+    # Prepare context
     context = {
         'today_stats': today_stats,
         'attendance_stats': attendance_stats,
@@ -144,7 +168,9 @@ def admin_dashboard_view(request):
         'late_today': late_today,
         'absent_today': absent_today,
         'companies': companies,
+        'employees': employees_qs,  # For employee filter dropdown
         'selected_company': company_filter,
+        'selected_employee': employee_filter,  # To keep selected employee in filter
         'selected_date_range': date_filter,
         'total_employees': total_employees,
         'total_active_users': total_active_users,
