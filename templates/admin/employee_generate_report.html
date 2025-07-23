@@ -1,0 +1,9 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Generate XLSX Report for {{ employee.full_name }}</h1>
+<form method="post">{% csrf_token %}
+    <label>Start date: <input type="date" name="start_date" required></label>
+    <label>End date: <input type="date" name="end_date" required></label>
+    <button type="submit" class="button">Generate</button>
+</form>
+{% endblock %} 

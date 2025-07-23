@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block object-tools %}
+    {{ block.super }}
+    {% if generate_report_url %}
+        <li>
+            <a class="button" href="{{ generate_report_url }}">
+                <i class="fas fa-file-excel"></i> Generate XLSX Report
+            </a>
+        </li>
+    {% endif %}
+{% endblock %} 

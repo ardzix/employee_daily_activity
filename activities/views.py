@@ -7,6 +7,7 @@ from django.db import transaction
 from .models import DailyActivity, ActivityGoal, PlannedActivity, DailyGoal, AdditionalActivity
 from datetime import date, datetime
 import json
+import pytz
 
 
 @login_required
@@ -16,6 +17,7 @@ def check_in_api(request):
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
     today = date.today()
+    jakarta_tz = pytz.timezone('Asia/Jakarta')
     
     # Get or create daily activity for the user
     daily_activity, created = DailyActivity.objects.get_or_create(
@@ -76,12 +78,12 @@ def check_in_api(request):
         
         # Determine if late (only if user has employee profile)
         if hasattr(request.user, 'employee_profile'):
-            current_time = timezone.now()
-            expected_time = timezone.make_aware(
+            checkin_time_local = daily_activity.checkin_time.astimezone(jakarta_tz)
+            expected_time = jakarta_tz.localize(
                 datetime.combine(today, request.user.employee_profile.effective_work_start_time)
             )
             
-            if current_time > expected_time:
+            if checkin_time_local > expected_time:
                 daily_activity.attendance_status = 'late'
             else:
                 daily_activity.attendance_status = 'on_time'
@@ -126,6 +128,7 @@ def check_out_api(request):
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
     today = date.today()
+    jakarta_tz = pytz.timezone('Asia/Jakarta')
     
     try:
         daily_activity = DailyActivity.objects.get(user=request.user, date=today)
@@ -197,7 +200,19 @@ def check_out_api(request):
         # Record check-out with data
         daily_activity.checkout_time = timezone.now()
         daily_activity.afternoon_problems = afternoon_problems
-        daily_activity.status = 'completed'
+        # Early checkout logic
+        early_checkout = False
+        if hasattr(request.user, 'employee_profile'):
+            checkout_time_local = daily_activity.checkout_time.astimezone(jakarta_tz)
+            expected_end_time = jakarta_tz.localize(
+                datetime.combine(today, request.user.employee_profile.effective_work_end_time)
+            )
+            if checkout_time_local < expected_end_time:
+                daily_activity.attendance_status = 'early_checkout'
+                daily_activity.status = 'early_checkout'
+                early_checkout = True
+        if not early_checkout:
+            daily_activity.status = 'completed'
         daily_activity.save()
         
         # Update PlannedActivity statuses

@@ -11,12 +11,14 @@ class DailyActivity(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending Check-out'),
         ('completed', 'Completed'),
+        ('early_checkout', 'Early Checkout'),
         ('absent', 'Absent'),
     ]
     
     ATTENDANCE_STATUS_CHOICES = [
         ('on_time', 'On Time'),
         ('late', 'Late'),
+        ('early_checkout', 'Early Checkout'),
         ('absent', 'Absent'),
     ]
     
