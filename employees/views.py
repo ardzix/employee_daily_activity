@@ -63,14 +63,11 @@ def employee_create(request):
     if request.method == 'POST':
         form = EmployeeForm(request.POST)
         if form.is_valid():
-            # Simpan dulu tanpa commit untuk memeriksa work time
             employee_instance = form.save(commit=False)
 
-            # Jika work_start_time kosong, ambil dari company
             if not employee_instance.work_start_time:
                 employee_instance.work_start_time = employee_instance.company.work_start_time
                 
-            # Jika work_end_time kosong, ambil dari company
             if not employee_instance.work_end_time:
                 employee_instance.work_end_time = employee_instance.company.work_end_time
                 
@@ -88,14 +85,11 @@ def employee_update(request, pk):
     if request.method == 'POST':
         form = EmployeeForm(request.POST, instance=employee)
         if form.is_valid():
-            # Simpan dulu tanpa commit untuk memeriksa work time
             employee_instance = form.save(commit=False)
 
-            # Jika work_start_time kosong, ambil dari company
             if not employee_instance.work_start_time:
                 employee_instance.work_start_time = employee_instance.company.work_start_time
                 
-            # Jika work_end_time kosong, ambil dari company
             if not employee_instance.work_end_time:
                 employee_instance.work_end_time = employee_instance.company.work_end_time
                 
