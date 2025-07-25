@@ -17,16 +17,30 @@
                 </p>
             </div>
             
-            <!-- Tombol Export Excel -->
-            <form method="GET" action="{% url 'dashboard:export_admin_dashboard' %}">
-                <input type="hidden" name="company" value="{{ selected_company }}">
-                <input type="hidden" name="employee" value="{{ selected_employee }}">
-                <input type="hidden" name="date_range" value="{{ selected_date_range }}">
-                <button type="submit" class="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center">
-                    <i class="fas fa-file-excel mr-2"></i>
-                    Export to Excel
-                </button>
-            </form>
+            <div class="flex space-x-4">
+                <!-- Tombol Company -->
+                <a href="{% url 'employee:company_list' %}" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center">
+                    <i class="fas fa-building mr-2"></i>
+                    Companies
+                </a>
+                
+                <!-- Tombol Employee -->
+                <a href="{% url 'employee:employee_list' %}" class="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center">
+                    <i class="fas fa-users mr-2"></i>
+                    Employees
+                </a>
+
+                <!-- Tombol Export Excel -->
+                <form method="GET" action="{% url 'dashboard:export_admin_dashboard' %}">
+                    <input type="hidden" name="company" value="{{ selected_company }}">
+                    <input type="hidden" name="employee" value="{{ selected_employee }}">
+                    <input type="hidden" name="date_range" value="{{ selected_date_range }}">
+                    <button type="submit" class="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Export to Excel
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- Filters -->
@@ -75,6 +89,8 @@
                         Apply Filters
                     </button>
                 </div>
+
+
             </form>
         </div>
 
