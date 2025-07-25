@@ -308,6 +308,7 @@
                             <th class="p-4">Check Out</th>
                             <th class="p-4">Status</th>
                             <th class="p-4">Attendance</th>
+                            <th class="p-4">Detail</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -356,6 +357,12 @@
                                     {% endif %}">
                                     {{ activity.get_attendance_status_display }}
                                 </span>
+                            </td>
+                            <td class="p-4">
+                                <a href="{% url 'employee:daily_summary' activity.id %}" 
+                                class="ml-3 text-nft-primary hover:text-nft-secondary transition-colors">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}

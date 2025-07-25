@@ -15,4 +15,7 @@ urlpatterns = [
     path('add/', views.employee_create, name='employee_create'),
     path('<int:pk>/edit/', views.employee_update, name='employee_update'),
     path('<int:pk>/delete/', views.employee_delete, name='employee_delete'),
+    
+    # Detail view for specific activity (using daily_summary.html)
+    path('activities/<int:activity_id>/', views.daily_summary_view, name='daily_summary'),
 ]

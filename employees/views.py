@@ -1,7 +1,9 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
+from datetime import date
 from .models import Company, Employee
+from activities.models import DailyActivity
 from django.contrib.auth import get_user_model
 from .forms import CompanyForm, EmployeeForm
 
@@ -111,3 +113,41 @@ def employee_delete(request, pk):
         employee.delete()
         return redirect('employee:employee_list')
     return render(request, 'employee/employee_confirm_delete.html', {'object': employee})
+
+
+@login_required
+@user_passes_test(is_admin_or_hr)
+def daily_summary_view(request, activity_id=None):
+    """Display daily activity summary - can show today's or a specific activity"""
+    if activity_id:
+        # Show specific activity
+        daily_activity = get_object_or_404(
+            DailyActivity.objects.prefetch_related(
+                'planned_activities', 'daily_goals', 'additional_activities', 'goals'
+            ),
+            id=activity_id
+        )
+    else:
+        # Show today's activity
+        today = date.today()
+        try:
+            daily_activity = DailyActivity.objects.prefetch_related(
+                'planned_activities', 'daily_goals', 'additional_activities', 'goals'
+            ).get(id=activity_id, date=today)
+        except DailyActivity.DoesNotExist:
+            # No activity for today, redirect to check-in
+            return redirect('activities:check_in')
+    
+    context = {
+        'user': daily_activity.user,
+        'daily_activity': daily_activity,
+        'goals': daily_activity.goals.all(),
+        'planned_activities': daily_activity.planned_activities.all(),
+        'daily_goals': daily_activity.daily_goals.all(),
+        'additional_activities': daily_activity.additional_activities.all(),
+        'can_check_in': not daily_activity.checkin_time and daily_activity.date == date.today(),
+        'can_check_out': daily_activity.checkin_time and not daily_activity.checkout_time and daily_activity.date == date.today(),
+        'has_employee_profile': hasattr(request.user, 'employee_profile'),
+    }
+    
+    return render(request, 'activities/daily_summary.html', context)

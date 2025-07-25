@@ -315,7 +315,8 @@
         {% endif %}
         {% endif %}
 
-        <!-- Navigation -->
+        <!-- Navigation --> 
+        {% if not user.is_staff and not user.super_user %}
         <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
             <h3 class="text-xl font-semibold text-white mb-4">More Options</h3>
             <div class="flex flex-wrap gap-4">
@@ -326,6 +327,7 @@
                 </a>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %} 
