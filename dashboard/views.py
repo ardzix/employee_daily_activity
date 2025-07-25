@@ -188,7 +188,7 @@ def admin_dashboard_view(request):
 @login_required
 @user_passes_test(is_admin_or_hr)
 def export_admin_dashboard(request):
-    """Export filtered dashboard data to Excel"""
+    """Export filtered activity details to Excel"""
     
     # Get filter parameters
     company_filter = request.GET.get('company', '')
@@ -200,12 +200,10 @@ def export_admin_dashboard(request):
     
     # Base queryset
     activities_qs = DailyActivity.objects.all()
-    employees_qs = Employee.objects.filter(employment_status='active')
     
     # Apply company filter
     if company_filter:
         activities_qs = activities_qs.filter(user__employee_profile__company_id=company_filter)
-        employees_qs = employees_qs.filter(company_id=company_filter)
     
     # Apply employee filter
     if employee_filter:
@@ -229,142 +227,16 @@ def export_admin_dashboard(request):
         'daily_goals',
         'additional_activities',
         'user__employee_profile'
-    )
+    ).order_by('-date', '-checkin_time')
     
-    # Calculate statistics (same as dashboard)
-    total_employees = employees_qs.count()
-    
-    if company_filter:
-        total_active_users = User.objects.filter(
-            is_active=True,
-            employee_profile__company_id=company_filter
-        ).count()
-    else:
-        total_active_users = User.objects.filter(is_active=True).count()
-    
-    # Today's attendance
-    today_activities = activities_qs.filter(date=today)
-    today_stats = {
-        'total_expected': total_active_users,
-        'checked_in': today_activities.filter(checkin_time__isnull=False).count(),
-        'checked_out': today_activities.filter(checkout_time__isnull=False).count(),
-        'on_time': today_activities.filter(attendance_status='on_time').count(),
-        'late': today_activities.filter(attendance_status='late').count(),
-        'absent': total_active_users - today_activities.filter(checkin_time__isnull=False).count(),
-    }
-    
-    # Attendance trends
-    attendance_stats = activities_qs.aggregate(
-        total_activities=Count('id'),
-        completed=Count('id', filter=Q(status='completed')),
-        on_time=Count('id', filter=Q(attendance_status='on_time')),
-        late=Count('id', filter=Q(attendance_status='late')),
-        absent=Count('id', filter=Q(attendance_status='absent')),
-    )
-    
-    # Completion rate
-    completion_rate = 0.0
-    if attendance_stats['total_activities'] and attendance_stats['completed']:
-        completion_rate = (attendance_stats['completed'] / attendance_stats['total_activities']) * 100
-    
-    # Late today
-    late_today = today_activities.filter(attendance_status='late').select_related('user')
-    
-    # Absent today
-    checked_in_user_ids = today_activities.filter(
-        checkin_time__isnull=False
-    ).values_list('user_id', flat=True)
-    
-    absent_today = User.objects.filter(is_active=True).exclude(id__in=checked_in_user_ids)
-    
-    current_company = "All"
-    current_employee = "All"
-    
-    if company_filter:
-        absent_today = absent_today.filter(
-            employee_profile__company_id=company_filter
-        )
-        current_company = Company.objects.get(id=company_filter)
-    if employee_filter:
-        absent_today = absent_today.filter(
-            employee_profile__id=employee_filter
-        )
-        current_employee = Employee.objects.get(id=employee_filter)
-    
-    # Recent activities
-    recent_activities = activities_qs.order_by('-date', '-checkin_time')
-    
-    # Create workbook with multiple sheets
+    # Create workbook
     wb = Workbook()
     
-    # Sheet 1: Dashboard Summary
-    ws_summary = wb.active
-    ws_summary.title = "Dashboard Summary"
-    
-    # Write summary header
-    ws_summary.append(["ADMIN DASHBOARD EXPORT"])
-    ws_summary.append([f"Exported at: {datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S %Z')}"])
-    ws_summary.append([f"Filters: Company={current_company.name if isinstance(current_company, Company) else current_company}, Employee={current_employee.full_name if isinstance(current_employee, Employee) else current_employee}, Date Range={date_filter.capitalize()}"])
-    ws_summary.append([])
-    
-    # Write summary cards data
-    ws_summary.append(["SUMMARY STATISTICS"])
-    ws_summary.append(["Metric", "Value"])
-    ws_summary.append(["Total Employees", total_employees])
-    ws_summary.append(["Total Active Users", total_active_users])
-    ws_summary.append(["Today's Attendance", f"{today_stats['checked_in']}/{today_stats['total_expected']}"])
-    ws_summary.append(["On Time Today", today_stats['on_time']])
-    ws_summary.append(["Late Today", today_stats['late']])
-    ws_summary.append(["Absent Today", today_stats['absent']])
-    ws_summary.append(["Completed Activities", attendance_stats['completed']])
-    ws_summary.append(["Total Activities", attendance_stats['total_activities']])
-    ws_summary.append(["Completion Rate", f"{completion_rate:.2f}%"])
-    ws_summary.append(["On Time Total", attendance_stats['on_time']])
-    ws_summary.append(["Late Total", attendance_stats['late']])
-    ws_summary.append([])
-    
-    # Sheet 2: Late Arrivals Today
-    ws_late = wb.create_sheet("Late Today")
-    ws_late.append(["LATE ARRIVALS TODAY"])
-    ws_late.append(["Employee", "Position", "Company", "Check-in Time (GMT+7)"])
-    
-    for activity in late_today:
-        checkin_time_str = ""
-        if activity.checkin_time:
-            # Handle both datetime and time objects
-            if isinstance(activity.checkin_time, datetime):
-                localized_time = activity.checkin_time.astimezone(tz)
-                checkin_time_str = localized_time.strftime('%Y-%m-%d %H:%M:%S')
-            else:
-                naive_datetime = datetime.combine(activity.date, activity.checkin_time)
-                localized_time = tz.localize(naive_datetime)
-                checkin_time_str = localized_time.strftime('%Y-%m-%d %H:%M:%S')
-        else:
-            checkin_time_str = "N/A"
-        
-        employee = activity.user.employee_profile
-        ws_late.append([
-            activity.user.get_full_name() or activity.user.username,
-            employee.position if employee else "N/A",
-            employee.company.name if (employee and employee.company) else "N/A",
-            checkin_time_str
-        ])
-    
-    # Sheet 3: Absent Today
-    ws_absent = wb.create_sheet("Absent Today")
-    ws_absent.append(["ABSENT EMPLOYEES TODAY"])
-    ws_absent.append(["Employee", "Position", "Company"])
-    
-    for user in absent_today:
-        employee = user.employee_profile
-        ws_absent.append([
-            user.get_full_name() or user.username,
-            employee.position if employee else "N/A",
-            employee.company.name if (employee and employee.company) else "N/A"
-        ])
-    
-    # Sheet 4: Activity Details
+    # Remove default sheet and create Activity Details sheet
+    wb.remove(wb.active)
     ws_activities = wb.create_sheet("Activity Details")
+    
+    # Define headers
     headers = [
         "Employee", "Position", "Company", "Date",
         "Check In (GMT+7)", "Check Out (GMT+7)", 
@@ -376,7 +248,8 @@ def export_admin_dashboard(request):
     ]
     ws_activities.append(headers)
     
-    for activity in recent_activities:
+    # Iterate through each activity and write to sheet
+    for activity in activities_qs:
         # Handle check-in time
         checkin_str = ""
         if activity.checkin_time:
@@ -477,7 +350,7 @@ def export_admin_dashboard(request):
             
             ws_activities.append(row)
     
-    # Apply styling to all sheets
+    # Apply styling to the sheet
     header_fill = PatternFill(start_color="2D6099", end_color="2D6099", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF")
     thin_border = Border(
@@ -487,41 +360,38 @@ def export_admin_dashboard(request):
         bottom=Side(style='thin')
     )
     
-    for ws in wb.worksheets:
-        # Apply header styling to the first row
-        for row in ws.iter_rows(min_row=1, max_row=1):
-            for cell in row:
-                cell.fill = header_fill
-                cell.font = header_font
-                cell.alignment = Alignment(horizontal='center')
+    # Apply header styling to the first row
+    for cell in ws_activities[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center')
+    
+    # Apply borders to all cells
+    for row in ws_activities.iter_rows(min_row=1, max_row=ws_activities.max_row, min_col=1, max_col=len(headers)):
+        for cell in row:
+            cell.border = thin_border
+    
+    # Auto adjust column widths
+    for col in ws_activities.columns:
+        max_length = 0
+        column_letter = get_column_letter(col[0].column)
         
-        # Apply borders to all cells
-        for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
-            for cell in row:
-                cell.border = thin_border
+        for cell in col:
+            try:
+                value = str(cell.value) if cell.value else ""
+                if len(value) > max_length:
+                    max_length = len(value)
+            except:
+                pass
         
-        # Auto adjust column widths
-        for col in ws.columns:
-            max_length = 0
-            column_letter = get_column_letter(col[0].column)
-            
-            for cell in col:
-                try:
-                    value = str(cell.value) if cell.value else ""
-                    if len(value) > max_length:
-                        max_length = len(value)
-                except:
-                    pass
-            
-            adjusted_width = (max_length + 2) * 1.2
-            ws.column_dimensions[column_letter].width = adjusted_width
+        adjusted_width = (max_length + 2) * 1.2
+        ws_activities.column_dimensions[column_letter].width = adjusted_width
     
     # Create response
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    # filename = f"dashboard_export_{datetime.now(tz).strftime('%Y%m%d_%H%M%S')}.xlsx"
-    filename = f"report_company({current_company.name.lower() if isinstance(current_company, Company) else current_company.lower()})_employee({current_employee.full_name.lower() if isinstance(current_employee, Employee) else current_employee.lower()})_date-range({date_filter}).xlsx"
+    filename = f"activity_details_export_{datetime.now(tz).strftime('%Y%m%d_%H%M%S')}.xlsx"
     response['Content-Disposition'] = f'attachment; filename={filename}'
     
     wb.save(response)
