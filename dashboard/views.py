@@ -111,16 +111,24 @@ def admin_dashboard_view(request):
     total_employees = employees_qs.count()
     
     # Calculate total active users based on filters
+    active_users_filters = Q(is_active=True)
+
     if company_filter:
-        total_active_users = User.objects.filter(
-            is_active=True,
-            employee_profile__company_id=company_filter
-        ).count()
-    else:
-        total_active_users = User.objects.filter(is_active=True).count()
+        active_users_filters &= Q(employee_profile__company_id=company_filter)
+    elif employee_filter:
+        active_users_filters &= Q(employee_profile__id=employee_filter)
+
+    total_active_users = User.objects.filter(active_users_filters).count()
     
+    today_activities_filters = Q(date=today)
+
+    if company_filter:
+        today_activities_filters &= Q(user__employee_profile__company_id=employee_filter)
+    elif employee_filter:
+        today_activities_filters &= Q(user__employee_profile__id=company_filter)
+
     # Today's attendance
-    today_activities = activities_qs.filter(date=today)
+    today_activities = DailyActivity.objects.filter(today_activities_filters)
     today_stats = {
         'total_expected': total_active_users,
         'checked_in': today_activities.filter(checkin_time__isnull=False).count(),
