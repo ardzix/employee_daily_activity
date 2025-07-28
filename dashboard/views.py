@@ -79,13 +79,14 @@ def admin_dashboard_view(request):
     """Admin dashboard with analytics"""
     
     today = date.today()
-    this_week_start = today - timedelta(days=today.weekday())
-    this_month_start = today.replace(day=1)
     
     # Get filter parameters
     company_filter = request.GET.get('company', '')
     employee_filter = request.GET.get('employee', '')
-    date_filter = request.GET.get('date_range', 'week')
+    date_filter = request.GET.get('date_range', '')
+
+    start_date_range = date_filter.split('_')[0]
+    end_date_range = date_filter.split('_')[1]
     
     # Base queryset
     activities_qs = DailyActivity.objects.all()
@@ -101,12 +102,8 @@ def admin_dashboard_view(request):
         activities_qs = activities_qs.filter(user__employee_profile__id=employee_filter)
     
     # Apply date filter
-    if date_filter == 'today':
-        activities_qs = activities_qs.filter(date=today)
-    elif date_filter == 'week':
-        activities_qs = activities_qs.filter(date__gte=this_week_start)
-    elif date_filter == 'month':
-        activities_qs = activities_qs.filter(date__gte=this_month_start)
+    if date_filter:
+        activities_qs = activities_qs.filter(date__gte=start_date_range, date__lte=end_date_range)
     
     # Calculate statistics
     total_employees = employees_qs.count()
@@ -177,7 +174,7 @@ def admin_dashboard_view(request):
         'employees': employees_qs,  # For employee filter dropdown
         'selected_company': company_filter,
         'selected_employee': employee_filter,  # To keep selected employee in filter
-        'selected_date_range': date_filter,
+        'selected_date_range': date_filter, # To keep selected date range in filter
         'total_employees': total_employees,
         'total_active_users': total_active_users,
     }
