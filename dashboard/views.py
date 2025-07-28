@@ -190,7 +190,10 @@ def export_admin_dashboard(request):
     # Get filter parameters
     company_filter = request.GET.get('company', '')
     employee_filter = request.GET.get('employee', '')
-    date_filter = request.GET.get('date_range', 'week')
+    date_filter = request.GET.get('date_range', '')
+
+    start_date_range = date_filter.split('_')[0]
+    end_date_range = date_filter.split('_')[1]
     
     # Timezone for GMT+7
     tz = pytz.timezone('Asia/Jakarta')  # GMT+7
@@ -206,17 +209,9 @@ def export_admin_dashboard(request):
     if employee_filter:
         activities_qs = activities_qs.filter(user__employee_profile__id=employee_filter)
     
-    # Apply date filter
-    today = date.today()
-    this_week_start = today - timedelta(days=today.weekday())
-    this_month_start = today.replace(day=1)
-    
-    if date_filter == 'today':
-        activities_qs = activities_qs.filter(date=today)
-    elif date_filter == 'week':
-        activities_qs = activities_qs.filter(date__gte=this_week_start)
-    elif date_filter == 'month':
-        activities_qs = activities_qs.filter(date__gte=this_month_start)
+    # Apply date filter    
+    if date_filter:
+        activities_qs = activities_qs.filter(date__gte=start_date_range, date__lte=end_date_range)
     
     # Prefetch related data for efficiency
     activities_qs = activities_qs.prefetch_related(
