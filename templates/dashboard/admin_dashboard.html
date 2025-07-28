@@ -498,8 +498,8 @@
         // get data from django context
         const selectedDateRange = "{{ selected_date_range }}";
         
-        const start = moment().startOf('isoWeek');
-        const end = moment().endOf('isoWeek');
+        const start = selectedDateRange ? selectedDateRange.split('_')[0] : moment().startOf('isoWeek');
+        const end = selectedDateRange ? selectedDateRange.split('_')[1] : moment().endOf('isoWeek');
 
         function cb(start, end) {
             $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));

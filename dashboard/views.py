@@ -79,14 +79,16 @@ def admin_dashboard_view(request):
     """Admin dashboard with analytics"""
     
     today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
     
     # Get filter parameters
     company_filter = request.GET.get('company', '')
     employee_filter = request.GET.get('employee', '')
-    date_filter = request.GET.get('date_range', '')
+    date_filter = request.GET.get('date_range', f'{start_of_week}_{end_of_week}')
 
-    start_date_range = date_filter.split('_')[0]
-    end_date_range = date_filter.split('_')[1]
+    start_date_range = date_filter.split('_')[0] if date_filter else ""
+    end_date_range = date_filter.split('_')[1] if date_filter else ""
     
     # Base queryset
     activities_qs = DailyActivity.objects.all()
