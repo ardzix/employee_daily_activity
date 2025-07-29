@@ -115,7 +115,8 @@ def admin_dashboard_view(request):
 
     if company_filter:
         active_users_filters &= Q(employee_profile__company_id=company_filter)
-    elif employee_filter:
+    
+    if employee_filter:
         active_users_filters &= Q(employee_profile__id=employee_filter)
 
     total_active_users = User.objects.filter(active_users_filters).count()
@@ -123,9 +124,10 @@ def admin_dashboard_view(request):
     today_activities_filters = Q(date=today)
 
     if company_filter:
-        today_activities_filters &= Q(user__employee_profile__company_id=employee_filter)
-    elif employee_filter:
         today_activities_filters &= Q(user__employee_profile__id=company_filter)
+    
+    if employee_filter:
+        today_activities_filters &= Q(user__employee_profile__company_id=employee_filter)
 
     # Today's attendance
     today_activities = DailyActivity.objects.filter(today_activities_filters)
@@ -197,13 +199,17 @@ def admin_dashboard_view(request):
 def export_admin_dashboard(request):
     """Export filtered activity details to Excel"""
     
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    
     # Get filter parameters
     company_filter = request.GET.get('company', '')
     employee_filter = request.GET.get('employee', '')
-    date_filter = request.GET.get('date_range', '')
+    date_filter = request.GET.get('date_range', f'{start_of_week}_{end_of_week}')
 
-    start_date_range = date_filter.split('_')[0]
-    end_date_range = date_filter.split('_')[1]
+    start_date_range = date_filter.split('_')[0] if date_filter else ""
+    end_date_range = date_filter.split('_')[1] if date_filter else ""
     
     # Timezone for GMT+7
     tz = pytz.timezone('Asia/Jakarta')  # GMT+7
