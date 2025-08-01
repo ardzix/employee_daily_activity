@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Company - Employee Activity Tracker{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div class="container mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">
+                {% if object %}Edit Company{% else %}Add New Company{% endif %}
+            </h1>
+            <p class="text-blue-300">
+                <i class="fas fa-building mr-1"></i>
+                {% if object %}Update company details{% else %}Create a new client company{% endif %}
+            </p>
+        </div>
+
+        <!-- Form Container -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-white mb-4">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Basic Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-blue-300 mb-2">Company Name*</label>
+                            {{ form.name }}
+                        </div>
+                        <div>
+                            <label class="block text-blue-300 mb-2">Company Code*</label>
+                            {{ form.code }}
+                            <p class="text-xs text-blue-400 mt-1">Short code for the company</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-blue-300 mb-2">Description</label>
+                            {{ form.description }}
+                        </div>
+                        <div>
+                            <label class="block text-blue-300 mb-2">Status*</label>
+                            <div class="flex items-center mt-2">
+                              <div class="ml-2 text-white">Active Company</div>
+                              <div class="ml-6 mt-1">
+                                {{ form.is_active }}
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Divider: Work Hours -->
+                <div class="border-t border-white/20 my-6"></div>
+                <h3 class="text-xl font-semibold text-white mb-4">
+                    <i class="fas fa-clock mr-2"></i>
+                    Work Hours
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div>
+                        <label class="block text-blue-300 mb-2">Work Start Time*</label>
+                        <input type="time" name="work_start_time" value="{% if form.work_start_time.value %}{{ form.work_start_time.value|time:'H:i' }}{% else %}09:00{% endif %}"
+                               class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-blue-400 mt-1">Default work start time</p>
+                    </div>
+                    <div>
+                        <label class="block text-blue-300 mb-2">Work End Time*</label>
+                        <input type="time" name="work_end_time" value="{% if form.work_end_time.value %}{{ form.work_end_time.value|time:'H:i' }}{% else %}17:00{% endif %}"
+                               class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-blue-400 mt-1">Default work end time</p>
+                    </div>
+                    <div>
+                        <label class="block text-blue-300 mb-2">Timezone*</label>
+                        {{ form.timezone }}
+                        <p class="text-xs text-blue-400 mt-1">Company timezone</p>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4 pt-4 border-t border-white/20">
+                    <a href="{% url 'employee:company_list' %}" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-lg text-sm font-medium">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-2 px-6 rounded-lg text-sm font-medium">
+                        {% if object %}Update Company{% else %}Create Company{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Style form inputs to match dashboard theme */
+    input, select, textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        color: white;
+        outline: none;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+    
+    .errorlist {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Style khusus untuk input time */
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
+</style>
+{% endblock %}

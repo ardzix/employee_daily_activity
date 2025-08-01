@@ -37,6 +37,7 @@ urlpatterns = [
     path('auth/', include('authentication.urls')),
     path('activities/', include('activities.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('employees/', include('employees.urls')),
     path('', root_redirect, name='root'),  # Redirect root to dashboard
 ]
 
