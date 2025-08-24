@@ -1,10 +1,19 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
-
+def validate_lat_long(value):
+        try:
+            lat, lon = value.split(',')
+            lat = float(lat.strip())
+            lon = float(lon.strip())
+            if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                raise ValidationError("Invalid latitude or longitude values")
+        except Exception:
+            raise ValidationError("Location must be in 'lat,long' format")
 class DailyActivity(models.Model):
     """Daily activity tracking model"""
     
@@ -33,6 +42,12 @@ class DailyActivity(models.Model):
     # Morning Check-in
     checkin_time = models.DateTimeField(null=True, blank=True)
     
+    checkin_location = models.CharField(
+        max_length=100, null=True, blank=True,
+        validators=[validate_lat_long],
+        help_text="Format: lat,long"
+    )
+    
     # Morning Problems (keeping as text field)
     morning_problems = models.TextField(
         help_text="Any problems or blockers?",
@@ -41,6 +56,12 @@ class DailyActivity(models.Model):
     
     # Afternoon Check-out
     checkout_time = models.DateTimeField(null=True, blank=True)
+    
+    checkout_location = models.CharField(
+        max_length=100, null=True, blank=True,
+        validators=[validate_lat_long],
+        help_text="Format: lat,long"
+    )
     
     # Afternoon Problems (keeping as text field)
     afternoon_problems = models.TextField(

@@ -33,6 +33,13 @@ def check_in_api(request):
     if daily_activity.checkin_time:
         return JsonResponse({'error': 'You have already checked in today'}, status=400)
     
+    # Get location data
+    lat = request.POST.get('lat')
+    long = request.POST.get('long')
+    location = None
+    if lat and long:
+        location = f"{lat},{long}"
+
     # Get form data
     planned_activities_data = request.POST.get('planned_activities', '').strip()
     daily_goals_data = request.POST.get('daily_goals', '').strip()
@@ -75,6 +82,9 @@ def check_in_api(request):
         # Record check-in with data
         daily_activity.checkin_time = timezone.now()
         daily_activity.morning_problems = morning_problems
+
+        if location:
+            daily_activity.checkin_location = location
         
         # Determine if late (only if user has employee profile)
         if hasattr(request.user, 'employee_profile'):
@@ -116,6 +126,7 @@ def check_in_api(request):
         'success': True,
         'message': 'Checked in successfully!',
         'time': timezone.now().strftime('%H:%M'),
+        'location': daily_activity.checkin_location,
         'planned_activities_count': len(planned_activities_list),
         'daily_goals_count': len(daily_goals_list)
     })
@@ -145,6 +156,13 @@ def check_out_api(request):
     
     # Get form data
     afternoon_problems = request.POST.get('afternoon_problems', '').strip()
+
+    # Get location data
+    lat = request.POST.get('lat')
+    long = request.POST.get('long')
+    location = None
+    if lat and long:
+        location = f"{lat},{long}"
     
     # Get activity and goal updates
     activity_updates = request.POST.get('activity_updates', '[]')
@@ -200,6 +218,8 @@ def check_out_api(request):
         # Record check-out with data
         daily_activity.checkout_time = timezone.now()
         daily_activity.afternoon_problems = afternoon_problems
+        if location:
+            daily_activity.checkout_location = location
         # Early checkout logic
         early_checkout = False
         if hasattr(request.user, 'employee_profile'):
@@ -268,6 +288,7 @@ def check_out_api(request):
         'success': True,
         'message': 'Checked out successfully!',
         'time': timezone.now().strftime('%H:%M'),
+        'location': daily_activity.checkout_location,
         'additional_activities_count': len(additional_activities_list)
     })
 

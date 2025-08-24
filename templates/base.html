@@ -235,6 +235,8 @@
                             </button>
                         </div>
                     </div>
+                    <input type="hidden" name="lat" id="checkin-lat">
+                    <input type="hidden" name="long" id="checkin-long">
                     <button type="button" id="add-activity" class="mt-3 bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-600/30 transition-colors flex items-center">
                         <i class="fas fa-plus mr-2"></i>Add Another Activity
                     </button>
@@ -360,6 +362,8 @@
                         rows="3"
                     ></textarea>
                 </div>
+                <input type="hidden" name="lat" id="checkin-lat">
+                <input type="hidden" name="long" id="checkin-long">
                 
                 <div class="flex justify-end space-x-4">
                     <button type="button" id="cancel-checkout" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
@@ -806,14 +810,13 @@
         // Handle check-in form submission
         checkInForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const formData = new FormData();
             formData.append('csrfmiddlewaretoken', getCSRFToken());
-            
+
             // Collect planned activities
             const activityTitles = [];
             const activityPriorities = [];
-            
             document.querySelectorAll('.planned-activity-item').forEach((item, index) => {
                 const title = item.querySelector(`input[name*="planned_activity_title"]`).value;
                 const priority = item.querySelector(`select[name*="planned_activity_priority"]`).value;
@@ -825,7 +828,7 @@
                     });
                 }
             });
-            
+
             // Collect daily goals
             const goalTitles = [];
             document.querySelectorAll('.daily-goal-item').forEach((item, index) => {
@@ -841,35 +844,36 @@
                     });
                 }
             });
-            
+
             formData.append('planned_activities', JSON.stringify(activityTitles));
             formData.append('daily_goals', JSON.stringify(goalTitles));
             formData.append('morning_problems', document.querySelector('textarea[name="morning_problems"]').value);
-            
+            // Handle submit button state
             const submitBtn = checkInForm.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking In...';
-            
-            fetch('/activities/api/check-in/', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': getCSRFToken()
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    checkInModal.classList.add('hidden');
-                    checkInForm.reset();
-                    // Reset counters and containers
-                    activityCounter = 1;
-                    goalCounter = 1;
-                    document.getElementById('planned-activities-container').innerHTML = `
+
+            // Function to finalize and send
+            function submitCheckin(formData) {
+                fetch('/activities/api/check-in/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        checkInModal.classList.add('hidden');
+                        checkInForm.reset();
+                        // Reset counters and containers
+                        activityCounter = 1;
+                        goalCounter = 1;
+                        document.getElementById('planned-activities-container').innerHTML = `
                         <div class="planned-activity-item flex items-center space-x-3">
                             <input 
                                 type="text" 
@@ -915,21 +919,40 @@
                             </button>
                         </div>
                     `;
-                    updateStatus();
-                } else if (data.redirect) {
-                    window.location.href = data.redirect;
-                } else {
-                    showNotification(data.error || 'Check-in failed', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Network error. Please try again.', 'error');
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            });
+                        updateStatus();
+                    } else if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        showNotification(data.error || 'Check-in failed', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Network error. Please try again.', 'error');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
+            }
+
+            // Get geolocation before submit
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    formData.append('lat', position.coords.latitude);
+                    formData.append('long', position.coords.longitude);
+                    submitCheckin(formData);
+                }, function(error) {
+                    // fallback if denied
+                    formData.append('lat', '');
+                    formData.append('long', '');
+                    submitCheckin(formData);
+                });
+            } else {
+                formData.append('lat', '');
+                formData.append('long', '');
+                submitCheckin(formData);
+            }
         });
         
         // Handle check-out form submission
@@ -1006,38 +1029,55 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking Out...';
             
-            fetch('/activities/api/check-out/', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': getCSRFToken()
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    checkOutModal.classList.add('hidden');
-                    checkOutForm.reset();
-                    // Reset additional activities counter
-                    additionalActivityCounter = 0;
-                    document.getElementById('additional-activities-container').innerHTML = '';
-                    updateStatus();
-                } else if (data.redirect) {
-                    window.location.href = data.redirect;
-                } else {
-                    showNotification(data.error || 'Check-out failed', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Network error. Please try again.', 'error');
-            })
-            .finally(() => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        formData.append('lat', position.coords.latitude);
+                        formData.append('long', position.coords.longitude);
+
+                        fetch('/activities/api/check-out/', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-CSRFToken': getCSRFToken() },
+                            credentials: 'same-origin'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showNotification(data.message, 'success');
+                                checkOutModal.classList.add('hidden');
+                                checkOutForm.reset();
+                                // Reset additional activities counter
+                                additionalActivityCounter = 0;
+                                document.getElementById('additional-activities-container').innerHTML = '';
+                                updateStatus();
+                            } else if (data.redirect) {
+                                window.location.href = data.redirect;
+                            } else {
+                                showNotification(data.error || 'Check-out failed', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showNotification('Network error. Please try again.', 'error');
+                        })
+                        .finally(() => {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        });
+                    },
+                        error => {
+                            console.error('Geolocation error:', error);
+                            showNotification('Location access denied. Check-out failed.', 'error');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }
+                    );
+            } else {
+                showNotification('Geolocation not supported by this browser.', 'error');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
-            });
+            }
         });
         
         // Update button visibility based on current status
