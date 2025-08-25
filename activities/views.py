@@ -18,21 +18,7 @@ def check_in_api(request):
     
     today = date.today()
     jakarta_tz = pytz.timezone('Asia/Jakarta')
-    
-    # Get or create daily activity for the user
-    daily_activity, created = DailyActivity.objects.get_or_create(
-        user=request.user,
-        date=today,
-        defaults={
-            'status': 'pending',
-            'attendance_status': 'on_time'
-        }
-    )
-    
-    # Check if already checked in
-    if daily_activity.checkin_time:
-        return JsonResponse({'error': 'You have already checked in today'}, status=400)
-    
+
     # Get location data
     lat = request.POST.get('lat')
     long = request.POST.get('long')
@@ -45,6 +31,21 @@ def check_in_api(request):
             "success": False,
             "error": "Location is required. Please allow location access."
         }, status=400)
+    
+    # Get or create daily activity for the user
+    daily_activity, created = DailyActivity.objects.get_or_create(
+        user=request.user,
+        date=today,
+        defaults={
+            'status': 'pending',
+            'attendance_status': 'on_time'
+        }
+    )
+
+    # Check if already checked in
+    if daily_activity.checkin_time:
+        return JsonResponse({'error': 'You have already checked in today'}, status=400)
+    
 
     # Get form data
     planned_activities_data = request.POST.get('planned_activities', '').strip()
@@ -146,6 +147,19 @@ def check_out_api(request):
     
     today = date.today()
     jakarta_tz = pytz.timezone('Asia/Jakarta')
+
+    # Get location data
+    lat = request.POST.get('lat')
+    long = request.POST.get('long')
+    location = None
+    if lat and long:
+        location = f"{lat},{long}"
+
+    if not location:
+        return JsonResponse({
+            "success": False,
+            "error": "Location is required. Please allow location access."
+        }, status=400)
     
     try:
         daily_activity = DailyActivity.objects.get(user=request.user, date=today)
@@ -163,18 +177,6 @@ def check_out_api(request):
     # Get form data
     afternoon_problems = request.POST.get('afternoon_problems', '').strip()
 
-    # Get location data
-    lat = request.POST.get('lat')
-    long = request.POST.get('long')
-    location = None
-    if lat and long:
-        location = f"{lat},{long}"
-    
-    if not location:
-        return JsonResponse({
-            "success": False,
-            "error": "Location is required. Please allow location access."
-        }, status=400)
     
     # Get activity and goal updates
     activity_updates = request.POST.get('activity_updates', '[]')

@@ -938,20 +938,23 @@
 
             // Get geolocation before submit
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    formData.append('lat', position.coords.latitude);
-                    formData.append('long', position.coords.longitude);
-                    submitCheckin(formData);
-                }, function(error) {
-                    // fallback if denied
-                    formData.append('lat', '');
-                    formData.append('long', '');
-                    submitCheckin(formData);
-                });
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        formData.append('lat', position.coords.latitude);
+                        formData.append('long', position.coords.longitude);
+                        submitCheckin(formData);
+                    },
+                    error => {
+                        console.error('Geolocation error:', error);
+                        showNotification('Location access denied. Check-in failed.', 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                );
             } else {
-                formData.append('lat', '');
-                formData.append('long', '');
-                submitCheckin(formData);
+                showNotification('Geolocation not supported by this browser.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
         });
         
