@@ -43,7 +43,7 @@ class DailyActivity(models.Model):
     checkin_time = models.DateTimeField(null=True, blank=True)
     
     checkin_location = models.CharField(
-        max_length=100, null=True, blank=True,
+        max_length=100,
         validators=[validate_lat_long],
         help_text="Format: lat,long"
     )
@@ -58,7 +58,7 @@ class DailyActivity(models.Model):
     checkout_time = models.DateTimeField(null=True, blank=True)
     
     checkout_location = models.CharField(
-        max_length=100, null=True, blank=True,
+        max_length=100,
         validators=[validate_lat_long],
         help_text="Format: lat,long"
     )

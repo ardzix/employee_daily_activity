@@ -40,6 +40,12 @@ def check_in_api(request):
     if lat and long:
         location = f"{lat},{long}"
 
+    if not location:
+        return JsonResponse({
+            "success": False,
+            "error": "Location is required. Please allow location access."
+        }, status=400)
+
     # Get form data
     planned_activities_data = request.POST.get('planned_activities', '').strip()
     daily_goals_data = request.POST.get('daily_goals', '').strip()
@@ -163,6 +169,12 @@ def check_out_api(request):
     location = None
     if lat and long:
         location = f"{lat},{long}"
+    
+    if not location:
+        return JsonResponse({
+            "success": False,
+            "error": "Location is required. Please allow location access."
+        }, status=400)
     
     # Get activity and goal updates
     activity_updates = request.POST.get('activity_updates', '[]')
