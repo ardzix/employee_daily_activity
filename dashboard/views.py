@@ -188,8 +188,8 @@ def admin_dashboard_view(request):
                 "lng": float(checkin_lng_str.strip()),
                 "checkout_lng": float(checkout_lng_str.strip()),
                 "checkout_lat": float(checkout_lat_str.strip()),
-                "time": activity.checkin_time.strftime("%Y-%m-%d %H:%M"),
-                "checkout_time": activity.checkout_time.strftime("%Y-%m-%d %H:%M"),
+                "time": timezone.localtime(activity.checkin_time).strftime("%Y-%m-%d %H:%M"),
+                "checkout_time": timezone.localtime(activity.checkout_time).strftime("%Y-%m-%d %H:%M"),
                 "status": activity.status,
                 "attendance_status": activity.attendance_status,
                 "detail_url": f"/employees/activities/{activity.id}/"
