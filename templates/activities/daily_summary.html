@@ -25,32 +25,45 @@
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
                 <!-- Full Name -->
-                <div>
+                <div class="space-y-1">
                     <p class="text-sm opacity-70">Full Name</p>
                     <p class="font-semibold">{{ user.get_full_name|default:user.username }}</p>
                 </div>
 
                 <!-- Email -->
-                <div>
+                <div class="space-y-1">
                     <p class="text-sm opacity-70">Email</p>
                     <p class="font-semibold">{{ user.email }}</p>
                 </div>
 
                 <!-- Username -->
-                <div>
+                <div class="space-y-1">
                     <p class="text-sm opacity-70">Username</p>
                     <p class="font-semibold">{{ user.username }}</p>
                 </div>
 
                 {% if has_employee_profile %}
-                <!-- Employee Profile -->
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-2 border-b border-white/20 pb-1">
+                            Employee Profile
+                        </h3>
+                    </div>
+                    
+                    <!-- Employee Profile -->
+                    <div class="space-y-1">
+                        <p class="text-sm opacity-70">Position</p>
+                        <p class="font-semibold">{{ user.employee_profile.position }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm opacity-70">Department</p>
+                        <p class="font-semibold">{{ user.employee_profile.department }}</p>
+                    </div>
+                {% else %}
                 <div>
-                    <p class="text-sm opacity-70">Position</p>
-                    <p class="font-semibold">{{ user.employee_profile.position }}</p>
-                </div>
-                <div>
-                    <p class="text-sm opacity-70">Department</p>
-                    <p class="font-semibold">{{ user.employee_profile.department }}</p>
+                    <h3 class="text-lg font-bold text-white mb-2 border-b border-white/20 pb-1">
+                        Employee Profile
+                    </h3>
+                    <p class="text-gray-400">Please contact HR to complete your profile.</p>
                 </div>
                 {% endif %}
             </div>
