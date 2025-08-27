@@ -43,7 +43,7 @@
                 </div>
 
                 {% if has_employee_profile %}
-                    <div>
+                    <div class="col-span-1 md:col-span-3">
                         <h3 class="text-lg font-bold text-white mb-2 border-b border-white/20 pb-1">
                             Employee Profile
                         </h3>
@@ -59,7 +59,7 @@
                         <p class="font-semibold">{{ user.employee_profile.department }}</p>
                     </div>
                 {% else %}
-                <div>
+                <div class="col-span-1 md:col-span-3">
                     <h3 class="text-lg font-bold text-white mb-2 border-b border-white/20 pb-1">
                         Employee Profile
                     </h3>
