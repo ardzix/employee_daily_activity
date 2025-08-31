@@ -6,6 +6,7 @@ app_name = 'authentication'
 urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('api/login/', views.api_login, name='api_login'),
+    path('api/google-login/', views.api_google_login, name='api_google_login'),
     path('api/register/', views.api_register, name='api_register'),
     path('api/verify-email/', views.api_verify_email, name='api_verify_email'),
     path('api/resend-email-otp/', views.api_resend_email_otp, name='api_resend_email_otp'),
