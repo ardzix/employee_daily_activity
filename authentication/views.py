@@ -13,6 +13,7 @@ import json
 from employees.models import Employee
 from .forms import UserProfileForm
 import jwt
+import os
 
 User = get_user_model()
 
@@ -24,7 +25,8 @@ def login_view(request):
     
     context = {
         'sso_url': settings.SSO_BASE_URL,
-        'app_name': 'Employee Daily Activity Tracker'
+        'app_name': 'Employee Daily Activity Tracker',
+        'google_client_id': os.getenv("GOOGLE_CLIENT_ID")
     }
     return render(request, 'authentication/login.html', context)
 
@@ -324,6 +326,106 @@ def api_login(request):
                             error_msg = response_data['password'][0]
                         else:
                             error_msg = str(response_data['password'])
+                    elif 'error' in response_data:
+                        error_msg = response_data['error']
+                    elif 'detail' in response_data:
+                        error_msg = response_data['detail']
+                    elif 'message' in response_data:
+                        error_msg = response_data['message']
+                    elif 'non_field_errors' in response_data:
+                        if isinstance(response_data['non_field_errors'], list):
+                            error_msg = response_data['non_field_errors'][0]
+                        else:
+                            error_msg = str(response_data['non_field_errors'])
+                    else:
+                        error_msg = 'Invalid credentials'
+                else:
+                    error_msg = 'Invalid credentials'
+                
+                return JsonResponse({'error': error_msg}, status=400)
+            except:
+                return JsonResponse({'error': f'Login failed: {sso_response.text}'}, status=400)
+        else:
+            try:
+                response_data = sso_response.json()
+                error_msg = response_data.get('error', response_data.get('detail', f'Authentication service returned status {sso_response.status_code}'))
+                return JsonResponse({'error': error_msg}, status=503)
+            except:
+                return JsonResponse({'error': f'Authentication service unavailable (Status: {sso_response.status_code})'}, status=503)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data provided'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Authentication failed: {str(e)}'}, status=500)
+    
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_google_login(request):
+    """Handle API Google login with SSO service"""
+    try:
+        data = json.loads(request.body)
+        token = data.get('token')
+        
+        if not token:
+            return JsonResponse({'error': 'Token required'}, status=400)
+        
+        # Call SSO login API
+        try:
+            sso_response = requests.post(
+                f"{settings.SSO_BASE_URL}/api/auth/google-login/",
+                json={'token': token},
+                headers={'Content-Type': 'application/json'},
+                timeout=15  # Increased timeout
+            )
+            
+        except requests.exceptions.Timeout:
+            return JsonResponse({'error': 'Authentication service timeout. Please try again later.'}, status=503)
+        except requests.exceptions.ConnectionError:
+            return JsonResponse({'error': 'Cannot connect to authentication service. Please check your internet connection.'}, status=503)
+        except Exception as e:
+            return JsonResponse({'error': f'Authentication service error: {str(e)}'}, status=503)
+        
+        if sso_response.status_code == 200:
+            response_data = sso_response.json()
+            email= response_data.get('email')
+            # Check if MFA is required
+            if response_data.get('mfa_required'):
+                return JsonResponse({
+                    'mfa_required': True,
+                    'email': email,
+                    'message': 'MFA verification required'
+                })
+            
+            # Login successful, we have tokens
+            access_token = response_data.get('access')
+            refresh_token = response_data.get('refresh')
+            
+            if access_token and refresh_token:
+                # Store tokens in session
+                request.session['access_token'] = access_token
+                request.session['refresh_token'] = refresh_token
+                
+                # Authenticate user
+                user = authenticate_with_token(access_token)
+                
+                if user:
+                    login(request, user)
+                    return JsonResponse({'success': True, 'redirect_url': '/dashboard/'})
+                else:
+                    return JsonResponse({'error': 'Failed to authenticate user. Please contact support.'}, status=401)
+            else:
+                return JsonResponse({'error': 'Invalid authentication response from SSO service'}, status=500)
+        
+        elif sso_response.status_code == 400:
+            try:
+                response_data = sso_response.json()
+                # Handle different error response formats
+                if isinstance(response_data, dict):
+                    if 'email' in response_data:
+                        if isinstance(response_data['email'], list):
+                            error_msg = response_data['email'][0]
+                        else:
+                            error_msg = str(response_data['email'])
                     elif 'error' in response_data:
                         error_msg = response_data['error']
                     elif 'detail' in response_data:
