@@ -372,7 +372,7 @@ def api_google_login(request):
         # Call SSO login API
         try:
             sso_response = requests.post(
-                "http://localhost:8000/api/auth/google-login/",
+                f"{settings.SSO_BASE_URL}/api/auth/google-login/",
                 json={'token': token},
                 headers={'Content-Type': 'application/json'},
                 timeout=15  # Increased timeout
