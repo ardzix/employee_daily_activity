@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
+from django.urls import reverse
 # import datetime
 import pytz
 
@@ -174,9 +175,31 @@ def admin_dashboard_view(request):
     
     # Companies for filter
     companies = Company.objects.filter(is_active=True)
+
+    activities_data = []
+    for activity in activities_qs:
+        try:
+            checkin_lat_str, checkin_lng_str = activity.checkin_location.split(",")
+            checkout_lat_str, checkout_lng_str = activity.checkout_location.split(",")
+            activities_data.append({
+                "id":activity.id,
+                "employee": activity.user.get_full_name() or activity.user.username,
+                "lat": float(checkin_lat_str.strip()),
+                "lng": float(checkin_lng_str.strip()),
+                "checkout_lng": float(checkout_lng_str.strip()),
+                "checkout_lat": float(checkout_lat_str.strip()),
+                "time": timezone.localtime(activity.checkin_time).strftime("%Y-%m-%d %H:%M"),
+                "checkout_time": timezone.localtime(activity.checkout_time).strftime("%Y-%m-%d %H:%M"),
+                "status": activity.status,
+                "attendance_status": activity.attendance_status,
+                "detail_url": f"/employees/activities/{activity.id}/"
+            })
+        except ValueError:
+            continue
     
     # Prepare context
     context = {
+        'activities' :activities_data,
         'today_stats': today_stats,
         'attendance_stats': attendance_stats,
         'recent_activities': recent_activities,
