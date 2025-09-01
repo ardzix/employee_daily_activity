@@ -180,22 +180,26 @@ def admin_dashboard_view(request):
     for activity in activities_qs:
         try:
             checkin_lat_str, checkin_lng_str = activity.checkin_location.split(",")
+        except:
+            checkin_lat_str, checkin_lng_str = None, None
+        try:
             checkout_lat_str, checkout_lng_str = activity.checkout_location.split(",")
-            activities_data.append({
-                "id":activity.id,
-                "employee": activity.user.get_full_name() or activity.user.username,
-                "lat": float(checkin_lat_str.strip()),
-                "lng": float(checkin_lng_str.strip()),
-                "checkout_lng": float(checkout_lng_str.strip()),
-                "checkout_lat": float(checkout_lat_str.strip()),
-                "time": timezone.localtime(activity.checkin_time).strftime("%Y-%m-%d %H:%M"),
-                "checkout_time": timezone.localtime(activity.checkout_time).strftime("%Y-%m-%d %H:%M"),
-                "status": activity.status,
-                "attendance_status": activity.attendance_status,
-                "detail_url": f"/employees/activities/{activity.id}/"
-            })
-        except ValueError:
-            continue
+        except:
+            checkout_lat_str, checkout_lng_str = None, None
+
+        activities_data.append({
+            "id":activity.id,
+            "employee": activity.user.get_full_name() or activity.user.username,
+            "lat": float(checkin_lat_str.strip()),
+            "lng": float(checkin_lng_str.strip()),
+            "checkout_lng": float(checkout_lng_str.strip()),
+            "checkout_lat": float(checkout_lat_str.strip()),
+            "time": timezone.localtime(activity.checkin_time).strftime("%Y-%m-%d %H:%M"),
+            "checkout_time": timezone.localtime(activity.checkout_time).strftime("%Y-%m-%d %H:%M"),
+            "status": activity.status,
+            "attendance_status": activity.attendance_status,
+            "detail_url": f"/employees/activities/{activity.id}/"
+        })
     
     # Prepare context
     context = {
