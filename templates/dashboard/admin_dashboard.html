@@ -220,6 +220,20 @@
             </div>
         </div>
 
+        <!-- Maps Location Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Attendance Stats -->
+            <div class="lg:col-span-3 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
+                <h3 class="text-xl font-semibold text-white mb-6">
+                    <i class="fas fa-map mr-2"></i>
+                    Map Locations
+                </h3>
+                <!-- maps -->
+                <div id="map" class="w-full h-[500px] rounded-lg overflow-hidden"></div>
+                {{ activities|json_script:"activities-data" }}
+            </div>
+        </div>
+
         <!-- Late & Absent Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Late Today -->
@@ -467,6 +481,42 @@
     .daterangepicker .calendar-table .next:hover {
         background: #0088CC;
     }
+
+    /* Style for popup markers */
+    .popup-card {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    max-width: 200px;
+    }
+
+    .popup-header {
+        font-weight: bold;
+        font-size: 14px;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+
+    .popup-body {
+        margin-bottom: 6px;
+        color: #555;
+    }
+
+    .popup-btn {
+        background-color: #3498db;
+        border: none;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background-color 0.2s ease;
+    }
+
+    .popup-btn:hover {
+        background-color: #2980b9;
+    }
+
 </style>
 
 <script type="text/javascript">
@@ -544,4 +594,78 @@
         }
     });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var activities = JSON.parse(document.getElementById("activities-data").textContent);
+
+    var map = L.map('map').setView([-2.5, 118], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var checkoutIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    var bounds = [];
+    activities.forEach(function(act) {
+        //Check-in Marker
+        if (act.lat && act.lng) {
+            var popupHtml = `
+                <div class="popup-card">
+                    <div class="popup-header">👤 ${act.employee}</div>
+                    <div class="popup-body">📅 <b>Check-in:</b><br/>${act.time}</div>
+                    <button class="popup-btn" onclick="window.location.href='${act.detail_url}'">
+                        Detail
+                    </button>
+                </div>
+            `;
+            var marker = L.marker([act.lat, act.lng])
+                .addTo(map)
+                .bindPopup(popupHtml);
+            bounds.push([act.lat, act.lng]);
+        }
+
+        //Checkout Marker 
+        if (act.checkout_lat && act.checkout_lng) {
+            let checkoutLat = act.checkout_lat;
+            let checkoutLng = act.checkout_lng;
+
+            //If same as check-in, sedikit geser
+            if (act.lat && act.lng && checkoutLat === act.lat && checkoutLng === act.lng) {
+                checkoutLat = checkoutLat + 0.0001; 
+                checkoutLng = checkoutLng + 0.0001; 
+            }
+
+            var popupHtmlCheckout = `
+                <div class="popup-card">
+                    <div class="popup-header">👤 ${act.employee}</div>
+                    <div class="popup-body">📅 <b>Check-out:</b><br/>${act.checkout_time}</div>
+                    <button class="popup-btn" onclick="window.location.href='${act.detail_url}'">
+                        Detail
+                    </button>
+                </div>
+            `;
+            var markerCheckout = L.marker([checkoutLat, checkoutLng], { icon: checkoutIcon })
+                .addTo(map)
+                .bindPopup(popupHtmlCheckout);
+            bounds.push([checkoutLat, checkoutLng]);
+        }
+    });
+
+    if (bounds.length > 0) {
+        map.fitBounds(bounds);
+    }
+});
+</script>
+
+
+
 {% endblock %}
