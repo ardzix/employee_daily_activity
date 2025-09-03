@@ -1,5 +1,6 @@
 pipeline {
-
+    agent any
+    
     environment {
         DEPLOY = 'true'
         DOCKER_IMAGE = 'ardzix/employee_activity_tracker'
