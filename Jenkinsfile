@@ -1,5 +1,4 @@
 pipeline {
-    agent { label 'escrow prod' }
 
     environment {
         DEPLOY = 'true'
