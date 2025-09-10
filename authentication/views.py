@@ -28,7 +28,11 @@ def login_view(request):
         'app_name': 'Employee Daily Activity Tracker',
         'google_client_id': os.getenv("GOOGLE_CLIENT_ID")
     }
-    return render(request, 'authentication/login.html', context)
+    response = render(request, 'authentication/login.html', context)
+    response['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+    response['Cross-Origin-Embedder-Policy'] = 'unsafe-none'
+
+    return response
 
 
 @csrf_exempt

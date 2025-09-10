@@ -54,9 +54,7 @@
                         <span id="loginBtnText">Sign In</span>
                         <i class="fas fa-spinner fa-spin ml-2 hidden" id="loginSpinner"></i>
                     </button>
-                     <button type="button" onclick="handleGoogleLogin()"
-                        id="googleLoginBtn"
-                        class="w-full flex items-center justify-center px-4 py-3 rounded-lg shadow-sm text-sm font-medium text-gray-800 bg-white hover:bg-gray-100 transition-all duration-200">
+                    <button type="button" onclick="handleGoogleLogin()" id="googleLoginBtn" class="w-full flex items-center justify-center px-4 py-3 rounded-lg shadow-sm text-sm font-medium text-gray-800 bg-white hover:bg-gray-100 transition-all duration-200 relative">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2">
                         <span id="googleBtnText">Sign in with Google</span>
                         <i class="fas fa-spinner fa-spin ml-2 hidden" id="googleSpinner"></i>
@@ -396,7 +394,7 @@ document.getElementById('resendBtn').addEventListener('click', async function() 
 
 // Google Login form handler
 async function handleGoogleLogin() {
-    setLoadingState('google', true);
+    toggleSpinner(true);
     hideMessages();
 
     google.accounts.id.initialize({
@@ -405,22 +403,36 @@ async function handleGoogleLogin() {
         auto_select: false,
         prompt_parent_id: "g_id_onload",
     });
-    google.accounts.id.prompt(); // Opens the Google popup
+
+    google.accounts.id.prompt(() => {
+        toggleSpinner(false);
+    });
+}
+
+function toggleSpinner(show) {
+    const spinner = document.getElementById("googleSpinner");
+    const btnText = document.getElementById("googleBtnText");
+    
+    if (show) {
+        spinner.classList.remove("hidden");
+        btnText.textContent = "Signing in...";
+    } else {
+        spinner.classList.add("hidden");
+        btnText.textContent = "Sign in with Google";
+    }
 }
 
 async function handleCredentialResponse(response) {
     const token = response.credential; // Google ID Token
 
-    try {
-        const res = await fetch("/auth/api/google-login/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
+    fetch("/auth/api/google-login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+    })
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok) {
             if (data.mfa_required) {
                 currentEmail = data.email;
                 showMFAForm();
@@ -430,11 +442,13 @@ async function handleCredentialResponse(response) {
         } else {
             showError(data.error || "Google login failed");
         }
-    } catch (err) {
+    })
+    .catch(() => {
         showError("Network error. Please try again.");
-    } finally {
-        setLoadingState('google', false);
-    }
+    })
+    .finally(() => {
+        toggleSpinner(false);
+    });
 }
 
 //  Login form handler
