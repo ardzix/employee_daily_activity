@@ -408,11 +408,11 @@
             menu.classList.toggle('hidden');
         }
         
-        // Close menu when clicking outside
+        // Close menu when clicking outside (hanya jika nav / userMenu ada)
         document.addEventListener('click', function(event) {
             const menu = document.getElementById('userMenu');
+            if (!menu) return;
             const button = event.target.closest('button');
-            
             if (!menu.contains(event.target) && !button) {
                 menu.classList.add('hidden');
             }
@@ -438,6 +438,11 @@
         const checkOutModal = document.getElementById('check-out-modal');
         const checkInForm = document.getElementById('check-in-form');
         const checkOutForm = document.getElementById('check-out-form');
+
+        // Halaman tanpa clock in/out (login, dll.): jangan pasang listener modal
+        if (!checkInBtn || !checkOutBtn || !checkInModal || !checkOutModal || !checkInForm || !checkOutForm) {
+            return;
+        }
         
         let activityCounter = 1;
         let goalCounter = 1;

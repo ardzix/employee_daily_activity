@@ -143,12 +143,13 @@
                 </form>
             </div>
 
-            <!-- MFA Form (hidden by default) -->
+            <!-- MFA Form (hidden by default) — langkah 2 setelah login MFA-aware (pre-auth token dari SSO) -->
             <form id="mfaForm" class="space-y-4 hidden">
                 <div class="text-center mb-4">
                     <i class="fas fa-shield-alt text-nft-primary text-2xl mb-2"></i>
-                    <h4 class="text-lg font-semibold text-white">Two-Factor Authentication</h4>
-                    <p class="text-gray-400 text-sm">Please enter your MFA token to continue</p>
+                    <h4 class="text-lg font-semibold text-white">Verifikasi dua faktor</h4>
+                    <p class="text-gray-400 text-sm" id="mfaHint">Masukkan kode 6 digit dari aplikasi authenticator Anda</p>
+                    <p class="text-nft-primary text-xs mt-2 hidden" id="mfaServerMessage"></p>
                 </div>
                 
                 <div>
@@ -234,7 +235,10 @@
 {% block extra_js %}
 <script>
 let currentEmail = '';
+/** Pre-auth SSO untuk langkah MFA (wajib sebelum POST /auth/api/mfa/verify/) */
+let mfaPreAuthToken = '';
 let isRegistering = false;
+let mfaVerifyInFlight = false;
 
 // Tab switching
 document.getElementById('loginTabBtn').addEventListener('click', () => switchTab('login'));
@@ -392,8 +396,8 @@ document.getElementById('resendBtn').addEventListener('click', async function() 
     }
 });
 
-// Google Login form handler
-async function handleGoogleLogin() {
+// Google Login — global untuk onclick di template
+window.handleGoogleLogin = async function () {
     toggleSpinner(true);
     hideMessages();
 
@@ -407,7 +411,7 @@ async function handleGoogleLogin() {
     google.accounts.id.prompt(() => {
         toggleSpinner(false);
     });
-}
+};
 
 function toggleSpinner(show) {
     const spinner = document.getElementById("googleSpinner");
@@ -434,8 +438,13 @@ async function handleCredentialResponse(response) {
     .then(({ ok, data }) => {
         if (ok) {
             if (data.mfa_required) {
-                currentEmail = data.email;
-                showMFAForm();
+                currentEmail = data.email || '';
+                mfaPreAuthToken = (data.token || '').trim();
+                if (!mfaPreAuthToken) {
+                    showError(data.error || 'Token MFA sementara tidak diterima. Coba login lagi.');
+                    return;
+                }
+                showMFAForm(data.message);
             } else {
                 window.location.href = data.redirect_url || "/dashboard/";
             }
@@ -475,11 +484,14 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         
         if (response.ok) {
             if (data.mfa_required) {
-                // Show MFA form
                 currentEmail = email;
-                showMFAForm();
+                mfaPreAuthToken = (data.token || '').trim();
+                if (!mfaPreAuthToken) {
+                    showError(data.error || 'Token MFA sementara tidak diterima. Coba login lagi.');
+                    return;
+                }
+                showMFAForm(data.message);
             } else if (data.success) {
-                // Login successful, redirect
                 window.location.href = data.redirect_url || '/dashboard/';
             }
         } else {
@@ -496,35 +508,56 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 document.getElementById('mfaForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const mfaToken = document.getElementById('mfa_token').value;
+    const mfaToken = (document.getElementById('mfa_token').value || '').replace(/\D/g, '');
     
-    // Show loading state
+    if (!mfaPreAuthToken) {
+        showError('Sesi verifikasi MFA tidak valid. Silakan login ulang.');
+        return;
+    }
+    if (mfaToken.length !== 6) {
+        showError('Masukkan kode MFA 6 digit.');
+        return;
+    }
+    if (mfaVerifyInFlight) {
+        return;
+    }
+    mfaVerifyInFlight = true;
     setLoadingState('mfa', true);
     hideMessages();
-    
+
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 45000);
+
     try {
         const response = await fetch('/auth/api/mfa/verify/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                email: currentEmail, 
-                mfa_token: mfaToken 
-            })
+            body: JSON.stringify({
+                token: mfaPreAuthToken,
+                mfa_token: mfaToken
+            }),
+            signal: controller.signal,
+            credentials: 'same-origin',
         });
         
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         
         if (response.ok && data.success) {
-            // MFA verification successful, redirect
             window.location.href = data.redirect_url || '/dashboard/';
-        } else {
-            showError(data.error || 'MFA verification failed');
+            return;
         }
+        showError(data.error || 'MFA verification failed');
     } catch (error) {
-        showError('Network error. Please try again.');
+        if (error.name === 'AbortError') {
+            showError('Verifikasi MFA habis waktu. Periksa jaringan lalu coba lagi.');
+        } else {
+            showError('Network error. Please try again.');
+        }
     } finally {
+        clearTimeout(t);
+        mfaVerifyInFlight = false;
         setLoadingState('mfa', false);
     }
 });
@@ -547,9 +580,18 @@ function showVerificationForm() {
     document.getElementById('otp').focus();
 }
 
-function showMFAForm() {
+function showMFAForm(serverMessage) {
     hideAllForms();
     document.getElementById('mfaForm').classList.remove('hidden');
+    const el = document.getElementById('mfaServerMessage');
+    if (serverMessage) {
+        el.textContent = serverMessage;
+        el.classList.remove('hidden');
+    } else {
+        el.textContent = '';
+        el.classList.add('hidden');
+    }
+    document.getElementById('mfa_token').value = '';
     document.getElementById('mfa_token').focus();
 }
 
@@ -557,6 +599,9 @@ function showLoginForm() {
     hideAllForms();
     switchTab('login');
     document.getElementById('mfa_token').value = '';
+    mfaPreAuthToken = '';
+    const el = document.getElementById('mfaServerMessage');
+    if (el) { el.textContent = ''; el.classList.add('hidden'); }
 }
 
 function showRegisterForm() {
@@ -633,15 +678,9 @@ document.getElementById('otp').addEventListener('input', function(e) {
     }
 });
 
-// Auto-focus MFA input when typing numbers
+// MFA: filter digit saja — user tekan "Verify" (hindari double submit / spinner nyangkut)
 document.getElementById('mfa_token').addEventListener('input', function(e) {
-    // Only allow numbers
-    e.target.value = e.target.value.replace(/[^0-9]/g, '');
-    
-    // Auto-submit when 6 digits are entered
-    if (e.target.value.length === 6) {
-        document.getElementById('mfaForm').dispatchEvent(new Event('submit'));
-    }
+    e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
 });
 </script>
 {% endblock %} 

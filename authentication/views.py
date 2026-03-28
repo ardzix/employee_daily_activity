@@ -18,6 +18,17 @@ import os
 User = get_user_model()
 
 
+def _mfa_pre_auth_token_from_sso(payload):
+    """Extract pre-auth token from SSO login/google-login body (MFA-aware flow)."""
+    if not isinstance(payload, dict):
+        return None
+    for key in ('token', 'pre_auth_token', 'preauth_token', 'mfa_preauth_token'):
+        val = payload.get(key)
+        if val and isinstance(val, str) and val.strip():
+            return val.strip()
+    return None
+
+
 def login_view(request):
     """Display login page"""
     if request.user.is_authenticated:
@@ -287,12 +298,19 @@ def api_login(request):
         if sso_response.status_code == 200:
             response_data = sso_response.json()
             
-            # Check if MFA is required
+            # MFA-aware login: SSO returns pre-auth token; full JWT after /auth/mfa/verify/
             if response_data.get('mfa_required'):
+                pre_auth = _mfa_pre_auth_token_from_sso(response_data)
+                if not pre_auth:
+                    return JsonResponse({
+                        'error': 'Layanan login tidak mengembalikan token MFA sementara. Hubungi admin atau coba lagi.',
+                        'mfa_required': True,
+                    }, status=502)
                 return JsonResponse({
                     'mfa_required': True,
+                    'token': pre_auth,
                     'email': email,
-                    'message': 'MFA verification required'
+                    'message': response_data.get('message') or 'MFA is required. Please provide your MFA token.',
                 })
             
             # Login successful, we have tokens
@@ -389,15 +407,21 @@ def api_google_login(request):
         except Exception as e:
             return JsonResponse({'error': f'Authentication service error: {str(e)}'}, status=503)
         
-        if sso_response.status_code == 200:
+        if sso_response.status_code in (200, 201):
             response_data = sso_response.json()
-            email= response_data.get('email')
-            # Check if MFA is required
+            email = response_data.get('email')
             if response_data.get('mfa_required'):
+                pre_auth = _mfa_pre_auth_token_from_sso(response_data)
+                if not pre_auth:
+                    return JsonResponse({
+                        'error': 'Layanan login tidak mengembalikan token MFA sementara. Hubungi admin atau coba lagi.',
+                        'mfa_required': True,
+                    }, status=502)
                 return JsonResponse({
                     'mfa_required': True,
+                    'token': pre_auth,
                     'email': email,
-                    'message': 'MFA verification required'
+                    'message': response_data.get('message') or 'MFA is required. Please provide your MFA token.',
                 })
             
             # Login successful, we have tokens
@@ -466,20 +490,22 @@ def api_google_login(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def mfa_verify(request):
-    """Handle MFA verification"""
+    """Handle MFA verification (SSO spec: POST /auth/mfa/verify/ with token + mfa_token)."""
     try:
         data = json.loads(request.body)
-        email = data.get('email')
-        mfa_token = data.get('mfa_token')
+        pre_auth_token = (data.get('token') or data.get('pre_auth_token') or '').strip()
+        mfa_token = (data.get('mfa_token') or '').strip()
         
-        if not email or not mfa_token:
-            return JsonResponse({'error': 'Email and MFA token are required'}, status=400)
+        if not pre_auth_token or not mfa_token:
+            return JsonResponse({
+                'error': 'Token langkah login dan kode MFA (6 digit) wajib diisi.'
+            }, status=400)
         
         # Call SSO MFA verify API
         try:
             sso_response = requests.post(
                 f"{settings.SSO_BASE_URL}/api/auth/mfa/verify/",
-                json={'email': email, 'mfa_token': mfa_token},
+                json={'token': pre_auth_token, 'mfa_token': mfa_token},
                 headers={'Content-Type': 'application/json'},
                 timeout=15
             )
@@ -521,6 +547,11 @@ def mfa_verify(request):
                             error_msg = response_data['mfa_token'][0]
                         else:
                             error_msg = str(response_data['mfa_token'])
+                    elif 'token' in response_data:
+                        if isinstance(response_data['token'], list):
+                            error_msg = response_data['token'][0]
+                        else:
+                            error_msg = str(response_data['token'])
                     elif 'email' in response_data:
                         if isinstance(response_data['email'], list):
                             error_msg = response_data['email'][0]
@@ -538,13 +569,20 @@ def mfa_verify(request):
                         else:
                             error_msg = str(response_data['non_field_errors'])
                     else:
-                        error_msg = 'Invalid MFA token'
+                        error_msg = 'Kode MFA atau token tidak valid'
                 else:
-                    error_msg = 'Invalid MFA token'
+                    error_msg = 'Kode MFA atau token tidak valid'
                 
                 return JsonResponse({'error': error_msg}, status=400)
             except:
                 return JsonResponse({'error': f'MFA verification failed: {sso_response.text}'}, status=400)
+        elif sso_response.status_code == 401:
+            try:
+                response_data = sso_response.json()
+                error_msg = response_data.get('detail', response_data.get('message', 'Token langkah login kedaluwarsa atau tidak valid. Silakan login ulang.'))
+            except Exception:
+                error_msg = 'Token langkah login kedaluwarsa atau tidak valid. Silakan login ulang.'
+            return JsonResponse({'error': error_msg}, status=401)
         elif sso_response.status_code == 404:
             return JsonResponse({'error': 'User not found. Please try logging in again.'}, status=404)
         else:
