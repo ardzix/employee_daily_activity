@@ -76,6 +76,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'authentication.context_processors.profile_completion_reminder',
             ],
         },
     },
@@ -198,6 +199,17 @@ SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
 # Optional: match PUBLIC_AUTH_COOKIE_DOMAIN for cross-subdomain Django session cookies
 SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN', '').strip() or None
+
+# Account portal — user edits profile (name, photo, etc.) on SSO; Clock-In is read-only.
+ACCOUNT_PORTAL_PROFILE_URL = os.getenv(
+    'ACCOUNT_PORTAL_PROFILE_URL',
+    'https://account.arnatech.id/en/profile',
+)
+
+# How long to cache SSO profile completeness check in session (seconds).
+PROFILE_COMPLETION_REMINDER_CACHE_SECONDS = int(
+    os.getenv('PROFILE_COMPLETION_REMINDER_CACHE_SECONDS', '300'),
+)
 
 # Custom User Model
 AUTH_USER_MODEL = 'authentication.User'

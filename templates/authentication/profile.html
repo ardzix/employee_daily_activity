@@ -29,126 +29,79 @@
             <!-- Main Profile Information -->
             <div class="lg:col-span-2">
                 <div class="nft-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-nft-gradient rounded-xl flex items-center justify-center mr-4">
-                                <i class="fas fa-user text-white text-xl"></i>
+                    <div class="mb-6 pb-4 border-b border-nft-light">
+                        <h2 class="text-xl font-semibold text-white">Profile</h2>
+                        <p class="text-gray-400 text-sm mt-1">Data from your Arnatech SSO account. Edit name, photo, and bio in the Account portal.</p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-8">
+                        <div class="flex-shrink-0 flex justify-center sm:justify-start">
+                            <div class="relative w-32 h-32 rounded-full overflow-hidden border-2 border-nft-light bg-gradient-to-br from-nft-gray to-gray-900 shadow-lg flex items-center justify-center">
+                                {% if sso_profile.profile_picture %}
+                                <img src="{{ sso_profile.profile_picture }}"
+                                     alt=""
+                                     class="absolute inset-0 w-full h-full object-cover"
+                                     width="128" height="128"
+                                     loading="lazy"
+                                     referrerpolicy="no-referrer"
+                                     onerror="this.style.display='none'; var el=document.getElementById('profile-avatar-fallback'); if(el) el.classList.remove('hidden');">
+                                {% endif %}
+                                <span id="profile-avatar-fallback" class="{% if sso_profile.profile_picture %}hidden {% endif %}flex items-center justify-center w-full h-full text-gray-400">
+                                    <i class="fas fa-user text-5xl opacity-60"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-1 space-y-5 min-w-0">
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">Full name</p>
+                                <p class="text-white font-semibold text-lg break-words">{{ display_full_name }}</p>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-white">Personal Information</h2>
-                                <p class="text-gray-400 text-sm">Your account details and profile information</p>
+                                <p class="text-sm text-gray-400 mb-1">Email</p>
+                                <p class="text-white font-medium break-all">{{ user.email }}</p>
                             </div>
-                        </div>
-                        <div class="flex items-center">
-                            <button type="button" id="editToggle" class="px-4 py-2 bg-nft-primary hover:bg-nft-primary/80 text-white rounded-lg transition-colors duration-200">
-                                <i class="fas fa-edit mr-2"></i>Edit Profile
-                            </button>
+                            {% if sso_profile.user_name and sso_profile.user_name != user.email %}
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">User name</p>
+                                <p class="text-white font-medium break-words">{{ sso_profile.user_name }}</p>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">Bio</p>
+                                <p class="text-white break-words">{% if sso_profile.bio %}{{ sso_profile.bio }}{% else %}<span class="text-gray-500 italic">—</span>{% endif %}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">Phone number</p>
+                                <p class="text-white font-medium">{% if sso_profile.phone_number %}{{ sso_profile.phone_number }}{% else %}<span class="text-gray-500 italic">—</span>{% endif %}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">SSO user ID</p>
+                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-2.5 flex items-center justify-between gap-2">
+                                    <span class="text-white text-sm font-mono break-all">{{ user.sso_id|default:user.username }}</span>
+                                    <span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded shrink-0">Read-only</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400 mb-1">Last login</p>
+                                <p class="text-white font-medium">
+                                    {% if user.last_login %}
+                                        {{ user.last_login|date:"M j, Y H:i" }}
+                                    {% else %}
+                                        Never
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <p class="pt-2">
+                                <a href="{{ account_portal_profile_url }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="inline-flex items-center text-nft-primary hover:text-white font-medium transition-colors">
+                                    <i class="fas fa-external-link-alt mr-2 text-sm"></i>
+                                    Edit in profile settings
+                                </a>
+                            </p>
                         </div>
                     </div>
-                    
-                    <form method="post" id="profileForm">
-                        {% csrf_token %}
-                        
-                        <div class="space-y-6">
-                            <!-- Basic Information -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- First Name -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">{{ form.first_name.label }}</label>
-                                    <div class="profile-field-container">
-                                        <div class="profile-display bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                            <span class="text-white font-medium">{{ user.first_name|default:"Not set" }}</span>
-                                        </div>
-                                        <div class="profile-edit" style="display: none;">
-                                            {{ form.first_name }}
-                                            {% if form.first_name.errors %}
-                                                <div class="text-red-400 text-sm mt-1">
-                                                    {% for error in form.first_name.errors %}
-                                                        <p>{{ error }}</p>
-                                                    {% endfor %}
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Last Name -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">{{ form.last_name.label }}</label>
-                                    <div class="profile-field-container">
-                                        <div class="profile-display bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                            <span class="text-white font-medium">{{ user.last_name|default:"Not set" }}</span>
-                                        </div>
-                                        <div class="profile-edit" style="display: none;">
-                                            {{ form.last_name }}
-                                            {% if form.last_name.errors %}
-                                                <div class="text-red-400 text-sm mt-1">
-                                                    {% for error in form.last_name.errors %}
-                                                        <p>{{ error }}</p>
-                                                    {% endfor %}
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Email -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">{{ form.email.label }}</label>
-                                    <div class="profile-field-container">
-                                        <div class="profile-display bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                            <span class="text-white font-medium">{{ user.email }}</span>
-                                        </div>
-                                        <div class="profile-edit" style="display: none;">
-                                            {{ form.email }}
-                                            {% if form.email.errors %}
-                                                <div class="text-red-400 text-sm mt-1">
-                                                    {% for error in form.email.errors %}
-                                                        <p>{{ error }}</p>
-                                                    {% endfor %}
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Username (Read-only) -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">SSO ID / Username</label>
-                                    <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-white font-medium">{{ user.username }}</span>
-                                            <span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">Read-only</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Last Login (Read-only) -->
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Last Login</label>
-                                    <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                        <span class="text-white font-medium">
-                                            {% if user.last_login %}
-                                                {{ user.last_login|date:"M j, Y H:i" }}
-                                            {% else %}
-                                                Never
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Form Actions -->
-                            <div class="form-actions flex justify-end space-x-4 pt-4 border-t border-nft-light" style="display: none;">
-                                <button type="button" id="cancelEdit" class="px-6 py-2 border border-gray-500 text-gray-400 hover:text-white hover:border-gray-400 rounded-lg transition-colors duration-200">
-                                    Cancel
-                                </button>
-                                <button type="submit" class="px-6 py-2 bg-nft-gradient hover:bg-nft-gradient-hover text-white rounded-lg transition-all duration-200">
-                                    <i class="fas fa-save mr-2"></i>Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </form>
                     
                     {% if employee %}
                     <!-- Employee Information -->
@@ -367,63 +320,3 @@
     </div>
 </div>
 {% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const editToggle = document.getElementById('editToggle');
-    const cancelEdit = document.getElementById('cancelEdit');
-    const profileForm = document.getElementById('profileForm');
-    const profileDisplays = document.querySelectorAll('.profile-display');
-    const profileEdits = document.querySelectorAll('.profile-edit');
-    const formActions = document.querySelector('.form-actions');
-    
-    let isEditing = false;
-    
-    function toggleEditMode() {
-        isEditing = !isEditing;
-        
-        profileDisplays.forEach(display => {
-            display.style.display = isEditing ? 'none' : 'block';
-        });
-        
-        profileEdits.forEach(edit => {
-            edit.style.display = isEditing ? 'block' : 'none';
-        });
-        
-        formActions.style.display = isEditing ? 'flex' : 'none';
-        
-        if (isEditing) {
-            editToggle.innerHTML = '<i class="fas fa-times mr-2"></i>Cancel Edit';
-            editToggle.classList.remove('bg-nft-primary', 'hover:bg-nft-primary/80');
-            editToggle.classList.add('bg-gray-600', 'hover:bg-gray-500');
-        } else {
-            editToggle.innerHTML = '<i class="fas fa-edit mr-2"></i>Edit Profile';
-            editToggle.classList.remove('bg-gray-600', 'hover:bg-gray-500');
-            editToggle.classList.add('bg-nft-primary', 'hover:bg-nft-primary/80');
-        }
-    }
-    
-    editToggle.addEventListener('click', function() {
-        if (isEditing) {
-            // Cancel edit mode
-            toggleEditMode();
-            profileForm.reset();
-        } else {
-            // Enter edit mode
-            toggleEditMode();
-        }
-    });
-    
-    cancelEdit.addEventListener('click', function() {
-        toggleEditMode();
-        profileForm.reset();
-    });
-    
-    // Show edit mode if there are form errors
-    {% if form.errors %}
-        toggleEditMode();
-    {% endif %}
-});
-</script>
-{% endblock %} 

@@ -11,7 +11,8 @@ from django.views.decorators.http import require_http_methods
 import requests
 import json
 from employees.models import Employee
-from .forms import UserProfileForm
+from .context_processors import PROFILE_REMINDER_SESSION_KEY
+from .sso_profile import fetch_sso_user_profile
 from .sso_cookies import (
     clear_public_sso_auth_cookies,
     refresh_sso_session_tokens,
@@ -655,24 +656,20 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
-    """Display and handle user profile editing"""
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=request.user)
-        if form.is_valid():
-            user = form.save(commit=False)
-            # Username should remain as sso_id and not change when email changes
-            user.save()
-            messages.success(request, 'Your profile has been updated successfully!')
-            return redirect('authentication:profile')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = UserProfileForm(instance=request.user)
-    
+    """Display profile: names/photo/bio/phone from SSO UserProfile; edit on Account portal."""
+    request.session.pop(PROFILE_REMINDER_SESSION_KEY, None)
+    sso_profile = fetch_sso_user_profile(request)
+    display_full_name = (sso_profile.get('full_name') or '').strip()
+    if not display_full_name:
+        display_full_name = request.user.get_full_name().strip()
+    if not display_full_name:
+        display_full_name = sso_profile.get('user_name') or request.user.email
     context = {
         'user': request.user,
         'employee': getattr(request.user, 'employee_profile', None),
-        'form': form,
+        'sso_profile': sso_profile,
+        'display_full_name': display_full_name,
+        'account_portal_profile_url': settings.ACCOUNT_PORTAL_PROFILE_URL,
     }
     return render(request, 'authentication/profile.html', context)
 
