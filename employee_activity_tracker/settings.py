@@ -180,9 +180,21 @@ JWT_ISSUER = os.getenv('JWT_ISSUER', 'sso.arnatech.id')
 # Load public key for JWT verification
 SSO_PUBLIC_KEY = load_sso_public_key()
 
+# Cookie JWT publik lintas subdomain (disepakati dengan portal Account, dll.)
+# Contoh production: PUBLIC_AUTH_COOKIE_DOMAIN=.arnatech.id
+# Kosong = hanya host saat ini (dev), tidak set cookie Domain.
+PUBLIC_AUTH_COOKIE_DOMAIN = os.getenv('PUBLIC_AUTH_COOKIE_DOMAIN', '').strip()
+SSO_PUBLIC_ACCESS_COOKIE_NAME = 'arna_sso_access_token'
+SSO_PUBLIC_REFRESH_COOKIE_NAME = 'arna_sso_refresh_token'
+# SameSite untuk sibling subdomain: Lax biasanya cukup; None + Secure jika lintas-site.
+SSO_PUBLIC_COOKIE_SAMESITE = os.getenv('SSO_PUBLIC_COOKIE_SAMESITE', 'Lax')
+
 # Session Configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+# Opsional: samakan dengan PUBLIC_AUTH_COOKIE_DOMAIN agar session Django juga lintas subdomain
+SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN', '').strip() or None
 
 # Custom User Model
 AUTH_USER_MODEL = 'authentication.User'

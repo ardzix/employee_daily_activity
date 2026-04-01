@@ -12,10 +12,26 @@ import requests
 import json
 from employees.models import Employee
 from .forms import UserProfileForm
+from .sso_cookies import set_public_sso_auth_cookies, clear_public_sso_auth_cookies
 import jwt
 import os
 
 User = get_user_model()
+
+
+def try_sso_session_login(request):
+    """
+    Setelah middleware menyalin arna_sso_* ke session, coba login Django.
+    Dipakai di halaman /auth/login/ dan / (belum melewati JWT middleware auth).
+    """
+    if request.user.is_authenticated:
+        return
+    access = request.session.get('access_token')
+    if not access:
+        return
+    user = authenticate_with_token(access)
+    if user:
+        login(request, user)
 
 
 def _mfa_pre_auth_token_from_sso(payload):
@@ -33,7 +49,10 @@ def login_view(request):
     """Display login page"""
     if request.user.is_authenticated:
         return redirect('dashboard:index')
-    
+    try_sso_session_login(request)
+    if request.user.is_authenticated:
+        return redirect('dashboard:index')
+
     context = {
         'sso_url': settings.SSO_BASE_URL,
         'app_name': 'Employee Daily Activity Tracker',
@@ -327,7 +346,8 @@ def api_login(request):
                 
                 if user:
                     login(request, user)
-                    return JsonResponse({'success': True, 'redirect_url': '/dashboard/'})
+                    resp = JsonResponse({'success': True, 'redirect_url': '/dashboard/'})
+                    return set_public_sso_auth_cookies(resp, access_token, refresh_token)
                 else:
                     return JsonResponse({'error': 'Failed to authenticate user. Please contact support.'}, status=401)
             else:
@@ -438,7 +458,8 @@ def api_google_login(request):
                 
                 if user:
                     login(request, user)
-                    return JsonResponse({'success': True, 'redirect_url': '/dashboard/'})
+                    resp = JsonResponse({'success': True, 'redirect_url': '/dashboard/'})
+                    return set_public_sso_auth_cookies(resp, access_token, refresh_token)
                 else:
                     return JsonResponse({'error': 'Failed to authenticate user. Please contact support.'}, status=401)
             else:
@@ -531,7 +552,8 @@ def mfa_verify(request):
                 user = authenticate_with_token(access_token)
                 if user:
                     login(request, user)
-                    return JsonResponse({'success': True, 'redirect_url': '/dashboard/'})
+                    resp = JsonResponse({'success': True, 'redirect_url': '/dashboard/'})
+                    return set_public_sso_auth_cookies(resp, access_token, refresh_token)
                 else:
                     return JsonResponse({'error': 'Failed to authenticate user after MFA verification. Please contact support.'}, status=401)
             else:
@@ -671,10 +693,15 @@ def refresh_token_view(request):
                 request.session['access_token'] = new_access_token
                 if new_refresh_token:
                     request.session['refresh_token'] = new_refresh_token
-                return JsonResponse({
+                resp = JsonResponse({
                     'access': new_access_token,
                     'refresh': new_refresh_token
                 })
+                return set_public_sso_auth_cookies(
+                    resp,
+                    new_access_token,
+                    new_refresh_token or refresh_token,
+                )
             else:
                 return JsonResponse({'error': 'Invalid response from token service'}, status=500)
         else:

@@ -20,11 +20,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
+from authentication.views import try_sso_session_login
 
 
 def root_redirect(request):
     """Smart redirect from root URL"""
-    # If user is not authenticated, go to login
+    if not request.user.is_authenticated:
+        try_sso_session_login(request)
     if not request.user.is_authenticated:
         return HttpResponseRedirect('/auth/login/')
     
