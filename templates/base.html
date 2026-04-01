@@ -1,932 +1,1020 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Arnatech Employee Daily Activity Tracker{% endblock %}</title>
-    
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome for icons -->
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <!-- Date Range Picker -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    
-    <!-- Custom CSS -->
+
+    <!-- Theme init (run before render to avoid flash) -->
+    <script>
+        (function () {
+            var saved = localStorage.getItem('arna-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
+
+    <!-- Ant Design Design Tokens + Global Styles -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+
+        /* ── Light theme ──────────────────────────────────────── */
+        :root,
+        [data-theme="light"] {
+            --ant-primary:              #1677ff;
+            --ant-primary-hover:        #4096ff;
+            --ant-primary-active:       #0958d9;
+            --ant-primary-bg:           #e6f4ff;
+            --ant-primary-bg-hover:     #bae0ff;
+            --ant-success:              #52c41a;
+            --ant-success-bg:           #f6ffed;
+            --ant-warning:              #faad14;
+            --ant-warning-bg:           #fffbe6;
+            --ant-error:                #ff4d4f;
+            --ant-error-bg:             #fff2f0;
+            --ant-info:                 #1677ff;
+
+            --bg-layout:                #f0f2f5;
+            --bg-container:             #ffffff;
+            --bg-elevated:              #ffffff;
+            --bg-overlay:               #ffffff;
+            --bg-fill:                  rgba(0,0,0,0.04);
+            --bg-fill-secondary:        rgba(0,0,0,0.06);
+            --bg-mask:                  rgba(0,0,0,0.45);
+
+            --border-color:             #d9d9d9;
+            --border-color-secondary:   #f0f0f0;
+            --split-color:              rgba(5,5,5,0.06);
+
+            --text-color:               rgba(0,0,0,0.88);
+            --text-secondary:           rgba(0,0,0,0.45);
+            --text-tertiary:            rgba(0,0,0,0.25);
+            --text-disabled:            rgba(0,0,0,0.25);
+            --text-heading:             rgba(0,0,0,0.88);
+            --text-label:               rgba(0,0,0,0.65);
+            --text-inverse:             #ffffff;
+
+            --nav-bg:                   #001529;
+            --nav-text:                 rgba(255,255,255,0.65);
+            --nav-text-active:          #ffffff;
+            --nav-item-hover:           rgba(255,255,255,0.08);
+            --nav-item-active-bg:       #1677ff;
+
+            --shadow-sm:    0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px 0 rgba(0,0,0,0.02);
+            --shadow-md:    0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg:    0 6px 16px rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05);
+            --shadow-modal: 0 6px 16px 0 rgba(0,0,0,0.08);
+
+            --input-bg:                 #ffffff;
+            --input-border:             #d9d9d9;
+            --input-text:               rgba(0,0,0,0.88);
+            --input-placeholder:        rgba(0,0,0,0.25);
+            --input-bg-disabled:        rgba(0,0,0,0.04);
+
+            --tag-default-bg:           rgba(0,0,0,0.04);
+            --tag-default-border:       #d9d9d9;
+            --tag-default-text:         rgba(0,0,0,0.88);
+        }
+
+        /* ── Dark theme ───────────────────────────────────────── */
+        [data-theme="dark"] {
+            --ant-primary:              #1668dc;
+            --ant-primary-hover:        #3c89e8;
+            --ant-primary-active:       #1554ad;
+            --ant-primary-bg:           #111a2c;
+            --ant-primary-bg-hover:     #112545;
+            --ant-success:              #49aa19;
+            --ant-success-bg:           #162312;
+            --ant-warning:              #d89614;
+            --ant-warning-bg:           #2b2111;
+            --ant-error:                #dc4446;
+            --ant-error-bg:             #2c1618;
+            --ant-info:                 #1668dc;
+
+            --bg-layout:                #141414;
+            --bg-container:             #1f1f1f;
+            --bg-elevated:              #2a2a2a;
+            --bg-overlay:               #2a2a2a;
+            --bg-fill:                  rgba(255,255,255,0.08);
+            --bg-fill-secondary:        rgba(255,255,255,0.12);
+            --bg-mask:                  rgba(0,0,0,0.55);
+
+            --border-color:             rgba(255,255,255,0.15);
+            --border-color-secondary:   rgba(255,255,255,0.08);
+            --split-color:              rgba(255,255,255,0.08);
+
+            --text-color:               rgba(255,255,255,0.85);
+            --text-secondary:           rgba(255,255,255,0.45);
+            --text-tertiary:            rgba(255,255,255,0.25);
+            --text-disabled:            rgba(255,255,255,0.25);
+            --text-heading:             rgba(255,255,255,0.85);
+            --text-label:               rgba(255,255,255,0.65);
+            --text-inverse:             rgba(0,0,0,0.88);
+
+            --nav-bg:                   #141414;
+            --nav-text:                 rgba(255,255,255,0.65);
+            --nav-text-active:          #ffffff;
+            --nav-item-hover:           rgba(255,255,255,0.08);
+            --nav-item-active-bg:       #1668dc;
+
+            --shadow-sm:    0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 6px -1px rgba(0,0,0,0.2), 0 2px 4px 0 rgba(0,0,0,0.2);
+            --shadow-md:    0 4px 12px rgba(0,0,0,0.45);
+            --shadow-lg:    0 6px 16px rgba(0,0,0,0.45), 0 3px 6px -4px rgba(0,0,0,0.6), 0 9px 28px 8px rgba(0,0,0,0.35);
+            --shadow-modal: 0 6px 16px 0 rgba(0,0,0,0.45);
+
+            --input-bg:                 rgba(255,255,255,0.04);
+            --input-border:             rgba(255,255,255,0.15);
+            --input-text:               rgba(255,255,255,0.85);
+            --input-placeholder:        rgba(255,255,255,0.25);
+            --input-bg-disabled:        rgba(255,255,255,0.08);
+
+            --tag-default-bg:           rgba(255,255,255,0.08);
+            --tag-default-border:       rgba(255,255,255,0.15);
+            --tag-default-text:         rgba(255,255,255,0.85);
+        }
+
+        /* ── Base ─────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-layout);
+            color: var(--text-color);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            font-size: 14px;
+            line-height: 1.5714;
+            margin: 0;
         }
-        
-        .nft-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+        /* ── Cards ────────────────────────────────────────────── */
+        .ant-card {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
-        
-        .nft-card:hover {
-            border-color: rgba(99, 102, 241, 0.4);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        .ant-card:hover { box-shadow: var(--shadow-md); }
+        .ant-card-head {
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-heading);
         }
-        
-        .nft-gradient {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        .ant-card-body { padding: 24px; }
+
+        /* ── Inputs ───────────────────────────────────────────── */
+        .ant-input, .ant-select, .ant-textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            color: var(--input-text);
+            padding: 8px 12px;
+            width: 100%;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
-        
-        .nft-gradient-hover:hover {
-            background: linear-gradient(135deg, #5855f3 0%, #7c3aed 100%);
+        .ant-input::placeholder, .ant-textarea::placeholder { color: var(--input-placeholder); }
+        .ant-input:focus, .ant-select:focus, .ant-textarea:focus {
+            border-color: var(--ant-primary);
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
         }
-        
-        .glass-effect {
-            backdrop-filter: blur(10px);
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .ant-input:hover:not(:focus), .ant-select:hover:not(:focus), .ant-textarea:hover:not(:focus) {
+            border-color: var(--ant-primary-hover);
         }
-        
-        .sidebar-nav a {
-            transition: all 0.3s ease;
+        .ant-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-label);
+            margin-bottom: 6px;
         }
-        
-        .sidebar-nav a:hover {
-            background: rgba(99, 102, 241, 0.1);
-            border-left: 4px solid #6366f1;
+        .ant-form-item { margin-bottom: 20px; }
+        option { background: var(--bg-elevated); color: var(--text-color); }
+
+        /* ── Buttons ──────────────────────────────────────────── */
+        .ant-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            user-select: none;
+            line-height: 1.5714;
+            height: 36px;
         }
-        
-        .sidebar-nav a.active {
-            background: rgba(99, 102, 241, 0.2);
-            border-left: 4px solid #6366f1;
+        .ant-btn-primary {
+            background: var(--ant-primary);
+            border-color: var(--ant-primary);
+            color: #ffffff;
+        }
+        .ant-btn-primary:hover { background: var(--ant-primary-hover); border-color: var(--ant-primary-hover); }
+        .ant-btn-primary:active { background: var(--ant-primary-active); border-color: var(--ant-primary-active); }
+        .ant-btn-default {
+            background: var(--bg-container);
+            border-color: var(--border-color);
+            color: var(--text-color);
+        }
+        .ant-btn-default:hover { border-color: var(--ant-primary); color: var(--ant-primary); background: var(--ant-primary-bg); }
+        .ant-btn-danger {
+            background: var(--ant-error);
+            border-color: var(--ant-error);
+            color: #fff;
+        }
+        .ant-btn-danger:hover { opacity: 0.85; }
+        .ant-btn-ghost {
+            background: transparent;
+            border-color: var(--border-color);
+            color: var(--text-color);
+        }
+        .ant-btn-ghost:hover { border-color: var(--ant-primary); color: var(--ant-primary); }
+        .ant-btn-link { background: transparent; border-color: transparent; color: var(--ant-primary); padding: 4px 8px; }
+        .ant-btn-link:hover { color: var(--ant-primary-hover); }
+        .ant-btn-success { background: var(--ant-success); border-color: var(--ant-success); color: #fff; }
+        .ant-btn-success:hover { opacity: 0.85; }
+        .ant-btn-lg { height: 40px; padding: 8px 20px; font-size: 15px; }
+        .ant-btn-sm { height: 28px; padding: 2px 10px; font-size: 12px; }
+        .ant-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Tags / Badges ────────────────────────────────────── */
+        .ant-tag {
+            display: inline-flex; align-items: center;
+            padding: 2px 8px; border-radius: 4px; font-size: 12px;
+            border: 1px solid var(--tag-default-border);
+            background: var(--tag-default-bg);
+            color: var(--tag-default-text);
+        }
+        .ant-tag-success { background: var(--ant-success-bg); border-color: var(--ant-success); color: var(--ant-success); }
+        .ant-tag-warning { background: var(--ant-warning-bg); border-color: var(--ant-warning); color: var(--ant-warning); }
+        .ant-tag-error   { background: var(--ant-error-bg);   border-color: var(--ant-error);   color: var(--ant-error);   }
+        .ant-tag-primary { background: var(--ant-primary-bg); border-color: var(--ant-primary); color: var(--ant-primary); }
+
+        /* ── Alert / Messages ─────────────────────────────────── */
+        .ant-alert {
+            padding: 10px 16px; border-radius: 6px; border: 1px solid;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .ant-alert-success { background: var(--ant-success-bg); border-color: var(--ant-success); color: var(--ant-success); }
+        .ant-alert-error   { background: var(--ant-error-bg);   border-color: var(--ant-error);   color: var(--ant-error);   }
+        .ant-alert-warning { background: var(--ant-warning-bg); border-color: var(--ant-warning); color: var(--ant-warning); }
+        .ant-alert-info    { background: var(--ant-primary-bg); border-color: var(--ant-primary); color: var(--ant-primary); }
+
+        /* ── Table ────────────────────────────────────────────── */
+        .ant-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); }
+        .ant-table { width: 100%; border-collapse: collapse; background: var(--bg-container); }
+        .ant-table th {
+            padding: 12px 16px; text-align: left;
+            background: var(--bg-fill); border-bottom: 1px solid var(--border-color);
+            font-weight: 600; font-size: 13px; color: var(--text-heading);
+            white-space: nowrap;
+        }
+        .ant-table td {
+            padding: 12px 16px; border-bottom: 1px solid var(--border-color-secondary);
+            font-size: 14px; color: var(--text-color);
+        }
+        .ant-table tbody tr:last-child td { border-bottom: none; }
+        .ant-table tbody tr:hover td { background: var(--bg-fill); }
+
+        /* ── Divider ──────────────────────────────────────────── */
+        .ant-divider { border: none; border-top: 1px solid var(--border-color); margin: 16px 0; }
+
+        /* ── Stat card ────────────────────────────────────────── */
+        .stat-card {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s;
+        }
+        .stat-card:hover { box-shadow: var(--shadow-md); }
+        .stat-value {
+            font-size: 28px; font-weight: 700;
+            line-height: 1.2; color: var(--text-heading);
+        }
+        .stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* ── Navigation ───────────────────────────────────────── */
+        .ant-nav {
+            background: var(--nav-bg);
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            height: 56px; display: flex; align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            transition: background 0.2s;
+        }
+        .ant-nav-brand {
+            font-size: 16px; font-weight: 700; color: var(--ant-primary);
+            display: flex; align-items: center; gap: 8px;
+            text-decoration: none; white-space: nowrap; flex-shrink: 0;
+        }
+        .ant-nav-menu { display: flex; align-items: center; gap: 2px; margin-left: 24px; }
+        .ant-nav-item {
+            color: var(--nav-text);
+            padding: 6px 14px; border-radius: 6px; font-size: 14px;
+            font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px;
+            transition: color 0.15s, background 0.15s;
+            white-space: nowrap;
+        }
+        .ant-nav-item:hover { color: var(--nav-text-active); background: var(--nav-item-hover); }
+        .ant-nav-item.active { color: var(--nav-text-active); background: var(--nav-item-active-bg); }
+        .ant-nav-spacer { flex: 1; }
+        .ant-nav-actions { display: flex; align-items: center; gap: 8px; }
+
+        /* ── Dropdown ─────────────────────────────────────────── */
+        .ant-dropdown {
+            position: absolute; top: 100%; right: 0; margin-top: 8px;
+            background: var(--bg-overlay); border: 1px solid var(--border-color);
+            border-radius: 8px; box-shadow: var(--shadow-lg);
+            min-width: 180px; z-index: 200; overflow: hidden;
+        }
+        .ant-dropdown-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 16px; font-size: 14px;
+            color: var(--text-color); text-decoration: none;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .ant-dropdown-item:hover { background: var(--bg-fill); color: var(--ant-primary); }
+        .ant-dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+
+        /* ── Modal ────────────────────────────────────────────── */
+        .ant-modal-mask {
+            position: fixed; inset: 0;
+            background: var(--bg-mask);
+            backdrop-filter: blur(4px);
+            z-index: 150; display: flex; align-items: center; justify-content: center;
+            padding: 16px;
+        }
+        .ant-modal {
+            background: var(--bg-container);
+            border-radius: 8px; box-shadow: var(--shadow-modal);
+            border: 1px solid var(--border-color);
+            width: 100%; max-height: 90vh; overflow-y: auto;
+        }
+        .ant-modal-header {
+            padding: 16px 24px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .ant-modal-title { font-size: 18px; font-weight: 600; color: var(--text-heading); display: flex; align-items: center; gap: 10px; }
+        .ant-modal-close {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-secondary); font-size: 16px;
+            width: 32px; height: 32px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s, color 0.15s;
+        }
+        .ant-modal-close:hover { background: var(--bg-fill); color: var(--ant-error); }
+        .ant-modal-body { padding: 24px; }
+        .ant-modal-footer { padding: 12px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px; }
+
+        /* ── Section / Page header ────────────────────────────── */
+        .page-header { margin-bottom: 24px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text-heading); margin: 0; }
+        .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* ── Avatar ───────────────────────────────────────────── */
+        .ant-avatar {
+            border-radius: 50%; background: var(--ant-primary);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 600; overflow: hidden; flex-shrink: 0;
+        }
+
+        /* ── Theme toggle ─────────────────────────────────────── */
+        .theme-toggle {
+            background: var(--nav-item-hover);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px; width: 40px; height: 24px;
+            cursor: pointer; position: relative;
+            transition: background 0.2s, border 0.2s;
+            display: flex; align-items: center; padding: 2px;
+        }
+        .theme-toggle-knob {
+            width: 18px; height: 18px; border-radius: 50%;
+            background: #fff; transition: transform 0.25s;
+            transform: translateX(0);
+        }
+        [data-theme="light"] .theme-toggle { background: #e0e0e0; border-color: #ccc; }
+        [data-theme="light"] .theme-toggle-knob { background: #555; transform: translateX(16px); }
+        [data-theme="dark"]  .theme-toggle-knob { transform: translateX(0); }
+
+        /* ── Scrollbar ────────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+        /* ── Footer ───────────────────────────────────────────── */
+        .ant-footer {
+            background: var(--bg-container);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+            font-size: 13px; color: var(--text-secondary);
+        }
+
+        /* ── Transitions for theme switch ─────────────────────── */
+        .ant-card, .stat-card, .ant-nav, .ant-modal, .ant-input,
+        .ant-btn, .ant-table, .ant-tag, .ant-alert, .ant-footer,
+        .ant-dropdown { transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s; }
+
+        /* ── Notification ─────────────────────────────────────── */
+        .ant-notification {
+            position: fixed; top: 72px; right: 24px;
+            z-index: 1000; display: flex; flex-direction: column; gap: 8px;
+            pointer-events: none;
+        }
+        .ant-notification-item {
+            background: var(--bg-container); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 12px 16px;
+            box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px;
+            min-width: 300px; pointer-events: all;
+            animation: slideIn 0.25s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ── Priority indicators ──────────────────────────────── */
+        .priority-low      { color: var(--ant-success); }
+        .priority-medium   { color: var(--ant-primary); }
+        .priority-high     { color: var(--ant-warning); }
+        .priority-critical { color: var(--ant-error); }
+
+        /* ── Responsive hide ──────────────────────────────────── */
+        @media (max-width: 768px) {
+            .ant-nav-menu { display: none; }
+            .md-hide { display: none !important; }
+        }
+
+        /* ── Activity/goal item rows in modals ────────────────── */
+        .activity-row, .goal-row {
+            display: flex; gap: 10px; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid var(--border-color-secondary);
+        }
+        .activity-row:last-child, .goal-row:last-child { border-bottom: none; }
+        .additional-item {
+            background: var(--bg-fill);
+            border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 14px; margin-bottom: 10px;
+        }
+
+        /* ── Profile completion modal overlay ─────────────────── */
+        #profile-completion-modal {
+            background: var(--bg-mask);
+        }
+        #profile-completion-modal .modal-card {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
         }
     </style>
-    
-    <!-- Tailwind Config -->
+
     <script>
         tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        'nft-primary': '#6366f1',
-                        'nft-secondary': '#8b5cf6',
-                        'nft-dark': '#0f172a',
-                        'nft-darker': '#020617',
-                        'nft-gray': '#1e293b',
-                        'nft-light': '#334155',
-                    },
-                    fontFamily: {
-                        'inter': ['Inter', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'nft': '0 4px 6px -1px rgba(99, 102, 241, 0.1), 0 2px 4px -1px rgba(99, 102, 241, 0.06)',
-                        'nft-lg': '0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05)',
-                    }
-                }
-            }
-        }
+            corePlugins: { preflight: false },
+            theme: { extend: {} }
+        };
     </script>
-    
+
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-nft-darker text-gray-100 font-inter">
-    <!-- Navigation -->
+
+<body style="padding-top: {% if user.is_authenticated %}56px{% else %}0{% endif %};">
+
+    <!-- ── Navigation ──────────────────────────────────────── -->
     {% if user.is_authenticated %}
-    <nav class="glass-effect fixed top-0 left-0 right-0 z-50 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-8">
-                <h1 class="text-xl font-bold text-nft-primary">
-                    <i class="fas fa-clipboard-check mr-2"></i>
-                    Arnatech Activity Tracker
-                </h1>
-                
-                <div class="hidden md:flex space-x-6">
-                    <a href="{% url 'dashboard:index' %}" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-nft-gray transition-colors">
-                        <i class="fas fa-home text-sm"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    
-                    <a href="{% url 'activities:activity_list' %}" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-nft-gray transition-colors">
-                        <i class="fas fa-history text-sm"></i>
-                        <span>History</span>
-                    </a>
-                    
-                    {% if user.is_staff %}
-                    <a href="{% url 'dashboard:admin' %}" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-nft-gray transition-colors">
-                        <i class="fas fa-chart-bar text-sm"></i>
-                        <span>Admin</span>
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 bg-nft-gradient rounded-full flex items-center justify-center">
-                        <i class="fas fa-user text-white text-xs"></i>
+    <nav class="ant-nav">
+        <a href="{% url 'dashboard:index' %}" class="ant-nav-brand">
+            <i class="fas fa-clipboard-check"></i>
+            <span>Arnatech EDA</span>
+        </a>
+
+        <div class="ant-nav-menu">
+            <a href="{% url 'dashboard:index' %}" class="ant-nav-item {% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'index' %}active{% endif %}">
+                <i class="fas fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="{% url 'activities:activity_list' %}" class="ant-nav-item {% if request.resolver_match.namespace == 'activities' %}active{% endif %}">
+                <i class="fas fa-history"></i> History
+            </a>
+            {% if user.is_staff %}
+            <a href="{% url 'dashboard:admin' %}" class="ant-nav-item {% if request.resolver_match.url_name == 'admin' %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i> Admin
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="ant-nav-spacer"></div>
+
+        <div class="ant-nav-actions">
+            <!-- Theme toggle -->
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle light/dark theme">
+                <div class="theme-toggle-knob"></div>
+            </button>
+
+            <!-- User menu -->
+            <div class="relative" id="userMenuWrapper">
+                <button onclick="toggleUserMenu()" class="ant-nav-item" style="cursor:pointer; border:none; background:none;">
+                    <div class="ant-avatar" style="width:30px;height:30px;font-size:12px;background:var(--ant-primary);">
+                        {% if user.first_name %}{{ user.first_name.0 }}{% else %}<i class="fas fa-user" style="font-size:12px;"></i>{% endif %}
                     </div>
-                    <div class="hidden md:block">
-                        <p class="text-sm font-medium">{{ user.get_full_name|default:user.username }}</p>
+                    <div class="md-hide" style="max-width:160px;overflow:hidden;">
+                        <p style="font-size:13px;font-weight:600;color:var(--nav-text-active);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ user.get_full_name|default:user.username }}
+                        </p>
                         {% if user.employee_profile %}
-                        <p class="text-xs text-gray-400">{{ user.employee_profile.position }}</p>
+                        <p style="font-size:11px;color:var(--nav-text);margin:0;white-space:nowrap;">{{ user.employee_profile.position }}</p>
                         {% endif %}
                     </div>
-                </div>
-                
-                <div class="relative">
-                    <button class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-nft-gray transition-colors" onclick="toggleUserMenu()">
-                        <i class="fas fa-chevron-down text-sm"></i>
-                    </button>
-                    
-                    <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 nft-card rounded-lg shadow-lg z-50">
-                        <a href="{% url 'authentication:profile' %}" class="block px-4 py-2 text-sm hover:bg-nft-gray rounded-t-lg">
-                            <i class="fas fa-user mr-2"></i>
-                            Profile
-                        </a>
-                        <a href="{% url 'authentication:logout' %}" class="block px-4 py-2 text-sm hover:bg-nft-gray rounded-b-lg">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
-                            Logout
-                        </a>
-                    </div>
+                    <i class="fas fa-chevron-down" style="font-size:11px;color:var(--nav-text);"></i>
+                </button>
+
+                <div id="userMenu" class="ant-dropdown" style="display:none;">
+                    <a href="{% url 'authentication:profile' %}" class="ant-dropdown-item">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                    <div class="ant-dropdown-divider"></div>
+                    <a href="{% url 'authentication:logout' %}" class="ant-dropdown-item" style="color:var(--ant-error);">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>
     </nav>
     {% endif %}
-    
-    <!-- Main Content -->
-    <main class="{% if user.is_authenticated %}pt-20{% else %}pt-8{% endif %} min-h-screen">
-        <!-- Messages -->
-        {% if messages %}
-        <div class="fixed top-20 right-4 z-50 space-y-2">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} nft-card p-4 rounded-lg shadow-lg max-w-md">
-                <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0">
-                        {% if message.tags == 'success' %}
-                        <i class="fas fa-check-circle text-green-400"></i>
-                        {% elif message.tags == 'error' %}
-                        <i class="fas fa-exclamation-circle text-red-400"></i>
-                        {% elif message.tags == 'warning' %}
-                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                        {% else %}
-                        <i class="fas fa-info-circle text-blue-400"></i>
-                        {% endif %}
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium">{{ message }}</p>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-200">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
+
+    <!-- ── Messages ────────────────────────────────────────── -->
+    {% if messages %}
+    <div class="ant-notification" id="msgContainer">
+        {% for message in messages %}
+        <div class="ant-notification-item alert" style="border-color:
+            {% if message.tags == 'success' %}var(--ant-success)
+            {% elif message.tags == 'error' %}var(--ant-error)
+            {% elif message.tags == 'warning' %}var(--ant-warning)
+            {% else %}var(--ant-primary){% endif %};">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"
+               style="color:{% if message.tags == 'success' %}var(--ant-success){% elif message.tags == 'error' %}var(--ant-error){% elif message.tags == 'warning' %}var(--ant-warning){% else %}var(--ant-primary){% endif %};flex-shrink:0;"></i>
+            <span style="flex:1;color:var(--text-color);font-size:14px;">{{ message }}</span>
+            <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:14px;flex-shrink:0;" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        {% endif %}
-        
-        <!-- Page Content -->
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Page Content ────────────────────────────────────── -->
+    <main style="min-height: calc(100vh - 56px);">
         {% block content %}{% endblock %}
-        
-
-<!-- Check-in Modal -->
-<div id="check-in-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fas fa-clock text-green-400 mr-3"></i>
-                    Clock In
-                </h2>
-                <button id="close-checkin-modal" class="text-white hover:text-red-400 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <form id="check-in-form" class="space-y-6" method="POST">
-                {% csrf_token %}
-                
-                <!-- Planned Activities Section -->
-                <div>
-                    <label class="block text-white font-semibold mb-3">
-                        <i class="fas fa-list-ul mr-2"></i>What do you plan to do today? *
-                    </label>
-                    <div id="planned-activities-container" class="space-y-3">
-                        <div class="planned-activity-item flex items-center space-x-3">
-                            <input 
-                                type="text" 
-                                name="planned_activity_title_1"
-                                required
-                                class="flex-1 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Enter planned activity..."
-                            >
-                            <select name="planned_activity_priority_1" class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="1" class="bg-gray-800">Low</option>
-                                <option value="2" class="bg-gray-800" selected>Medium</option>
-                                <option value="3" class="bg-gray-800">High</option>
-                                <option value="4" class="bg-gray-800">Critical</option>
-                            </select>
-                            <button type="button" class="remove-activity text-red-400 hover:text-red-300 p-2">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <input type="hidden" name="lat" id="checkin-lat">
-                    <input type="hidden" name="long" id="checkin-long">
-                    <button type="button" id="add-activity" class="mt-3 bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg hover:bg-blue-600/30 transition-colors flex items-center">
-                        <i class="fas fa-plus mr-2"></i>Add Another Activity
-                    </button>
-                </div>
-                
-                <!-- Daily Goals Section -->
-                <div>
-                    <label class="block text-white font-semibold mb-3">
-                        <i class="fas fa-bullseye mr-2"></i>Daily Goals *
-                    </label>
-                    <div id="daily-goals-container" class="space-y-3">
-                        <div class="daily-goal-item flex items-center space-x-3">
-                            <input 
-                                type="text" 
-                                name="daily_goal_title_1"
-                                required
-                                class="flex-1 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Enter daily goal..."
-                            >
-                            <input 
-                                type="text" 
-                                name="daily_goal_target_1"
-                                class="w-32 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Target"
-                            >
-                            <select name="daily_goal_priority_1" class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="1" class="bg-gray-800">Low</option>
-                                <option value="2" class="bg-gray-800" selected>Medium</option>
-                                <option value="3" class="bg-gray-800">High</option>
-                                <option value="4" class="bg-gray-800">Critical</option>
-                            </select>
-                            <button type="button" class="remove-goal text-red-400 hover:text-red-300 p-2">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <button type="button" id="add-goal" class="mt-3 bg-green-600/20 text-green-400 px-4 py-2 rounded-lg hover:bg-green-600/30 transition-colors flex items-center">
-                        <i class="fas fa-plus mr-2"></i>Add Another Goal
-                    </button>
-                </div>
-                
-                <!-- Morning Problems -->
-                <div>
-                    <label class="block text-white font-semibold mb-2">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Problems or Blockers
-                    </label>
-                    <textarea 
-                        name="morning_problems" 
-                        class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Any problems or blockers you're facing? (optional)"
-                        rows="3"
-                    ></textarea>
-                </div>
-                
-                <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancel-checkin" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
-                        <i class="fas fa-clock mr-2"></i>Clock In
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Check-out Modal -->
-<div id="check-out-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fas fa-clock text-blue-400 mr-3"></i>
-                    Clock Out
-                </h2>
-                <button id="close-checkout-modal" class="text-white hover:text-red-400 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <form id="check-out-form" class="space-y-6"  method="POST">
-                {% csrf_token %}
-                
-                <!-- Planned Activities Status -->
-                <div id="planned-activities-status" class="hidden">
-                    <h3 class="text-xl font-semibold text-white mb-4">
-                        <i class="fas fa-list-ul mr-2"></i>Planned Activities Status
-                    </h3>
-                    <div id="activities-status-container" class="space-y-3"></div>
-                </div>
-                
-                <!-- Daily Goals Status -->
-                <div id="daily-goals-status" class="hidden">
-                    <h3 class="text-xl font-semibold text-white mb-4">
-                        <i class="fas fa-bullseye mr-2"></i>Daily Goals Status
-                    </h3>
-                    <div id="goals-status-container" class="space-y-3"></div>
-                </div>
-                
-                <!-- Additional Activities -->
-                <div>
-                    <label class="block text-white font-semibold mb-3">
-                        <i class="fas fa-plus-circle mr-2"></i>Additional Activities (Done outside planned work)
-                    </label>
-                    <div id="additional-activities-container" class="space-y-3">
-                        <!-- Additional activities will be added dynamically -->
-                    </div>
-                    <button type="button" id="add-additional-activity" class="mt-3 bg-purple-600/20 text-purple-400 px-4 py-2 rounded-lg hover:bg-purple-600/30 transition-colors flex items-center">
-                        <i class="fas fa-plus mr-2"></i>Add Additional Activity
-                    </button>
-                </div>
-                
-                <!-- Afternoon Problems -->
-                <div>
-                    <label class="block text-white font-semibold mb-2">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Problems or Issues
-                    </label>
-                    <textarea 
-                        name="afternoon_problems" 
-                        class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Any problems or issues you encountered today?"
-                        rows="3"
-                    ></textarea>
-                </div>
-                <input type="hidden" name="lat" id="checkin-lat">
-                <input type="hidden" name="long" id="checkin-long">
-                
-                <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancel-checkout" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
-                        <i class="fas fa-clock mr-2"></i>Clock Out
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
     </main>
-    
-    <!-- Footer -->
-    <footer class="bg-nft-dark border-t border-nft-light mt-16">
-        <div class="max-w-7xl mx-auto px-4 py-6">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="flex items-center space-x-2 mb-4 md:mb-0">
-                    <i class="fas fa-copyright text-gray-400"></i>
-                    <span class="text-gray-400">2025 <a href="https://arnatech.id" target="blank" class="text-nft-primary">Arnatech</a>. All rights reserved.</span>
+
+    <!-- ── Check-in Modal ──────────────────────────────────── -->
+    <div id="check-in-modal" class="ant-modal-mask" style="display:none;">
+        <div class="ant-modal" style="max-width:680px;">
+            <div class="ant-modal-header">
+                <div class="ant-modal-title">
+                    <i class="fas fa-clock" style="color:var(--ant-success);"></i>
+                    Clock In
                 </div>
-                <div class="flex space-x-4">
-                    <a href="#" class="text-gray-400 hover:text-nft-primary transition-colors">
-                        <i class="fas fa-question-circle"></i>
-                        <span class="ml-1">Help</span>
-                    </a>
-                </div>
+                <button class="ant-modal-close" id="close-checkin-modal" aria-label="Close"><i class="fas fa-times"></i></button>
             </div>
+            <div class="ant-modal-body">
+                <form id="check-in-form" method="POST">
+                    {% csrf_token %}
+
+                    <!-- Planned Activities -->
+                    <div class="ant-form-item">
+                        <label class="ant-label"><i class="fas fa-list-ul" style="margin-right:6px;color:var(--ant-primary);"></i>What do you plan to do today? *</label>
+                        <div id="planned-activities-container" style="display:flex;flex-direction:column;gap:8px;">
+                            <div class="activity-row planned-activity-item">
+                                <input type="text" name="planned_activity_title_1" required class="ant-input" placeholder="Enter planned activity..." style="flex:1;">
+                                <select name="planned_activity_priority_1" class="ant-input" style="width:120px;flex-shrink:0;">
+                                    <option value="1">Low</option>
+                                    <option value="2" selected>Medium</option>
+                                    <option value="3">High</option>
+                                    <option value="4">Critical</option>
+                                </select>
+                                <button type="button" class="remove-activity ant-btn ant-btn-ghost ant-btn-sm" style="flex-shrink:0;color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="lat" id="checkin-lat">
+                        <input type="hidden" name="long" id="checkin-long">
+                        <button type="button" id="add-activity" class="ant-btn ant-btn-default ant-btn-sm" style="margin-top:10px;color:var(--ant-primary);border-color:var(--ant-primary);">
+                            <i class="fas fa-plus"></i> Add Another Activity
+                        </button>
+                    </div>
+
+                    <!-- Daily Goals -->
+                    <div class="ant-form-item">
+                        <label class="ant-label"><i class="fas fa-bullseye" style="margin-right:6px;color:var(--ant-success);"></i>Daily Goals *</label>
+                        <div id="daily-goals-container" style="display:flex;flex-direction:column;gap:8px;">
+                            <div class="goal-row daily-goal-item">
+                                <input type="text" name="daily_goal_title_1" required class="ant-input" placeholder="Enter daily goal..." style="flex:1;">
+                                <input type="text" name="daily_goal_target_1" class="ant-input" placeholder="Target" style="width:100px;flex-shrink:0;">
+                                <select name="daily_goal_priority_1" class="ant-input" style="width:120px;flex-shrink:0;">
+                                    <option value="1">Low</option>
+                                    <option value="2" selected>Medium</option>
+                                    <option value="3">High</option>
+                                    <option value="4">Critical</option>
+                                </select>
+                                <button type="button" class="remove-goal ant-btn ant-btn-ghost ant-btn-sm" style="flex-shrink:0;color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <button type="button" id="add-goal" class="ant-btn ant-btn-default ant-btn-sm" style="margin-top:10px;color:var(--ant-success);border-color:var(--ant-success);">
+                            <i class="fas fa-plus"></i> Add Another Goal
+                        </button>
+                    </div>
+
+                    <!-- Morning Problems -->
+                    <div class="ant-form-item">
+                        <label class="ant-label"><i class="fas fa-exclamation-triangle" style="margin-right:6px;color:var(--ant-warning);"></i>Problems or Blockers <span style="color:var(--text-tertiary);font-weight:400;">(optional)</span></label>
+                        <textarea name="morning_problems" class="ant-textarea" rows="3" placeholder="Any problems or blockers you're facing?"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="ant-modal-footer">
+                <button type="button" id="cancel-checkin" class="ant-btn ant-btn-default">Cancel</button>
+                <button type="submit" form="check-in-form" class="ant-btn ant-btn-success ant-btn-lg">
+                    <i class="fas fa-clock"></i> Clock In
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Check-out Modal ─────────────────────────────────── -->
+    <div id="check-out-modal" class="ant-modal-mask" style="display:none;">
+        <div class="ant-modal" style="max-width:760px;">
+            <div class="ant-modal-header">
+                <div class="ant-modal-title">
+                    <i class="fas fa-clock" style="color:var(--ant-primary);"></i>
+                    Clock Out
+                </div>
+                <button class="ant-modal-close" id="close-checkout-modal" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ant-modal-body">
+                <form id="check-out-form" method="POST">
+                    {% csrf_token %}
+
+                    <div id="planned-activities-status" style="display:none;margin-bottom:20px;">
+                        <h3 style="font-size:16px;font-weight:600;color:var(--text-heading);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                            <i class="fas fa-list-ul" style="color:var(--ant-primary);"></i> Planned Activities Status
+                        </h3>
+                        <div id="activities-status-container" style="display:flex;flex-direction:column;gap:8px;"></div>
+                    </div>
+
+                    <div id="daily-goals-status" style="display:none;margin-bottom:20px;">
+                        <h3 style="font-size:16px;font-weight:600;color:var(--text-heading);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                            <i class="fas fa-bullseye" style="color:var(--ant-success);"></i> Daily Goals Status
+                        </h3>
+                        <div id="goals-status-container" style="display:flex;flex-direction:column;gap:8px;"></div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-label"><i class="fas fa-plus-circle" style="margin-right:6px;color:var(--ant-primary);"></i>Additional Activities <span style="color:var(--text-tertiary);font-weight:400;">(done outside planned work)</span></label>
+                        <div id="additional-activities-container"></div>
+                        <button type="button" id="add-additional-activity" class="ant-btn ant-btn-default ant-btn-sm" style="margin-top:8px;color:var(--ant-primary);border-color:var(--ant-primary);">
+                            <i class="fas fa-plus"></i> Add Additional Activity
+                        </button>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-label"><i class="fas fa-exclamation-triangle" style="margin-right:6px;color:var(--ant-warning);"></i>Problems or Issues</label>
+                        <textarea name="afternoon_problems" class="ant-textarea" rows="3" placeholder="Any problems or issues you encountered today?"></textarea>
+                    </div>
+                    <input type="hidden" name="lat" id="checkout-lat">
+                    <input type="hidden" name="long" id="checkout-long">
+                </form>
+            </div>
+            <div class="ant-modal-footer">
+                <button type="button" id="cancel-checkout" class="ant-btn ant-btn-default">Cancel</button>
+                <button type="submit" form="check-out-form" class="ant-btn ant-btn-primary ant-btn-lg">
+                    <i class="fas fa-clock"></i> Clock Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Footer ──────────────────────────────────────────── -->
+    <footer class="ant-footer" style="margin-top:40px;">
+        <div style="max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <span>&copy; 2025 <a href="https://arnatech.id" target="_blank" style="color:var(--ant-primary);">Arnatech</a>. All rights reserved.</span>
+            <a href="#" style="color:var(--text-secondary);text-decoration:none;font-size:13px;" onmouseover="this.style.color='var(--ant-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
+                <i class="fas fa-question-circle"></i> Help
+            </a>
         </div>
     </footer>
-    
-    <!-- JavaScript -->
+
+    <!-- ── Theme Toggle JS ─────────────────────────────────── -->
+    <script>
+        var _themeBtn = document.getElementById('themeToggle');
+        if (_themeBtn) {
+            _themeBtn.addEventListener('click', function () {
+                var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('arna-theme', next);
+            });
+        }
+    </script>
+
+    <!-- ── Nav / Dropdown JS ───────────────────────────────── -->
     <script>
         function toggleUserMenu() {
-            const menu = document.getElementById('userMenu');
-            menu.classList.toggle('hidden');
-        }
-        
-        // Close menu when clicking outside (hanya jika nav / userMenu ada)
-        document.addEventListener('click', function(event) {
-            const menu = document.getElementById('userMenu');
+            var menu = document.getElementById('userMenu');
             if (!menu) return;
-            const button = event.target.closest('button');
-            if (!menu.contains(event.target) && !button) {
-                menu.classList.add('hidden');
-            }
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+        document.addEventListener('click', function (e) {
+            var wrapper = document.getElementById('userMenuWrapper');
+            var menu = document.getElementById('userMenu');
+            if (!menu || !wrapper) return;
+            if (!wrapper.contains(e.target)) menu.style.display = 'none';
         });
-        
-        // Auto-hide messages after 5 seconds
-        setTimeout(() => {
-            const messages = document.querySelectorAll('.alert');
-            messages.forEach(msg => {
-                msg.style.opacity = '0';
-                msg.style.transition = 'opacity 0.5s';
-                setTimeout(() => msg.remove(), 500);
+
+        // Auto-dismiss messages
+        setTimeout(function () {
+            document.querySelectorAll('.alert').forEach(function (el) {
+                el.style.transition = 'opacity 0.5s';
+                el.style.opacity = '0';
+                setTimeout(function () { el.remove(); }, 500);
             });
         }, 5000);
     </script>
-    
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const checkInBtn = document.getElementById('check-in-btn');
-        const checkOutBtn = document.getElementById('check-out-btn');
-        const checkInModal = document.getElementById('check-in-modal');
-        const checkOutModal = document.getElementById('check-out-modal');
-        const checkInForm = document.getElementById('check-in-form');
-        const checkOutForm = document.getElementById('check-out-form');
+    <!-- ── Clock-in / Clock-out JS ────────────────────────── -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var checkInBtn   = document.getElementById('check-in-btn');
+        var checkOutBtn  = document.getElementById('check-out-btn');
+        var checkInModal = document.getElementById('check-in-modal');
+        var checkOutModal= document.getElementById('check-out-modal');
+        var checkInForm  = document.getElementById('check-in-form');
+        var checkOutForm = document.getElementById('check-out-form');
 
-        // Halaman tanpa clock in/out (login, dll.): jangan pasang listener modal
-        if (!checkInBtn || !checkOutBtn || !checkInModal || !checkOutModal || !checkInForm || !checkOutForm) {
-            return;
+        if (!checkInBtn || !checkOutBtn || !checkInModal || !checkOutModal) return;
+
+        var activityCounter = 1, goalCounter = 1, additionalActivityCounter = 0;
+
+        function openModal(m)  { m.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+        function closeModal(m) { m.style.display = 'none'; document.body.style.overflow = ''; }
+
+        document.getElementById('close-checkin-modal') .addEventListener('click', function () { closeModal(checkInModal);  });
+        document.getElementById('cancel-checkin')      .addEventListener('click', function () { closeModal(checkInModal);  });
+        document.getElementById('close-checkout-modal').addEventListener('click', function () { closeModal(checkOutModal); });
+        document.getElementById('cancel-checkout')     .addEventListener('click', function () { closeModal(checkOutModal); });
+
+        checkInModal .addEventListener('click', function (e) { if (e.target === checkInModal)  closeModal(checkInModal);  });
+        checkOutModal.addEventListener('click', function (e) { if (e.target === checkOutModal) closeModal(checkOutModal); });
+
+        checkInBtn.addEventListener('click',  function () { openModal(checkInModal); });
+        checkOutBtn.addEventListener('click', function () { loadCheckoutData(); openModal(checkOutModal); });
+
+        function activityRowHTML(idx) {
+            return '<div class="activity-row planned-activity-item">' +
+                '<input type="text" name="planned_activity_title_' + idx + '" required class="ant-input" placeholder="Enter planned activity..." style="flex:1;">' +
+                '<select name="planned_activity_priority_' + idx + '" class="ant-input" style="width:120px;flex-shrink:0;">' +
+                '<option value="1">Low</option><option value="2" selected>Medium</option><option value="3">High</option><option value="4">Critical</option></select>' +
+                '<button type="button" class="remove-activity ant-btn ant-btn-ghost ant-btn-sm" style="flex-shrink:0;color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>';
         }
-        
-        let activityCounter = 1;
-        let goalCounter = 1;
-        let additionalActivityCounter = 0;
-        
-        // Modal controls
-        document.getElementById('close-checkin-modal').addEventListener('click', () => {
-            checkInModal.classList.add('hidden');
-        });
-        
-        document.getElementById('cancel-checkin').addEventListener('click', () => {
-            checkInModal.classList.add('hidden');
-        });
-        
-        document.getElementById('close-checkout-modal').addEventListener('click', () => {
-            checkOutModal.classList.add('hidden');
-        });
-        
-        document.getElementById('cancel-checkout').addEventListener('click', () => {
-            checkOutModal.classList.add('hidden');
-        });
-        
-        // Close modal when clicking outside
-        checkInModal.addEventListener('click', (e) => {
-            if (e.target === checkInModal) {
-                checkInModal.classList.add('hidden');
-            }
-        });
-        
-        checkOutModal.addEventListener('click', (e) => {
-            if (e.target === checkOutModal) {
-                checkOutModal.classList.add('hidden');
-            }
-        });
-        
-        // Add Activity functionality
-        document.getElementById('add-activity').addEventListener('click', function() {
+        function goalRowHTML(idx) {
+            return '<div class="goal-row daily-goal-item">' +
+                '<input type="text" name="daily_goal_title_' + idx + '" required class="ant-input" placeholder="Enter daily goal..." style="flex:1;">' +
+                '<input type="text" name="daily_goal_target_' + idx + '" class="ant-input" placeholder="Target" style="width:100px;flex-shrink:0;">' +
+                '<select name="daily_goal_priority_' + idx + '" class="ant-input" style="width:120px;flex-shrink:0;">' +
+                '<option value="1">Low</option><option value="2" selected>Medium</option><option value="3">High</option><option value="4">Critical</option></select>' +
+                '<button type="button" class="remove-goal ant-btn ant-btn-ghost ant-btn-sm" style="flex-shrink:0;color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>';
+        }
+
+        document.getElementById('add-activity').addEventListener('click', function () {
             activityCounter++;
-            const container = document.getElementById('planned-activities-container');
-            const activityItem = document.createElement('div');
-            activityItem.className = 'planned-activity-item flex items-center space-x-3';
-            activityItem.innerHTML = `
-                <input 
-                    type="text" 
-                    name="planned_activity_title_${activityCounter}"
-                    required
-                    class="flex-1 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter planned activity..."
-                >
-                <select name="planned_activity_priority_${activityCounter}" class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="1" class="bg-gray-800">Low</option>
-                    <option value="2" class="bg-gray-800" selected>Medium</option>
-                    <option value="3" class="bg-gray-800">High</option>
-                    <option value="4" class="bg-gray-800">Critical</option>
-                </select>
-                <button type="button" class="remove-activity text-red-400 hover:text-red-300 p-2">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            container.appendChild(activityItem);
-            
-            // Add remove functionality
-            activityItem.querySelector('.remove-activity').addEventListener('click', function() {
-                activityItem.remove();
-            });
+            var cont = document.getElementById('planned-activities-container');
+            var div = document.createElement('div');
+            div.innerHTML = activityRowHTML(activityCounter);
+            cont.appendChild(div.firstChild);
         });
-        
-        // Add Goal functionality
-        document.getElementById('add-goal').addEventListener('click', function() {
+        document.getElementById('add-goal').addEventListener('click', function () {
             goalCounter++;
-            const container = document.getElementById('daily-goals-container');
-            const goalItem = document.createElement('div');
-            goalItem.className = 'daily-goal-item flex items-center space-x-3';
-            goalItem.innerHTML = `
-                <input 
-                    type="text" 
-                    name="daily_goal_title_${goalCounter}"
-                    required
-                    class="flex-1 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter daily goal..."
-                >
-                <input 
-                    type="text" 
-                    name="daily_goal_target_${goalCounter}"
-                    class="w-32 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Target"
-                >
-                <select name="daily_goal_priority_${goalCounter}" class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="1" class="bg-gray-800">Low</option>
-                    <option value="2" class="bg-gray-800" selected>Medium</option>
-                    <option value="3" class="bg-gray-800">High</option>
-                    <option value="4" class="bg-gray-800">Critical</option>
-                </select>
-                <button type="button" class="remove-goal text-red-400 hover:text-red-300 p-2">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            container.appendChild(goalItem);
-            
-            // Add remove functionality
-            goalItem.querySelector('.remove-goal').addEventListener('click', function() {
-                goalItem.remove();
-            });
+            var cont = document.getElementById('daily-goals-container');
+            var div = document.createElement('div');
+            div.innerHTML = goalRowHTML(goalCounter);
+            cont.appendChild(div.firstChild);
         });
-        
-        // Add remove functionality to initial activity and goal
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (e.target.closest('.remove-activity')) {
-                const activityItems = document.querySelectorAll('.planned-activity-item');
-                if (activityItems.length > 1) {
-                    e.target.closest('.planned-activity-item').remove();
-                }
+                var items = document.querySelectorAll('.planned-activity-item');
+                if (items.length > 1) e.target.closest('.planned-activity-item').remove();
             }
             if (e.target.closest('.remove-goal')) {
-                const goalItems = document.querySelectorAll('.daily-goal-item');
-                if (goalItems.length > 1) {
-                    e.target.closest('.daily-goal-item').remove();
-                }
+                var items = document.querySelectorAll('.daily-goal-item');
+                if (items.length > 1) e.target.closest('.daily-goal-item').remove();
             }
         });
-        
-        // Add Additional Activity functionality
-        document.getElementById('add-additional-activity').addEventListener('click', function() {
+
+        document.getElementById('add-additional-activity').addEventListener('click', function () {
             additionalActivityCounter++;
-            const container = document.getElementById('additional-activities-container');
-            const activityItem = document.createElement('div');
-            activityItem.className = 'additional-activity-item bg-white/5 rounded-lg p-4 space-y-3';
-            activityItem.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <h4 class="text-white font-medium">Additional Activity #${additionalActivityCounter}</h4>
-                    <button type="button" class="remove-additional-activity text-red-400 hover:text-red-300">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input 
-                        type="text" 
-                        name="additional_activity_title_${additionalActivityCounter}"
-                        required
-                        class="bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Activity title..."
-                    >
-                    <select name="additional_activity_category_${additionalActivityCounter}" class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="urgent" class="bg-gray-800 text-white">Urgent Task</option>
-                        <option value="meeting" class="bg-gray-800 text-white">Unplanned Meeting</option>
-                        <option value="support" class="bg-gray-800 text-white">Support/Help</option>
-                        <option value="research" class="bg-gray-800 text-white">Research</option>
-                        <option value="admin" class="bg-gray-800 text-white">Administrative</option>
-                        <option value="other" class="bg-gray-800 text-white" selected>Other</option>
-                    </select>
-                </div>
-                <textarea 
-                    name="additional_activity_description_${additionalActivityCounter}"
-                    class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Describe what you did..."
-                    rows="2"
-                ></textarea>
-                <textarea 
-                    name="additional_activity_impact_${additionalActivityCounter}"
-                    class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="How did this affect your planned work? (optional)"
-                    rows="2"
-                ></textarea>
-            `;
-            container.appendChild(activityItem);
-            
-            // Add remove functionality
-            activityItem.querySelector('.remove-additional-activity').addEventListener('click', function() {
-                activityItem.remove();
-            });
+            var n = additionalActivityCounter;
+            var cont = document.getElementById('additional-activities-container');
+            var div = document.createElement('div');
+            div.className = 'additional-item';
+            div.innerHTML =
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+                '<span style="font-weight:600;color:var(--text-heading);">Additional Activity #' + n + '</span>' +
+                '<button type="button" class="remove-additional-activity ant-btn ant-btn-ghost ant-btn-sm" style="color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+                '<input type="text" name="additional_activity_title_' + n + '" required class="ant-input" placeholder="Activity title...">' +
+                '<select name="additional_activity_category_' + n + '" class="ant-input">' +
+                '<option value="urgent">Urgent Task</option><option value="meeting">Unplanned Meeting</option>' +
+                '<option value="support">Support/Help</option><option value="research">Research</option>' +
+                '<option value="admin">Administrative</option><option value="other" selected>Other</option></select></div>' +
+                '<textarea name="additional_activity_description_' + n + '" class="ant-textarea" rows="2" placeholder="Describe what you did..." style="margin-bottom:8px;"></textarea>' +
+                '<textarea name="additional_activity_impact_' + n + '" class="ant-textarea" rows="2" placeholder="How did this affect your planned work? (optional)"></textarea>';
+            cont.appendChild(div);
+            div.querySelector('.remove-additional-activity').addEventListener('click', function () { div.remove(); });
         });
-        
-        // Get CSRF token
-        function getCSRFToken() {
-            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                   document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
-                   '{{ csrf_token }}';
+
+        function getCSRF() {
+            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
         }
-        
-        // Show notification
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
-                type === 'success' ? 'bg-green-600' : 'bg-red-600'
-            } text-white`;
-            notification.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+
+        function showNotification(msg, type) {
+            var cont = document.getElementById('msgContainer') || (function () {
+                var c = document.createElement('div'); c.id = 'msgContainer'; c.className = 'ant-notification'; document.body.appendChild(c); return c;
+            })();
+            var el = document.createElement('div');
+            el.className = 'ant-notification-item';
+            var color = type === 'success' ? 'var(--ant-success)' : type === 'warning' ? 'var(--ant-warning)' : 'var(--ant-error)';
+            var icon  = type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-exclamation-circle';
+            el.style.borderColor = color;
+            el.innerHTML = '<i class="fas ' + icon + '" style="color:' + color + ';flex-shrink:0;"></i>' +
+                '<span style="flex:1;color:var(--text-color);">' + msg + '</span>' +
+                '<button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);"><i class="fas fa-times"></i></button>';
+            cont.appendChild(el);
+            setTimeout(function () { if (el.parentNode) el.remove(); }, 4000);
         }
-        
-        // Handle check-in button click
-        checkInBtn.addEventListener('click', function() {
-            checkInModal.classList.remove('hidden');
-        });
-        
-        // Handle check-out button click
-        checkOutBtn.addEventListener('click', function() {
-            // Load current activity data for check-out
-            loadCheckoutData();
-            checkOutModal.classList.remove('hidden');
-        });
-        
-        // Load checkout data
+
         function loadCheckoutData() {
             fetch('/activities/api/status/')
-            .then(response => response.json())
-            .then(data => {
-                if (data.checkin_data) {
-                    populateCheckoutForm(data.checkin_data);
+            .then(function (r) { return r.json(); })
+            .then(function (data) { if (data.checkin_data) populateCheckoutForm(data.checkin_data); })
+            .catch(function (e) { console.error('Status error:', e); });
+        }
+
+        function statusSelectHTML(name) {
+            return '<select name="' + name + '" required class="ant-input" style="flex:1;" data-status-select>' +
+                '<option value="">Select status...</option>' +
+                '<option value="completed">Completed</option><option value="in_progress">In Progress</option>' +
+                '<option value="not_completed">Not Completed</option><option value="cancelled">Cancelled</option>' +
+                '<option value="deferred">Deferred</option></select>';
+        }
+        function goalStatusSelectHTML(name) {
+            return '<select name="' + name + '" required class="ant-input" style="flex:1;" data-goal-status-select>' +
+                '<option value="">Select status...</option>' +
+                '<option value="completed">Completed</option><option value="partially_completed">Partially Completed</option>' +
+                '<option value="not_achieved">Not Achieved</option><option value="in_progress">In Progress</option>' +
+                '<option value="deferred">Deferred</option></select>';
+        }
+
+        function populateCheckoutForm(data) {
+            var aC = document.getElementById('activities-status-container');
+            var gC = document.getElementById('goals-status-container');
+            var aS = document.getElementById('planned-activities-status');
+            var gS = document.getElementById('daily-goals-status');
+            aC.innerHTML = ''; gC.innerHTML = '';
+
+            var priorities = ['', 'Low', 'Medium', 'High', 'Critical'];
+
+            if (data.planned_activities && data.planned_activities.length > 0) {
+                aS.style.display = 'block';
+                data.planned_activities.forEach(function (a) {
+                    var d = document.createElement('div');
+                    d.className = 'additional-item';
+                    d.innerHTML =
+                        '<div style="display:flex;justify-content:space-between;margin-bottom:10px;">' +
+                        '<span style="font-weight:600;color:var(--text-heading);">' + a.title + '</span>' +
+                        '<span class="ant-tag">' + (priorities[a.priority] || '') + '</span></div>' +
+                        '<div style="display:flex;flex-direction:column;gap:8px;">' +
+                        statusSelectHTML('activity_status_' + a.id) +
+                        '<textarea name="activity_reasons_' + a.id + '" class="ant-textarea activity-reasons-field" rows="2" placeholder="Reason (required if not completed)" style="display:none;"></textarea></div>';
+                    aC.appendChild(d);
+                    var sel = d.querySelector('[data-status-select]');
+                    var rea = d.querySelector('.activity-reasons-field');
+                    sel.addEventListener('change', function () {
+                        var r = ['not_completed','cancelled','deferred'].includes(this.value);
+                        rea.style.display = r ? 'block' : 'none';
+                        if (r) rea.setAttribute('required','required'); else { rea.removeAttribute('required'); rea.value=''; }
+                    });
+                });
+            }
+
+            if (data.daily_goals && data.daily_goals.length > 0) {
+                gS.style.display = 'block';
+                data.daily_goals.forEach(function (g) {
+                    var d = document.createElement('div');
+                    d.className = 'additional-item';
+                    d.innerHTML =
+                        '<div style="display:flex;justify-content:space-between;margin-bottom:10px;">' +
+                        '<span style="font-weight:600;color:var(--text-heading);">' + g.title + '</span>' +
+                        '<span class="ant-tag">Target: ' + (g.target_value || 'N/A') + '</span></div>' +
+                        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+                        goalStatusSelectHTML('goal_status_' + g.id) +
+                        '<input type="text" name="goal_achieved_value_' + g.id + '" class="ant-input" placeholder="Achieved value"></div>' +
+                        '<input type="number" name="goal_completion_' + g.id + '" class="ant-input goal-completion-field" min="0" max="100" placeholder="Completion % (0-100)" style="display:none;margin-bottom:8px;">' +
+                        '<textarea name="goal_reasons_' + g.id + '" class="ant-textarea goal-reasons-field" rows="2" placeholder="Reason (required if not achieved)" style="display:none;"></textarea>';
+                    gC.appendChild(d);
+                    var sel = d.querySelector('[data-goal-status-select]');
+                    var rea = d.querySelector('.goal-reasons-field');
+                    var pct = d.querySelector('.goal-completion-field');
+                    sel.addEventListener('change', function () {
+                        var needReason = ['not_achieved','partially_completed','deferred'].includes(this.value);
+                        var partial    = this.value === 'partially_completed';
+                        rea.style.display = needReason ? 'block' : 'none';
+                        if (needReason) rea.setAttribute('required','required'); else { rea.removeAttribute('required'); rea.value=''; }
+                        pct.style.display = partial ? 'block' : 'none';
+                        if (partial) pct.setAttribute('required','required'); else { pct.removeAttribute('required'); pct.value=''; }
+                    });
+                });
+            }
+        }
+
+        function updateStatus() {
+            fetch('/activities/api/status/')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.checked_out) {
+                    checkInBtn.style.display = 'none'; checkOutBtn.style.display = 'none';
+                } else if (data.checked_in) {
+                    checkInBtn.style.display = 'none'; checkOutBtn.style.display = 'flex';
+                } else {
+                    checkInBtn.style.display = 'flex'; checkOutBtn.style.display = 'none';
                 }
             })
-            .catch(error => {
-                console.error('Error loading checkout data:', error);
-            });
+            .catch(function (e) { console.error('Status error:', e); });
         }
-        
-        // Populate checkout form with check-in data
-        function populateCheckoutForm(checkinData) {
-            const activitiesContainer = document.getElementById('activities-status-container');
-            const goalsContainer = document.getElementById('goals-status-container');
-            const activitiesSection = document.getElementById('planned-activities-status');
-            const goalsSection = document.getElementById('daily-goals-status');
-            
-            // Clear containers
-            activitiesContainer.innerHTML = '';
-            goalsContainer.innerHTML = '';
-            
-            // Populate planned activities
-            if (checkinData.planned_activities && checkinData.planned_activities.length > 0) {
-                activitiesSection.classList.remove('hidden');
-                checkinData.planned_activities.forEach(activity => {
-                    const activityDiv = document.createElement('div');
-                    activityDiv.className = 'bg-white/5 rounded-lg p-4 space-y-3';
-                    activityDiv.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-white font-medium">${activity.title}</h4>
-                            <span class="text-sm text-gray-400">Priority: ${['', 'Low', 'Medium', 'High', 'Critical'][activity.priority]}</span>
-                        </div>
-                        <div class="space-y-3">
-                            <select name="activity_status_${activity.id}" required class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 activity-status-select">
-                                <option value="" class="bg-gray-800 text-white">Select status...</option>
-                                <option value="completed" class="bg-gray-800 text-white">Completed</option>
-                                <option value="in_progress" class="bg-gray-800 text-white">In Progress</option>
-                                <option value="not_completed" class="bg-gray-800 text-white">Not Completed</option>
-                                <option value="cancelled" class="bg-gray-800 text-white">Cancelled</option>
-                                <option value="deferred" class="bg-gray-800 text-white">Deferred</option>
-                            </select>
-                            <div class="activity-reasons-container" style="display: none;">
-                                <textarea 
-                                    name="activity_reasons_${activity.id}"
-                                    class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent activity-reasons-field"
-                                    placeholder="Reason (required if not completed)"
-                                    rows="3"
-                                ></textarea>
-                            </div>
-                        </div>
-                    `;
-                    activitiesContainer.appendChild(activityDiv);
-                    
-                    // Add event listener for status change
-                    const statusSelect = activityDiv.querySelector('.activity-status-select');
-                    const reasonsContainer = activityDiv.querySelector('.activity-reasons-container');
-                    const reasonsField = activityDiv.querySelector('.activity-reasons-field');
-                    
-                    statusSelect.addEventListener('change', function() {
-                        const requiresReason = ['not_completed', 'cancelled', 'deferred'].includes(this.value);
-                        
-                        if (requiresReason) {
-                            reasonsContainer.style.display = 'block';
-                            reasonsField.setAttribute('required', 'required');
-                        } else {
-                            reasonsContainer.style.display = 'none';
-                            reasonsField.removeAttribute('required');
-                            reasonsField.value = ''; // Clear the field when hidden
-                        }
-                    });
-                });
-            }
-            
-            // Populate daily goals
-            if (checkinData.daily_goals && checkinData.daily_goals.length > 0) {
-                goalsSection.classList.remove('hidden');
-                checkinData.daily_goals.forEach(goal => {
-                    const goalDiv = document.createElement('div');
-                    goalDiv.className = 'bg-white/5 rounded-lg p-4 space-y-3';
-                    goalDiv.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-white font-medium">${goal.title}</h4>
-                            <span class="text-sm text-gray-400">Target: ${goal.target_value || 'Not set'}</span>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <select name="goal_status_${goal.id}" required class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 goal-status-select">
-                                    <option value="" class="bg-gray-800 text-white">Select status...</option>
-                                    <option value="completed" class="bg-gray-800 text-white">Completed</option>
-                                    <option value="partially_completed" class="bg-gray-800 text-white">Partially Completed</option>
-                                    <option value="not_achieved" class="bg-gray-800 text-white">Not Achieved</option>
-                                    <option value="in_progress" class="bg-gray-800 text-white">In Progress</option>
-                                    <option value="deferred" class="bg-gray-800 text-white">Deferred</option>
-                                </select>
-                                <input 
-                                    type="text" 
-                                    name="goal_achieved_value_${goal.id}"
-                                    class="bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Achieved value"
-                                >
-                            </div>
-                            <div class="goal-completion-container" style="display: none;">
-                                <input 
-                                    type="number" 
-                                    name="goal_completion_${goal.id}"
-                                    min="0" max="100"
-                                    class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent goal-completion-field"
-                                    placeholder="Completion percentage (0-100)"
-                                >
-                            </div>
-                            <div class="goal-reasons-container" style="display: none;">
-                                <textarea 
-                                    name="goal_reasons_${goal.id}"
-                                    class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent goal-reasons-field"
-                                    placeholder="Reason (required if not achieved or partially completed)"
-                                    rows="3"
-                                ></textarea>
-                            </div>
-                        </div>
-                    `;
-                    goalsContainer.appendChild(goalDiv);
-                    
-                    // Add event listener for status change
-                    const statusSelect = goalDiv.querySelector('.goal-status-select');
-                    const reasonsContainer = goalDiv.querySelector('.goal-reasons-container');
-                    const reasonsField = goalDiv.querySelector('.goal-reasons-field');
-                    const completionContainer = goalDiv.querySelector('.goal-completion-container');
-                    const completionField = goalDiv.querySelector('.goal-completion-field');
-                    
-                    statusSelect.addEventListener('change', function() {
-                        const requiresReason = ['not_achieved', 'partially_completed', 'deferred'].includes(this.value);
-                        const isPartiallyCompleted = this.value === 'partially_completed';
-                        
-                        // Handle reasons field
-                        if (requiresReason) {
-                            reasonsContainer.style.display = 'block';
-                            reasonsField.setAttribute('required', 'required');
-                        } else {
-                            reasonsContainer.style.display = 'none';
-                            reasonsField.removeAttribute('required');
-                            reasonsField.value = ''; // Clear the field when hidden
-                        }
-                        
-                        // Handle completion percentage field
-                        if (isPartiallyCompleted) {
-                            completionContainer.style.display = 'block';
-                            completionField.setAttribute('required', 'required');
-                        } else {
-                            completionContainer.style.display = 'none';
-                            completionField.removeAttribute('required');
-                            completionField.value = ''; // Clear the field when hidden
-                        }
-                    });
-                });
-            }
-        }
-        
-        // Handle check-in form submission
-        checkInForm.addEventListener('submit', function(e) {
+        updateStatus();
+
+        // Check-in submit
+        checkInForm.addEventListener('submit', function (e) {
             e.preventDefault();
-
-            const formData = new FormData();
-            formData.append('csrfmiddlewaretoken', getCSRFToken());
-
-            // Collect planned activities
-            const activityTitles = [];
-            const activityPriorities = [];
-            document.querySelectorAll('.planned-activity-item').forEach((item, index) => {
-                const title = item.querySelector(`input[name*="planned_activity_title"]`).value;
-                const priority = item.querySelector(`select[name*="planned_activity_priority"]`).value;
-                if (title) {
-                    activityTitles.push({
-                        title: title,
-                        priority: parseInt(priority),
-                        order: index + 1
-                    });
-                }
+            var formData = new FormData();
+            formData.append('csrfmiddlewaretoken', getCSRF());
+            var acts = [];
+            document.querySelectorAll('.planned-activity-item').forEach(function (item, i) {
+                var t = item.querySelector('[name*="planned_activity_title"]').value;
+                var p = item.querySelector('[name*="planned_activity_priority"]').value;
+                if (t) acts.push({ title: t, priority: parseInt(p), order: i + 1 });
             });
-
-            // Collect daily goals
-            const goalTitles = [];
-            document.querySelectorAll('.daily-goal-item').forEach((item, index) => {
-                const title = item.querySelector(`input[name*="daily_goal_title"]`).value;
-                const target = item.querySelector(`input[name*="daily_goal_target"]`).value;
-                const priority = item.querySelector(`select[name*="daily_goal_priority"]`).value;
-                if (title) {
-                    goalTitles.push({
-                        title: title,
-                        target_value: target,
-                        priority: parseInt(priority),
-                        order: index + 1
-                    });
-                }
+            var goals = [];
+            document.querySelectorAll('.daily-goal-item').forEach(function (item, i) {
+                var t  = item.querySelector('[name*="daily_goal_title"]').value;
+                var tg = item.querySelector('[name*="daily_goal_target"]').value;
+                var p  = item.querySelector('[name*="daily_goal_priority"]').value;
+                if (t) goals.push({ title: t, target_value: tg, priority: parseInt(p), order: i + 1 });
             });
+            formData.append('planned_activities', JSON.stringify(acts));
+            formData.append('daily_goals', JSON.stringify(goals));
+            formData.append('morning_problems', checkInForm.querySelector('[name="morning_problems"]').value);
+            var btn = checkInForm.querySelector('button[type="submit"]');
+            var orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking In…';
 
-            formData.append('planned_activities', JSON.stringify(activityTitles));
-            formData.append('daily_goals', JSON.stringify(goalTitles));
-            formData.append('morning_problems', document.querySelector('textarea[name="morning_problems"]').value);
-            // Handle submit button state
-            const submitBtn = checkInForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking In...';
-
-            // Function to finalize and send
-            function submitCheckin(formData) {
+            function send(fd) {
                 fetch('/activities/api/check-in/', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': getCSRFToken()
-                    },
-                    credentials: 'same-origin'
+                    method: 'POST', body: fd,
+                    headers: { 'X-CSRFToken': getCSRF() }, credentials: 'same-origin'
                 })
-                .then(response => response.json())
-                .then(data => {
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
                     if (data.success) {
                         showNotification(data.message, 'success');
-                        checkInModal.classList.add('hidden');
+                        closeModal(checkInModal);
                         checkInForm.reset();
-                        // Reset counters and containers
-                        activityCounter = 1;
-                        goalCounter = 1;
-                        document.getElementById('planned-activities-container').innerHTML = `
-                        <div class="planned-activity-item flex items-center space-x-3">
-                            <input 
-                                type="text" 
-                                name="planned_activity_title_1"
-                                required
-                                class="flex-1 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Enter planned activity..."
-                            >
-                            <select name="planned_activity_priority_1" class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="1" class="bg-gray-800">Low</option>
-                                <option value="2" class="bg-gray-800" selected>Medium</option>
-                                <option value="3" class="bg-gray-800">High</option>
-                                <option value="4" class="bg-gray-800">Critical</option>
-                            </select>
-                            <button type="button" class="remove-activity text-red-400 hover:text-red-300 p-2">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    document.getElementById('daily-goals-container').innerHTML = `
-                        <div class="daily-goal-item flex items-center space-x-3">
-                            <input 
-                                type="text" 
-                                name="daily_goal_title_1"
-                                required
-                                class="flex-1 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Enter daily goal..."
-                            >
-                            <input 
-                                type="text" 
-                                name="daily_goal_target_1"
-                                class="w-32 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Target"
-                            >
-                            <select name="daily_goal_priority_1" class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="1" class="bg-gray-800">Low</option>
-                                <option value="2" class="bg-gray-800" selected>Medium</option>
-                                <option value="3" class="bg-gray-800">High</option>
-                                <option value="4" class="bg-gray-800">Critical</option>
-                            </select>
-                            <button type="button" class="remove-goal text-red-400 hover:text-red-300 p-2">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
+                        activityCounter = 1; goalCounter = 1;
+                        document.getElementById('planned-activities-container').innerHTML = activityRowHTML(1);
+                        document.getElementById('daily-goals-container').innerHTML = goalRowHTML(1);
                         updateStatus();
                     } else if (data.redirect) {
                         window.location.href = data.redirect;
@@ -934,131 +1022,72 @@
                         showNotification(data.error || 'Check-in failed', 'error');
                     }
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Network error. Please try again.', 'error');
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                });
+                .catch(function () { showNotification('Network error. Please try again.', 'error'); })
+                .finally(function () { btn.disabled = false; btn.innerHTML = orig; });
             }
 
-            // Get geolocation before submit
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    position => {
-                        formData.append('lat', position.coords.latitude);
-                        formData.append('long', position.coords.longitude);
-                        submitCheckin(formData);
-                    },
-                    error => {
-                        console.error('Geolocation error:', error);
-                        showNotification('Location access denied. Check-in failed.', 'error');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalText;
-                    }
+                    function (pos) { formData.append('lat', pos.coords.latitude); formData.append('long', pos.coords.longitude); send(formData); },
+                    function ()    { showNotification('Location access denied. Check-in failed.', 'error'); btn.disabled = false; btn.innerHTML = orig; }
                 );
             } else {
-                showNotification('Geolocation not supported by this browser.', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
+                showNotification('Geolocation not supported.', 'error'); btn.disabled = false; btn.innerHTML = orig;
             }
         });
-        
-        // Handle check-out form submission
-        checkOutForm.addEventListener('submit', function(e) {
+
+        // Check-out submit
+        checkOutForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            
-            const formData = new FormData();
-            formData.append('csrfmiddlewaretoken', getCSRFToken());
-            
-            // Collect activity updates
-            const activityUpdates = [];
-            document.querySelectorAll('[name^="activity_status_"]').forEach(select => {
-                const activityId = select.name.split('_').pop();
-                const status = select.value;
-                const reasons = document.querySelector(`[name="activity_reasons_${activityId}"]`).value;
-                
-                if (status) {
-                    activityUpdates.push({
-                        id: parseInt(activityId),
-                        status: status,
-                        reasons: reasons
-                    });
-                }
+            var formData = new FormData();
+            formData.append('csrfmiddlewaretoken', getCSRF());
+            var acts = [];
+            document.querySelectorAll('[name^="activity_status_"]').forEach(function (sel) {
+                var id = sel.name.split('_').pop();
+                var reasons = document.querySelector('[name="activity_reasons_' + id + '"]');
+                if (sel.value) acts.push({ id: parseInt(id), status: sel.value, reasons: reasons ? reasons.value : '' });
             });
-            
-            // Collect goal updates
-            const goalUpdates = [];
-            document.querySelectorAll('[name^="goal_status_"]').forEach(select => {
-                const goalId = select.name.split('_').pop();
-                const status = select.value;
-                const reasons = document.querySelector(`[name="goal_reasons_${goalId}"]`).value;
-                const achievedValue = document.querySelector(`[name="goal_achieved_value_${goalId}"]`).value;
-                const completion = document.querySelector(`[name="goal_completion_${goalId}"]`).value;
-                
-                if (status) {
-                    goalUpdates.push({
-                        id: parseInt(goalId),
-                        status: status,
-                        reasons: reasons,
-                        achieved_value: achievedValue,
-                        completion_percentage: completion ? parseInt(completion) : 0
-                    });
-                }
+            var gls = [];
+            document.querySelectorAll('[name^="goal_status_"]').forEach(function (sel) {
+                var id = sel.name.split('_').pop();
+                var rea = document.querySelector('[name="goal_reasons_' + id + '"]');
+                var av  = document.querySelector('[name="goal_achieved_value_' + id + '"]');
+                var pct = document.querySelector('[name="goal_completion_' + id + '"]');
+                if (sel.value) gls.push({ id: parseInt(id), status: sel.value, reasons: rea?rea.value:'', achieved_value: av?av.value:'', completion_percentage: pct&&pct.value?parseInt(pct.value):0 });
             });
-            
-            // Collect additional activities
-            const additionalActivities = [];
-            document.querySelectorAll('.additional-activity-item').forEach((item, index) => {
-                const title = item.querySelector(`[name*="additional_activity_title"]`).value;
-                const category = item.querySelector(`[name*="additional_activity_category"]`).value;
-                const description = item.querySelector(`[name*="additional_activity_description"]`).value;
-                const impact = item.querySelector(`[name*="additional_activity_impact"]`).value;
-                
-                if (title) {
-                    additionalActivities.push({
-                        title: title,
-                        category: category,
-                        description: description,
-                        impact_on_planned_work: impact,
-                        status: 'completed',
-                        order: index + 1
-                    });
-                }
+            var addl = [];
+            document.querySelectorAll('.additional-item').forEach(function (item, i) {
+                var t = item.querySelector('[name*="additional_activity_title"]');
+                var c = item.querySelector('[name*="additional_activity_category"]');
+                var d = item.querySelector('[name*="additional_activity_description"]');
+                var imp = item.querySelector('[name*="additional_activity_impact"]');
+                if (t && t.value) addl.push({ title: t.value, category: c?c.value:'other', description: d?d.value:'', impact_on_planned_work: imp?imp.value:'', status: 'completed', order: i+1 });
             });
-            
-            formData.append('activity_updates', JSON.stringify(activityUpdates));
-            formData.append('goal_updates', JSON.stringify(goalUpdates));
-            formData.append('additional_activities', JSON.stringify(additionalActivities));
-            formData.append('afternoon_problems', document.querySelector('textarea[name="afternoon_problems"]').value);
-            
-            const submitBtn = checkOutForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking Out...';
-            
+            formData.append('activity_updates', JSON.stringify(acts));
+            formData.append('goal_updates', JSON.stringify(gls));
+            formData.append('additional_activities', JSON.stringify(addl));
+            formData.append('afternoon_problems', checkOutForm.querySelector('[name="afternoon_problems"]').value);
+
+            var btn = checkOutForm.querySelector('button[type="submit"]');
+            var orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking Out…';
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    position => {
-                        formData.append('lat', position.coords.latitude);
-                        formData.append('long', position.coords.longitude);
-
+                    function (pos) {
+                        formData.append('lat', pos.coords.latitude);
+                        formData.append('long', pos.coords.longitude);
                         fetch('/activities/api/check-out/', {
-                            method: 'POST',
-                            body: formData,
-                            headers: { 'X-CSRFToken': getCSRFToken() },
-                            credentials: 'same-origin'
+                            method: 'POST', body: formData,
+                            headers: { 'X-CSRFToken': getCSRF() }, credentials: 'same-origin'
                         })
-                        .then(response => response.json())
-                        .then(data => {
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
                             if (data.success) {
                                 showNotification(data.message, 'success');
-                                checkOutModal.classList.add('hidden');
+                                closeModal(checkOutModal);
                                 checkOutForm.reset();
-                                // Reset additional activities counter
                                 additionalActivityCounter = 0;
                                 document.getElementById('additional-activities-container').innerHTML = '';
                                 updateStatus();
@@ -1068,90 +1097,47 @@
                                 showNotification(data.error || 'Check-out failed', 'error');
                             }
                         })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            showNotification('Network error. Please try again.', 'error');
-                        })
-                        .finally(() => {
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = originalText;
-                        });
+                        .catch(function () { showNotification('Network error. Please try again.', 'error'); })
+                        .finally(function () { btn.disabled = false; btn.innerHTML = orig; });
                     },
-                        error => {
-                            console.error('Geolocation error:', error);
-                            showNotification('Location access denied. Check-out failed.', 'error');
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = originalText;
-                        }
-                    );
+                    function () { showNotification('Location access denied. Check-out failed.', 'error'); btn.disabled = false; btn.innerHTML = orig; }
+                );
             } else {
-                showNotification('Geolocation not supported by this browser.', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
+                showNotification('Geolocation not supported.', 'error'); btn.disabled = false; btn.innerHTML = orig;
             }
         });
-        
-        // Update button visibility based on current status
-        function updateStatus() {
-            fetch('/activities/api/status/')
-            .then(response => response.json())
-            .then(data => {
-                if (data.checked_out) {
-                    checkInBtn.style.display = 'none';
-                    checkOutBtn.style.display = 'none';
-                } else if (data.checked_in) {
-                    checkInBtn.style.display = 'none';
-                    checkOutBtn.style.display = 'flex';
-                } else {
-                    checkInBtn.style.display = 'flex';
-                    checkOutBtn.style.display = 'none';
-                }
-            })
-            .catch(error => {
-                console.error('Status check error:', error);
-            });
-        }
-        
-        // Initialize status on page load
-        updateStatus();
     });
     </script>
-    
+
+    <!-- ── Profile Completion Reminder ────────────────────── -->
     {% if user.is_authenticated and show_profile_completion_reminder %}
-    <div id="profile-completion-modal" role="dialog" aria-modal="true" aria-labelledby="profile-completion-title"
-         class="fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" id="profile-completion-backdrop" aria-hidden="true"></div>
-        <div class="relative nft-card max-w-md w-full rounded-xl p-6 shadow-nft-lg border border-indigo-500/40">
-            <div class="flex items-start gap-3 mb-4">
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                    <i class="fas fa-user-edit text-amber-400"></i>
+    <div id="profile-completion-modal" style="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;">
+        <div style="position:absolute;inset:0;background:var(--bg-mask);backdrop-filter:blur(4px);cursor:pointer;" id="profile-completion-backdrop"></div>
+        <div class="modal-card" style="position:relative;max-width:440px;width:100%;padding:24px;">
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+                <div style="width:40px;height:40px;border-radius:8px;background:var(--ant-warning-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas fa-user-edit" style="color:var(--ant-warning);"></i>
                 </div>
                 <div>
-                    <h2 id="profile-completion-title" class="text-lg font-semibold text-white">Lengkapi data profil</h2>
-                    <p class="text-gray-400 text-sm mt-1">Profil SSO Anda belum lengkap. Mohon isi data berikut di portal Akun Arnatech agar informasi karyawan konsisten.</p>
+                    <h2 style="font-size:16px;font-weight:600;color:var(--text-heading);margin:0 0 4px;">Lengkapi data profil</h2>
+                    <p style="font-size:13px;color:var(--text-secondary);margin:0;">Profil SSO Anda belum lengkap. Mohon isi data berikut di portal Akun Arnatech.</p>
                 </div>
             </div>
-            <ul class="text-sm text-gray-200 list-disc pl-5 mb-6 space-y-1.5">
+            <ul style="margin:0 0 20px 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;">
                 {% if 'full_name' in profile_reminder_missing %}
-                <li><span class="text-gray-400">Nama lengkap</span></li>
+                <li style="font-size:14px;color:var(--text-secondary);">Nama lengkap</li>
                 {% endif %}
                 {% if 'profile_picture' in profile_reminder_missing %}
-                <li><span class="text-gray-400">Foto profil</span></li>
+                <li style="font-size:14px;color:var(--text-secondary);">Foto profil</li>
                 {% endif %}
                 {% if 'phone_number' in profile_reminder_missing %}
-                <li><span class="text-gray-400">Nomor telepon</span></li>
+                <li style="font-size:14px;color:var(--text-secondary);">Nomor telepon</li>
                 {% endif %}
             </ul>
-            <div class="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
-                <button type="button" id="profile-completion-dismiss"
-                        class="px-4 py-2.5 rounded-lg border border-nft-light text-gray-300 hover:bg-nft-gray/80 transition-colors text-sm font-medium">
-                    Tutup
-                </button>
-                <a href="{{ account_portal_profile_url }}"
-                   target="_blank" rel="noopener noreferrer"
-                   class="px-4 py-2.5 rounded-lg bg-nft-gradient text-white text-center text-sm font-semibold hover:opacity-90 transition-opacity inline-flex items-center justify-center gap-2">
-                    <i class="fas fa-external-link-alt text-xs"></i>
-                    Lengkapi di pengaturan akun
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" id="profile-completion-dismiss" class="ant-btn ant-btn-default">Tutup</button>
+                <a href="{{ account_portal_profile_url }}" target="_blank" rel="noopener noreferrer" class="ant-btn ant-btn-primary">
+                    <i class="fas fa-external-link-alt" style="font-size:11px;"></i> Lengkapi di pengaturan akun
                 </a>
             </div>
         </div>
@@ -1160,10 +1146,7 @@
     (function () {
         var modal = document.getElementById('profile-completion-modal');
         if (!modal) return;
-        function hide() {
-            modal.classList.add('hidden');
-            modal.setAttribute('aria-hidden', 'true');
-        }
+        function hide() { modal.style.display = 'none'; }
         document.getElementById('profile-completion-dismiss')?.addEventListener('click', hide);
         document.getElementById('profile-completion-backdrop')?.addEventListener('click', hide);
     })();
@@ -1172,4 +1155,4 @@
 
     {% block extra_js %}{% endblock %}
 </body>
-</html> 
+</html>

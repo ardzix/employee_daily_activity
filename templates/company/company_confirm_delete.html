@@ -1,36 +1,28 @@
 {% extends 'base.html' %}
 
-{% block title %}Delete Company - Employee Activity Tracker{% endblock %}
+{% block title %}Delete Company{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-    <div class="container mx-auto px-6 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold text-white mb-2">Delete Company</h1>
-            <p class="text-blue-300">
-                <i class="fas fa-exclamation-triangle mr-1"></i>
-                Confirm company deletion
-            </p>
-        </div>
+<div style="max-width:600px;margin:0 auto;padding:32px 24px;">
+    <h1 class="page-title" style="color:var(--ant-error);margin-bottom:24px;"><i class="fas fa-exclamation-triangle" style="margin-right:8px;"></i>Delete Company</h1>
 
-        <!-- Confirmation Box -->
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl max-w-2xl mx-auto">
-            <h2 class="text-2xl font-bold text-white mb-4">Are you sure?</h2>
-            <p class="text-blue-300 mb-6">
-                You are about to delete the company <span class="text-white font-medium">{{ object.name }}</span>. 
-                This action cannot be undone.
-            </p>
-            
-            <div class="flex justify-end space-x-4 pt-4 border-t border-white/20">
-                <a href="{% url 'employee:company_list' %}" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-lg text-sm font-medium">
-                    Cancel
-                </a>
-                <form method="post">
+    <div class="ant-card">
+        <div class="ant-card-body">
+            <p style="font-size:16px;font-weight:600;color:var(--text-heading);margin:0 0 16px;">Are you sure?</p>
+
+            <div style="padding:14px 16px;background:var(--ant-error-bg);border-radius:6px;border:1px solid var(--ant-error);margin-bottom:16px;">
+                <p style="margin:0;color:var(--text-color);font-size:14px;">
+                    You are about to delete the company <strong style="color:var(--text-heading);">{{ object.name }}</strong>.
+                    <br><span style="color:var(--ant-error);font-size:13px;font-weight:600;">This action cannot be undone.</span>
+                </p>
+            </div>
+
+            <hr class="ant-divider">
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+                <a href="{% url 'employee:company_list' %}" class="ant-btn ant-btn-default">Cancel</a>
+                <form method="post" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white py-2 px-6 rounded-lg text-sm font-medium">
-                        <i class="fas fa-trash mr-2"></i>Delete Company
-                    </button>
+                    <button type="submit" class="ant-btn ant-btn-danger"><i class="fas fa-trash"></i> Delete Company</button>
                 </form>
             </div>
         </div>

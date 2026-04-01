@@ -1,45 +1,33 @@
 {% extends 'base.html' %}
 
-{% block title %}Delete Employee - Employee Activity Tracker{% endblock %}
+{% block title %}Delete Employee{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-    <div class="container mx-auto px-6 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold text-white mb-2">Delete Employee</h1>
-            <p class="text-blue-300">
-                <i class="fas fa-exclamation-triangle mr-1"></i>
-                Confirm employee deletion
-            </p>
-        </div>
+<div style="max-width:600px;margin:0 auto;padding:32px 24px;">
+    <h1 class="page-title" style="color:var(--ant-error);margin-bottom:24px;"><i class="fas fa-exclamation-triangle" style="margin-right:8px;"></i>Delete Employee</h1>
 
-        <!-- Confirmation Box -->
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl max-w-2xl mx-auto">
-            <h2 class="text-2xl font-bold text-white mb-4">Are you sure?</h2>
-            <div class="flex items-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center mr-4">
-                    <i class="fas fa-user text-white text-xl"></i>
+    <div class="ant-card">
+        <div class="ant-card-body">
+            <p style="font-size:16px;font-weight:600;color:var(--text-heading);margin:0 0 16px;">Are you sure?</p>
+
+            <div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--ant-error-bg);border-radius:6px;border:1px solid var(--ant-error);margin-bottom:16px;">
+                <div class="ant-avatar" style="width:48px;height:48px;background:var(--ant-primary-bg);flex-shrink:0;">
+                    <i class="fas fa-user" style="color:var(--ant-primary);font-size:18px;"></i>
                 </div>
                 <div>
-                    <p class="text-white font-medium text-xl">{{ object.full_name }}</p>
-                    <p class="text-blue-300">{{ object.position }} • {{ object.company.name }}</p>
+                    <p style="font-size:16px;font-weight:600;color:var(--text-heading);margin:0;">{{ object.full_name }}</p>
+                    <p style="font-size:13px;color:var(--text-secondary);margin:0;">{{ object.position }} &bull; {{ object.company.name }}</p>
                 </div>
             </div>
-            
-            <p class="text-blue-300 mb-6">
-                You are about to delete this employee profile. This action cannot be undone.
-            </p>
-            
-            <div class="flex justify-end space-x-4 pt-4 border-t border-white/20">
-                <a href="{% url 'employee:employee_list' %}" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-lg text-sm font-medium">
-                    Cancel
-                </a>
-                <form method="post">
+
+            <p style="font-size:13px;color:var(--text-secondary);margin:0 0 20px;">You are about to delete this employee profile. <strong style="color:var(--ant-error);">This action cannot be undone.</strong></p>
+
+            <hr class="ant-divider">
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+                <a href="{% url 'employee:employee_list' %}" class="ant-btn ant-btn-default">Cancel</a>
+                <form method="post" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white py-2 px-6 rounded-lg text-sm font-medium">
-                        <i class="fas fa-trash mr-2"></i>Delete Employee
-                    </button>
+                    <button type="submit" class="ant-btn ant-btn-danger"><i class="fas fa-trash"></i> Delete Employee</button>
                 </form>
             </div>
         </div>

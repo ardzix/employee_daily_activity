@@ -1,68 +1,56 @@
 {% extends 'base.html' %}
 
-{% block title %}Company List - Employee Activity Tracker{% endblock %}
+{% block title %}Company Management{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-    <div class="container mx-auto px-6 py-8">
-        <!-- Header -->
-        <div class="mb-8 flex justify-between items-start">
-            <div>
-                <h1 class="text-4xl font-bold text-white mb-2">Company Management</h1>
-                <p class="text-blue-300">
-                    <i class="fas fa-building mr-1"></i>
-                    Manage client companies
-                </p>
-            </div>
-            
-            <!-- Create Button -->
-            <a href="{% url 'employee:company_create' %}" class="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center">
-                <i class="fas fa-plus mr-2"></i>
-                Add New Company
-            </a>
+<div style="max-width:1100px;margin:0 auto;padding:32px 24px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+        <div>
+            <h1 class="page-title"><i class="fas fa-building" style="color:var(--ant-primary);margin-right:10px;"></i>Company Management</h1>
+            <p class="page-subtitle">Manage client companies</p>
         </div>
+        <div style="display:flex;gap:8px;">
+            <a href="{% url 'dashboard:admin' %}" class="ant-btn ant-btn-default"><i class="fas fa-arrow-left"></i> Back</a>
+            <a href="{% url 'employee:company_create' %}" class="ant-btn ant-btn-primary"><i class="fas fa-plus"></i> Add New Company</a>
+        </div>
+    </div>
 
-        <!-- Company Table -->
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-            <div class="overflow-x-auto">
-                <table class="w-full text-white">
-                    <thead class="bg-white/10 text-left">
+    <div class="ant-card">
+        <div class="ant-card-body" style="padding:0;">
+            <div class="ant-table-wrap">
+                <table class="ant-table">
+                    <thead>
                         <tr>
-                            <th class="p-4">Name</th>
-                            <th class="p-4">Code</th>
-                            <th class="p-4">Work Hours</th>
-                            <th class="p-4">Timezone</th>
-                            <th class="p-4">Status</th>
-                            <th class="p-4">Actions</th>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Work Hours</th>
+                            <th>Timezone</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for company in companies %}
-                        <tr class="border-b border-white/10 hover:bg-white/5">
-                            <td class="p-4 font-medium">{{ company.name }}</td>
-                            <td class="p-4 text-blue-300">{{ company.code }}</td>
-                            <td class="p-4">{{ company.work_start_time|time:"H:i" }} - {{ company.work_end_time|time:"H:i" }}</td>
-                            <td class="p-4">{{ company.timezone }}</td>
-                            <td class="p-4">
-                                <span class="px-2 py-1 rounded-full text-xs
-                                    {% if company.is_active %}bg-green-500/20 text-green-400
-                                    {% else %}bg-red-500/20 text-red-400
-                                    {% endif %}">
+                        <tr>
+                            <td style="font-weight:600;color:var(--text-heading);">{{ company.name }}</td>
+                            <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">{{ company.code }}</td>
+                            <td style="white-space:nowrap;">{{ company.work_start_time|time:"H:i" }} — {{ company.work_end_time|time:"H:i" }}</td>
+                            <td>{{ company.timezone }}</td>
+                            <td>
+                                <span class="ant-tag {% if company.is_active %}ant-tag-success{% else %}ant-tag-error{% endif %}">
                                     {% if company.is_active %}Active{% else %}Inactive{% endif %}
                                 </span>
                             </td>
-                            <td class="p-4 flex space-x-2">
-                                <a href="{% url 'employee:company_update' company.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-sm">
-                                    <i class="fas fa-edit mr-1"></i>Edit
-                                </a>
-                                <a href="{% url 'employee:company_delete' company.pk %}" class="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded text-sm">
-                                    <i class="fas fa-trash mr-1"></i>Delete
-                                </a>
+                            <td>
+                                <div style="display:flex;gap:6px;">
+                                    <a href="{% url 'employee:company_update' company.pk %}" class="ant-btn ant-btn-primary ant-btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="{% url 'employee:company_delete' company.pk %}" class="ant-btn ant-btn-danger ant-btn-sm"><i class="fas fa-trash"></i> Delete</a>
+                                </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="p-4 text-center text-blue-300">No companies found.</td>
+                            <td colspan="6" style="text-align:center;color:var(--text-secondary);padding:32px;">No companies found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

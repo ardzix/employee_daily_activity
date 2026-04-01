@@ -1,126 +1,90 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - Employee Activity Tracker{% endblock %}
+{% block title %}Dashboard — Employee Activity Tracker{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-    <div class="container mx-auto px-6 py-8">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-4xl font-bold text-white mb-2">Welcome!</h1>
-                <p class="text-blue-300">{{ user.username }}</p>
-            </div>
-            
-            <div class="flex items-center space-x-4">
-                {% if is_admin %}
-                <a href="{% url 'dashboard:admin' %}" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300">
-                    <i class="fas fa-cog mr-2"></i>Admin Panel
+<div style="max-width:1000px;margin:0 auto;padding:32px 24px;">
+
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+        <div>
+            <h1 class="page-title">Welcome!</h1>
+            <p class="page-subtitle">{{ user.username }}</p>
+        </div>
+        {% if is_admin %}
+        <a href="{% url 'dashboard:admin' %}" class="ant-btn ant-btn-primary"><i class="fas fa-cog"></i> Admin Panel</a>
+        {% endif %}
+    </div>
+
+    <!-- Setup Notice -->
+    <div class="ant-alert ant-alert-warning" style="margin-bottom:24px;">
+        <i class="fas fa-user-clock" style="font-size:18px;flex-shrink:0;"></i>
+        <div>
+            <p style="font-weight:600;margin:0 0 2px;">Profile Setup in Progress</p>
+            <p style="margin:0;font-size:13px;">{{ message }}</p>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <!-- Quick Actions -->
+        <div class="ant-card">
+            <div class="ant-card-head"><i class="fas fa-bolt" style="margin-right:8px;color:var(--ant-warning);"></i>Quick Actions</div>
+            <div class="ant-card-body" style="display:flex;flex-direction:column;gap:12px;">
+                <button id="check-in-btn" class="ant-btn ant-btn-success ant-btn-lg" style="width:100%;justify-content:center;">
+                    <i class="fas fa-clock"></i> Clock In
+                </button>
+                <button id="check-out-btn" class="ant-btn ant-btn-primary ant-btn-lg" style="width:100%;justify-content:center;">
+                    <i class="fas fa-clock"></i> Clock Out
+                </button>
+                <a href="{% url 'authentication:profile' %}" class="ant-btn ant-btn-default ant-btn-lg" style="width:100%;justify-content:center;text-decoration:none;">
+                    <i class="fas fa-user"></i> View Profile
                 </a>
+                <a href="{% url 'activities:activity_data' %}" class="ant-btn ant-btn-default ant-btn-lg" style="width:100%;justify-content:center;text-decoration:none;">
+                    <i class="fas fa-database"></i> View Activity Data
+                </a>
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="ant-card">
+            <div class="ant-card-head"><i class="fas fa-user" style="margin-right:8px;color:var(--ant-primary);"></i>Your Information</div>
+            <div class="ant-card-body" style="display:flex;flex-direction:column;gap:0;">
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color-secondary);">
+                    <span style="color:var(--text-secondary);font-size:13px;">Username</span>
+                    <span style="font-weight:600;font-size:13px;color:var(--text-heading);">{{ user.username }}</span>
+                </div>
+                {% if user.email %}
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color-secondary);">
+                    <span style="color:var(--text-secondary);font-size:13px;">Email</span>
+                    <span style="font-weight:600;font-size:13px;color:var(--text-heading);">{{ user.email }}</span>
+                </div>
                 {% endif %}
-                
-                <a href="{% url 'authentication:logout' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                </a>
-            </div>
-        </div>
-
-        <!-- Status Card -->
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
-            <div class="flex items-center space-x-4">
-                <div class="p-3 bg-yellow-500/20 rounded-xl">
-                    <i class="fas fa-user-clock text-yellow-400 text-2xl"></i>
+                {% if user.first_name or user.last_name %}
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color-secondary);">
+                    <span style="color:var(--text-secondary);font-size:13px;">Name</span>
+                    <span style="font-weight:600;font-size:13px;color:var(--text-heading);">{{ user.first_name }} {{ user.last_name }}</span>
                 </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-white mb-1">Profile Setup in Progress</h3>
-                    <p class="text-blue-300">{{ message }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Quick Actions -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
-                    <i class="fas fa-bolt text-yellow-400 mr-3"></i>
-                    Quick Actions
-                </h2>
-                
-                <div class="space-y-4">
-                    <button id="check-in-btn" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
-                        <i class="fas fa-clock text-xl"></i>
-                        <span class="text-lg font-semibold">Clock In</span>
-                    </button>
-                    
-                    <button id="check-out-btn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-4 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
-                        <i class="fas fa-clock text-xl"></i>
-                        <span class="text-lg font-semibold">Clock Out</span>
-                    </button>
-                    
-                    <a href="{% url 'authentication:profile' %}" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 block">
-                        <i class="fas fa-user text-xl"></i>
-                        <span class="text-lg font-semibold">View Profile</span>
-                    </a>
-                    
-                    <a href="{% url 'activities:activity_data' %}" class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-4 px-6 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 block">
-                        <i class="fas fa-database text-xl"></i>
-                        <span class="text-lg font-semibold">View Activity Data</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- User Information -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
-                    <i class="fas fa-user text-blue-400 mr-3"></i>
-                    Your Information
-                </h2>
-                
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center py-2 border-b border-white/10">
-                        <span class="text-blue-300">Username:</span>
-                        <span class="text-white font-semibold">{{ user.username }}</span>
-                    </div>
-                    
-                    {% if user.email %}
-                    <div class="flex justify-between items-center py-2 border-b border-white/10">
-                        <span class="text-blue-300">Email:</span>
-                        <span class="text-white font-semibold">{{ user.email }}</span>
-                    </div>
-                    {% endif %}
-                    
-                    {% if user.first_name or user.last_name %}
-                    <div class="flex justify-between items-center py-2 border-b border-white/10">
-                        <span class="text-blue-300">Name:</span>
-                        <span class="text-white font-semibold">{{ user.first_name }} {{ user.last_name }}</span>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="flex justify-between items-center py-2 border-b border-white/10">
-                        <span class="text-blue-300">Status:</span>
-                        <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm">Profile Setup Pending</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Information Notice -->
-        <div class="mt-8 bg-blue-600/20 border border-blue-500/30 rounded-2xl p-6">
-            <div class="flex items-start space-x-4">
-                <i class="fas fa-info-circle text-blue-400 text-xl mt-1"></i>
-                <div>
-                    <h3 class="text-lg font-semibold text-white mb-2">Next Steps</h3>
-                    <ul class="text-blue-300 space-y-1">
-                        <li>• Your HR department will complete your employee profile setup</li>
-                        <li>• You'll gain access to full features once your profile is ready</li>
-                        <li>• In the meantime, you can use basic clock in/out functionality</li>
-                        <li>• Contact HR if you have any questions about your account</li>
-                    </ul>
+                {% endif %}
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
+                    <span style="color:var(--text-secondary);font-size:13px;">Status</span>
+                    <span class="ant-tag ant-tag-warning">Profile Setup Pending</span>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-{% endblock %} 
+    <!-- Info Notice -->
+    <div class="ant-alert ant-alert-info" style="margin-top:24px;">
+        <i class="fas fa-info-circle" style="font-size:16px;flex-shrink:0;"></i>
+        <div>
+            <p style="font-weight:600;margin:0 0 6px;">Next Steps</p>
+            <ul style="margin:0;padding-left:16px;font-size:13px;display:flex;flex-direction:column;gap:4px;">
+                <li>Your HR department will complete your employee profile setup</li>
+                <li>You'll gain access to full features once your profile is ready</li>
+                <li>In the meantime, you can use basic clock in/out functionality</li>
+                <li>Contact HR if you have any questions about your account</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

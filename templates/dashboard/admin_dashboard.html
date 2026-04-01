@@ -2,383 +2,284 @@
 {% load static %}
 {% load math_filters %}
 
-{% block title %}Admin Dashboard - Employee Activity Tracker{% endblock %}
+{% block title %}Admin Dashboard — Employee Activity Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .daterangepicker { background: var(--bg-elevated); border-color: var(--border-color); border-radius: 8px; color: var(--text-color); }
+    .daterangepicker .ranges li { color: var(--text-secondary); }
+    .daterangepicker .ranges li:hover, .daterangepicker .ranges li.active { background: var(--ant-primary); color: #fff; border-radius: 4px; }
+    .daterangepicker td.in-range { background-color: var(--ant-primary-bg); color: var(--text-color); }
+    .daterangepicker td.active { background-color: var(--ant-primary) !important; color: #fff !important; }
+    .daterangepicker .calendar-table { background: var(--bg-elevated); border-color: var(--border-color); }
+    .daterangepicker .calendar-table td, .daterangepicker .calendar-table th { color: var(--text-color); }
+    .daterangepicker td.off { color: var(--text-tertiary); }
+    .daterangepicker td:hover { background-color: var(--ant-primary-bg-hover) !important; }
+    .daterangepicker:before, .daterangepicker:after { border-bottom-color: var(--border-color); }
+    .popup-card { font-size: 13px; min-width: 180px; }
+    .popup-header { font-weight: 600; margin-bottom: 4px; color: var(--text-heading); }
+    .popup-body { color: var(--text-secondary); margin-bottom: 8px; }
+    .popup-btn { background: var(--ant-primary); border: none; color: #fff; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .popup-btn:hover { opacity: 0.85; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-    <div class="container mx-auto px-6 py-8">
-        <!-- Header -->
-        <div class="mb-8 flex justify-between items-start">  <!-- Perubahan di sini -->
-            <div>
-                <h1 class="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
-                <p class="text-blue-300">
-                    <i class="fas fa-chart-bar mr-1"></i>
-                    Analytics and Management
-                </p>
-            </div>
-            
-            <div class="flex space-x-4">
-                <!-- Tombol Company -->
-                <a href="{% url 'employee:company_list' %}" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center">
-                    <i class="fas fa-building mr-2"></i>
-                    Companies
-                </a>
-                
-                <!-- Tombol Employee -->
-                <a href="{% url 'employee:employee_list' %}" class="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center">
-                    <i class="fas fa-users mr-2"></i>
-                    Employees
-                </a>
+<div style="max-width:1280px;margin:0 auto;padding:32px 24px;">
 
-                <!-- Tombol Export Excel -->
-                <form method="GET" action="{% url 'dashboard:export_admin_dashboard' %}">
-                    <input type="hidden" name="company" value="{{ selected_company }}">
-                    <input type="hidden" name="employee" value="{{ selected_employee }}">
-                    <input type="hidden" name="date_range" value="{{ selected_date_range }}">
-                    <button type="submit" class="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center">
-                        <i class="fas fa-file-excel mr-2"></i>
-                        Export to Excel
-                    </button>
-                </form>
-            </div>
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:24px;">
+        <div>
+            <h1 class="page-title">Admin Dashboard</h1>
+            <p class="page-subtitle"><i class="fas fa-chart-bar" style="margin-right:6px;"></i>Analytics and Management</p>
         </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="{% url 'employee:company_list' %}" class="ant-btn ant-btn-default"><i class="fas fa-building"></i> Companies</a>
+            <a href="{% url 'employee:employee_list' %}" class="ant-btn ant-btn-default"><i class="fas fa-users"></i> Employees</a>
+            <form method="GET" action="{% url 'dashboard:export_admin_dashboard' %}" style="display:inline;">
+                <input type="hidden" name="company" value="{{ selected_company }}">
+                <input type="hidden" name="employee" value="{{ selected_employee }}">
+                <input type="hidden" name="date_range" value="{{ selected_date_range }}">
+                <button type="submit" class="ant-btn ant-btn-success"><i class="fas fa-file-excel"></i> Export Excel</button>
+            </form>
+        </div>
+    </div>
 
-        <!-- Filters -->
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl mb-8">
-            <h3 class="text-xl font-semibold text-white mb-4">
-                <i class="fas fa-filter mr-2"></i>
-                Filter Data
-            </h3>
-            <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- Filters -->
+    <div class="ant-card" style="margin-bottom:24px;">
+        <div class="ant-card-head"><i class="fas fa-filter" style="margin-right:8px;color:var(--ant-primary);"></i>Filter Data</div>
+        <div class="ant-card-body">
+            <form method="GET" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;align-items:end;">
                 <div>
-                    <label class="block text-blue-300 mb-2">Company</label>
-                    <select name="company" class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" class="bg-gray-800">All Companies</option>
+                    <label class="ant-label">Company</label>
+                    <select name="company" class="ant-input">
+                        <option value="">All Companies</option>
                         {% for company in companies %}
-                        <option value="{{ company.id }}" class="bg-gray-800" {% if selected_company == company.id|stringformat:"s" %}selected{% endif %}>
-                            {{ company.name }}
-                        </option>
+                        <option value="{{ company.id }}" {% if selected_company == company.id|stringformat:"s" %}selected{% endif %}>{{ company.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                
                 <div>
-                    <label class="block text-blue-300 mb-2">Employee</label>
-                    <select name="employee" class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" class="bg-gray-800">All Employees</option>
-                        {% for employee in employees %}
-                        <option value="{{ employee.id }}" class="bg-gray-800" {% if selected_employee == employee.id|stringformat:"s" %}selected{% endif %}>
-                            {{ employee.user.get_full_name|default:employee.user.username }}
-                        </option>
+                    <label class="ant-label">Employee</label>
+                    <select name="employee" class="ant-input">
+                        <option value="">All Employees</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.id }}" {% if selected_employee == emp.id|stringformat:"s" %}selected{% endif %}>{{ emp.user.get_full_name|default:emp.user.username }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                
                 <div>
-                    <label class="block text-blue-300 mb-2">Date Range</label>
-                    {% comment %} <select name="date_range" class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="today" class="bg-gray-800" {% if selected_date_range == 'today' %}selected{% endif %}>Today</option>
-                        <option value="week" class="bg-gray-800" {% if selected_date_range == 'week' %}selected{% endif %}>This Week</option>
-                        <option value="month" class="bg-gray-800" {% if selected_date_range == 'month' %}selected{% endif %}>This Month</option>
-                    </select> {% endcomment %}
-                    <div id="reportrange" class="bg-white/10 border border-white/20 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md flex items-center space-x-3 cursor-pointer w-full h-[48px] mx-auto">
-                        <span class="text-white">Select date range</span> 
+                    <label class="ant-label">Date Range</label>
+                    <div id="reportrange" class="ant-input" style="cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;">
+                        <i class="fas fa-calendar" style="color:var(--ant-primary);"></i>
+                        <span>Select date range</span>
                         <input type="hidden" name="date_range" id="date_range">
                     </div>
                 </div>
-                
-                <div class="flex items-end">
-                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 px-4 rounded-lg text-sm font-medium hover:shadow-lg">
-                        <i class="fas fa-sync mr-2"></i>
-                        Apply Filters
+                <div>
+                    <button type="submit" class="ant-btn ant-btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-sync"></i> Apply Filters
                     </button>
                 </div>
-
-
             </form>
         </div>
+    </div>
 
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <!-- Total Employees -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-users text-purple-400 text-xl"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-white">{{ total_employees }}</div>
-                </div>
-                <h3 class="text-lg font-semibold text-white mb-2">Total Employees</h3>
-                <p class="text-blue-300 text-sm">
-                    <i class="fas fa-user-check mr-1"></i>
-                    {{ total_active_users }} active users
-                </p>
+    <!-- Summary Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
+        <div class="stat-card" style="display:flex;align-items:center;gap:16px;">
+            <div style="width:48px;height:48px;border-radius:8px;background:rgba(114,46,209,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-users" style="color:#722ed1;font-size:20px;"></i>
             </div>
-
-            <!-- Today's Attendance -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-calendar-check text-green-400 text-xl"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-white">{{ today_stats.checked_in|default:"0" }}/{{ today_stats.total_expected|default:"0" }}</div>
-                </div>
-                <h3 class="text-lg font-semibold text-white mb-2">Today's Attendance</h3>
-                <p class="text-blue-300 text-sm">
-                    <i class="fas fa-clock mr-1"></i>
-                    {{ today_stats.on_time|default:"0" }} on time, {{ today_stats.late|default:"0" }} late
-                </p>
-            </div>
-
-            <!-- Completed Activities -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-clipboard-list text-blue-400 text-xl"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-white">{{ attendance_stats.completed|default:"0" }}</div>
-                </div>
-                <h3 class="text-lg font-semibold text-white mb-2">Completed Activities</h3>
-                <p class="text-blue-300 text-sm">
-                    <i class="fas fa-clipboard mr-1"></i>
-                    {{ attendance_stats.total_activities|default:"0" }} total activities
-                </p>
-            </div>
-
-            <!-- Late & Absent -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-exclamation-triangle text-orange-400 text-xl"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-white">{{ today_stats.late|default:"0" }}/{{ today_stats.absent|default:"0" }}</div>
-                </div>
-                <h3 class="text-lg font-semibold text-white mb-2">Late & Absent</h3>
-                <p class="text-blue-300 text-sm">
-                    <i class="fas fa-user-slash mr-1"></i>
-                    {{ today_stats.absent|default:"0" }} absent today
-                </p>
+            <div>
+                <div class="stat-value">{{ total_employees }}</div>
+                <div class="stat-label">Total Employees</div>
+                <div style="font-size:12px;color:var(--ant-success);margin-top:2px;"><i class="fas fa-user-check"></i> {{ total_active_users }} active</div>
             </div>
         </div>
-
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Attendance Stats -->
-            <div class="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <h3 class="text-xl font-semibold text-white mb-6">
-                    <i class="fas fa-chart-pie mr-2"></i>
-                    Attendance Statistics
-                </h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="text-center p-4 bg-white/5 rounded-lg">
-                        <div class="text-2xl font-bold text-green-400">{{ today_stats.on_time|default:"0" }}</div>
-                        <div class="text-sm text-blue-300">On Time Today</div>
-                    </div>
-                    <div class="text-center p-4 bg-white/5 rounded-lg">
-                        <div class="text-2xl font-bold text-orange-400">{{ today_stats.late|default:"0" }}</div>
-                        <div class="text-sm text-blue-300">Late Today</div>
-                    </div>
-                    <div class="text-center p-4 bg-white/5 rounded-lg">
-                        <div class="text-2xl font-bold text-red-400">{{ today_stats.absent|default:"0" }}</div>
-                        <div class="text-sm text-blue-300">Absent Today</div>
-                    </div>
-                    <div class="text-center p-4 bg-white/5 rounded-lg">
-                        <div class="text-2xl font-bold text-blue-400">{{ attendance_stats.on_time|default:"0" }}</div>
-                        <div class="text-sm text-blue-300">On Time Total</div>
-                    </div>
-                </div>
+        <div class="stat-card" style="display:flex;align-items:center;gap:16px;">
+            <div style="width:48px;height:48px;border-radius:8px;background:var(--ant-success-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-calendar-check" style="color:var(--ant-success);font-size:20px;"></i>
             </div>
-            
-            <!-- Activity Stats -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <h3 class="text-xl font-semibold text-white mb-6">
-                    <i class="fas fa-tasks mr-2"></i>
-                    Activity Statistics
-                </h3>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                        <span class="text-blue-300">Total Activities:</span>
-                        <span class="text-white font-medium">{{ attendance_stats.total_activities|default:"0" }}</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                        <span class="text-blue-300">Completed Activities:</span>
-                        <span class="text-white font-medium">{{ attendance_stats.completed|default:"0" }}</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                        <span class="text-blue-300">Completion Rate:</span>
-                        <span class="text-white font-medium">
-                            {% if attendance_stats.total_activities and attendance_stats.completed %}
-                                {% with numerator=attendance_stats.completed denominator=attendance_stats.total_activities %}
-                                    {{ numerator|mul:100|div:denominator|floatformat:2 }}%
-                                {% endwith %}
-                            {% else %}
-                                0%
-                            {% endif %}
-                        </span>
-                    </div>
+            <div>
+                <div class="stat-value" style="color:var(--ant-success);">{{ today_stats.checked_in|default:"0" }}/{{ today_stats.total_expected|default:"0" }}</div>
+                <div class="stat-label">Today's Attendance</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">{{ today_stats.on_time|default:"0" }} on time &bull; {{ today_stats.late|default:"0" }} late</div>
+            </div>
+        </div>
+        <div class="stat-card" style="display:flex;align-items:center;gap:16px;">
+            <div style="width:48px;height:48px;border-radius:8px;background:var(--ant-primary-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-clipboard-list" style="color:var(--ant-primary);font-size:20px;"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color:var(--ant-primary);">{{ attendance_stats.completed|default:"0" }}</div>
+                <div class="stat-label">Completed Activities</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">{{ attendance_stats.total_activities|default:"0" }} total</div>
+            </div>
+        </div>
+        <div class="stat-card" style="display:flex;align-items:center;gap:16px;">
+            <div style="width:48px;height:48px;border-radius:8px;background:var(--ant-warning-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-exclamation-triangle" style="color:var(--ant-warning);font-size:20px;"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color:var(--ant-warning);">{{ today_stats.late|default:"0" }}/{{ today_stats.absent|default:"0" }}</div>
+                <div class="stat-label">Late / Absent Today</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">{{ today_stats.absent|default:"0" }} absent</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Stats + Activity Stats -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;">
+        <div class="ant-card">
+            <div class="ant-card-head"><i class="fas fa-chart-pie" style="margin-right:8px;color:var(--ant-primary);"></i>Attendance Statistics</div>
+            <div class="ant-card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center;">
+                <div>
+                    <div class="stat-value" style="color:var(--ant-success);">{{ today_stats.on_time|default:"0" }}</div>
+                    <div class="stat-label">On Time Today</div>
+                </div>
+                <div>
+                    <div class="stat-value" style="color:var(--ant-warning);">{{ today_stats.late|default:"0" }}</div>
+                    <div class="stat-label">Late Today</div>
+                </div>
+                <div>
+                    <div class="stat-value" style="color:var(--ant-error);">{{ today_stats.absent|default:"0" }}</div>
+                    <div class="stat-label">Absent Today</div>
+                </div>
+                <div>
+                    <div class="stat-value" style="color:var(--ant-primary);">{{ attendance_stats.on_time|default:"0" }}</div>
+                    <div class="stat-label">On Time Total</div>
                 </div>
             </div>
         </div>
-
-        <!-- Maps Location Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Attendance Stats -->
-            <div class="lg:col-span-3 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <h3 class="text-xl font-semibold text-white mb-6">
-                    <i class="fas fa-map mr-2"></i>
-                    Map Locations
-                </h3>
-                <!-- maps -->
-                <div id="map" class="w-full h-[500px] rounded-lg overflow-hidden"></div>
-                {{ activities|json_script:"activities-data" }}
+        <div class="ant-card">
+            <div class="ant-card-head"><i class="fas fa-tasks" style="margin-right:8px;color:var(--ant-primary);"></i>Activity Statistics</div>
+            <div class="ant-card-body" style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg-fill);border-radius:6px;">
+                    <span style="font-size:13px;color:var(--text-secondary);">Total Activities</span>
+                    <span style="font-weight:600;color:var(--text-heading);">{{ attendance_stats.total_activities|default:"0" }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg-fill);border-radius:6px;">
+                    <span style="font-size:13px;color:var(--text-secondary);">Completed</span>
+                    <span style="font-weight:600;color:var(--ant-success);">{{ attendance_stats.completed|default:"0" }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg-fill);border-radius:6px;">
+                    <span style="font-size:13px;color:var(--text-secondary);">Completion Rate</span>
+                    <span style="font-weight:600;color:var(--ant-primary);">
+                        {% if attendance_stats.total_activities and attendance_stats.completed %}
+                            {% with n=attendance_stats.completed d=attendance_stats.total_activities %}{{ n|mul:100|div:d|floatformat:1 }}%{% endwith %}
+                        {% else %}0%{% endif %}
+                    </span>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Late & Absent Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Late Today -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <h3 class="text-xl font-semibold text-white mb-6">
-                    <i class="fas fa-running mr-2"></i>
-                    Late Arrivals Today
-                </h3>
+    <!-- Map -->
+    <div class="ant-card" style="margin-bottom:24px;">
+        <div class="ant-card-head"><i class="fas fa-map" style="margin-right:8px;color:var(--ant-primary);"></i>Map Locations</div>
+        <div class="ant-card-body">
+            <div id="map" style="width:100%;height:480px;border-radius:6px;overflow:hidden;border:1px solid var(--border-color);"></div>
+            {{ activities|json_script:"activities-data" }}
+        </div>
+    </div>
+
+    <!-- Late + Absent -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+        <div class="ant-card">
+            <div class="ant-card-head"><i class="fas fa-running" style="margin-right:8px;color:var(--ant-warning);"></i>Late Arrivals Today</div>
+            <div class="ant-card-body" style="padding:0;">
                 {% if late_today %}
-                <div class="space-y-3">
-                    {% for activity in late_today %}
-                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-10 h-10 bg-gradient-to-r from-orange-600 to-red-600 rounded-full flex items-center justify-center">
-                                <i class="fas fa-clock text-white text-sm"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-medium text-white">{{ activity.user.get_full_name|default:activity.user.username }}</h4>
-                                <p class="text-sm text-blue-300">
-                                    {{ activity.user.employee_profile.position|default:"No position" }} • 
-                                    {{ activity.checkin_time|time:"H:i" }}
-                                </p>
-                            </div>
-                        </div>
-                        <span class="text-orange-400 text-sm">
-                            {{ activity.get_attendance_status_display }}
-                        </span>
+                {% for activity in late_today %}
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-color-secondary);">
+                    <div class="ant-avatar" style="width:36px;height:36px;background:var(--ant-warning-bg);flex-shrink:0;">
+                        <i class="fas fa-clock" style="color:var(--ant-warning);font-size:13px;"></i>
                     </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-blue-300 text-center py-4">No late arrivals today.</p>
-                {% endif %}
-            </div>
-            
-            <!-- Absent Today -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-                <h3 class="text-xl font-semibold text-white mb-6">
-                    <i class="fas fa-user-slash mr-2"></i>
-                    Absent Today
-                </h3>
-                {% if absent_today %}
-                <div class="space-y-3">
-                    {% for user in absent_today %}
-                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-10 h-10 bg-gradient-to-r from-red-600 to-pink-600 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user-times text-white text-sm"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-medium text-white">{{ user.get_full_name|default:user.username }}</h4>
-                                <p class="text-sm text-blue-300">
-                                    {{ user.employee_profile.position|default:"No position" }} • 
-                                    {{ user.employee_profile.company|default:"No company" }}
-                                </p>
-                            </div>
-                        </div>
-                        <span class="text-red-400 text-sm">
-                            Absent
-                        </span>
+                    <div style="flex:1;min-width:0;">
+                        <p style="font-size:14px;font-weight:600;color:var(--text-heading);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ activity.user.get_full_name|default:activity.user.username }}</p>
+                        <p style="font-size:12px;color:var(--text-secondary);margin:0;">{{ activity.user.employee_profile.position|default:"—" }} &bull; {{ activity.checkin_time|time:"H:i" }}</p>
                     </div>
-                    {% endfor %}
+                    <span class="ant-tag ant-tag-warning">{{ activity.get_attendance_status_display }}</span>
                 </div>
+                {% endfor %}
                 {% else %}
-                <p class="text-blue-300 text-center py-4">No absent employees today.</p>
+                <p style="text-align:center;color:var(--text-secondary);padding:24px 16px;font-size:13px;">No late arrivals today.</p>
                 {% endif %}
             </div>
         </div>
-
-        <!-- Recent Activities Table -->
-        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-semibold text-white">
-                    <i class="fas fa-history mr-2"></i>
-                    Recent Activities
-                </h3>
-                <span class="text-blue-300 text-sm">
-                    {{ recent_activities|length }} activities
-                </span>
+        <div class="ant-card">
+            <div class="ant-card-head"><i class="fas fa-user-slash" style="margin-right:8px;color:var(--ant-error);"></i>Absent Today</div>
+            <div class="ant-card-body" style="padding:0;">
+                {% if absent_today %}
+                {% for user in absent_today %}
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-color-secondary);">
+                    <div class="ant-avatar" style="width:36px;height:36px;background:var(--ant-error-bg);flex-shrink:0;">
+                        <i class="fas fa-user-times" style="color:var(--ant-error);font-size:13px;"></i>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <p style="font-size:14px;font-weight:600;color:var(--text-heading);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ user.get_full_name|default:user.username }}</p>
+                        <p style="font-size:12px;color:var(--text-secondary);margin:0;">{{ user.employee_profile.position|default:"—" }}</p>
+                    </div>
+                    <span class="ant-tag ant-tag-error">Absent</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p style="text-align:center;color:var(--text-secondary);padding:24px 16px;font-size:13px;">No absent employees today.</p>
+                {% endif %}
             </div>
-            
+        </div>
+    </div>
+
+    <!-- Recent Activities Table -->
+    <div class="ant-card">
+        <div class="ant-card-head" style="display:flex;justify-content:space-between;align-items:center;">
+            <span><i class="fas fa-history" style="margin-right:8px;color:var(--ant-primary);"></i>Recent Activities</span>
+            <span class="ant-tag">{{ recent_activities|length }} activities</span>
+        </div>
+        <div class="ant-card-body" style="padding:0;">
             {% if recent_activities %}
-            <div class="overflow-x-auto">
-                <table class="w-full text-white">
-                    <thead class="bg-white/10 text-left">
+            <div class="ant-table-wrap">
+                <table class="ant-table">
+                    <thead>
                         <tr>
-                            <th class="p-4">Employee</th>
-                            <th class="p-4">Date</th>
-                            <th class="p-4">Check In</th>
-                            <th class="p-4">Check Out</th>
-                            <th class="p-4">Status</th>
-                            <th class="p-4">Attendance</th>
-                            <th class="p-4">Detail</th>
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Status</th>
+                            <th>Attendance</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for activity in recent_activities %}
-                        <tr class="border-b border-white/10 hover:bg-white/5">
-                            <td class="p-4">
-                                <div class="flex items-center">
-                                    <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center mr-3">
-                                        <i class="fas fa-user text-white text-xs"></i>
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div class="ant-avatar" style="width:32px;height:32px;background:var(--ant-primary-bg);flex-shrink:0;font-size:11px;">
+                                        <i class="fas fa-user" style="color:var(--ant-primary);"></i>
                                     </div>
                                     <div>
-                                        <div class="font-medium">{{ activity.user.get_full_name|default:activity.user.username }}</div>
-                                        <div class="text-sm text-blue-300">{{ activity.user.employee_profile.position|default:"No position" }}</div>
+                                        <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0;">{{ activity.user.get_full_name|default:activity.user.username }}</p>
+                                        <p style="font-size:11px;color:var(--text-secondary);margin:0;">{{ activity.user.employee_profile.position|default:"—" }}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="p-4">{{ activity.date|date:"M j, Y" }}</td>
-                            <td class="p-4">
-                                {% if activity.checkin_time %}
-                                    {{ activity.checkin_time|time:"H:i" }}
-                                {% else %}
-                                    <span class="text-red-400">-</span>
-                                {% endif %}
-                            </td>
-                            <td class="p-4">
-                                {% if activity.checkout_time %}
-                                    {{ activity.checkout_time|time:"H:i" }}
-                                {% else %}
-                                    <span class="text-orange-400">Pending</span>
-                                {% endif %}
-                            </td>
-                            <td class="p-4">
-                                <span class="px-2 py-1 rounded-full text-xs
-                                    {% if activity.status == 'completed' %}bg-green-500/20 text-green-400
-                                    {% elif activity.status == 'pending' %}bg-orange-500/20 text-orange-400
-                                    {% else %}bg-gray-500/20 text-gray-400
-                                    {% endif %}">
+                            <td style="white-space:nowrap;">{{ activity.date|date:"M j, Y" }}</td>
+                            <td>{% if activity.checkin_time %}{{ activity.checkin_time|time:"H:i" }}{% else %}<span style="color:var(--ant-error);">—</span>{% endif %}</td>
+                            <td>{% if activity.checkout_time %}{{ activity.checkout_time|time:"H:i" }}{% else %}<span style="color:var(--ant-warning);">Pending</span>{% endif %}</td>
+                            <td>
+                                <span class="ant-tag {% if activity.status == 'completed' %}ant-tag-success{% elif activity.status == 'pending' %}ant-tag-warning{% else %}ant-tag{% endif %}">
                                     {{ activity.get_status_display }}
                                 </span>
                             </td>
-                            <td class="p-4">
-                                <span class="px-2 py-1 rounded-full text-xs
-                                    {% if activity.attendance_status == 'on_time' %}bg-green-500/20 text-green-400
-                                    {% elif activity.attendance_status == 'late' %}bg-red-500/20 text-red-400
-                                    {% else %}bg-gray-500/20 text-gray-400
-                                    {% endif %}">
+                            <td>
+                                <span class="ant-tag {% if activity.attendance_status == 'on_time' %}ant-tag-success{% elif activity.attendance_status == 'late' %}ant-tag-error{% else %}ant-tag{% endif %}">
                                     {{ activity.get_attendance_status_display }}
                                 </span>
                             </td>
-                            <td class="p-4">
-                                <a href="{% url 'employee:daily_summary' activity.id %}" 
-                                class="ml-3 text-nft-primary hover:text-nft-secondary transition-colors">
+                            <td>
+                                <a href="{% url 'employee:daily_summary' activity.id %}" class="ant-btn ant-btn-link ant-btn-sm">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>
@@ -388,284 +289,63 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-blue-300 text-center py-8">No recent activities found.</p>
+            <p style="text-align:center;color:var(--text-secondary);padding:32px;font-size:13px;">No recent activities found.</p>
             {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
 
-<style>
-    /* Style triangle shape */
-    .daterangepicker:after {
-        top: -6px;
-        border-right: 6px solid transparent;
-        border-bottom: 6px solid rgb(32, 44, 65);
-        border-left: 6px solid transparent;
-    }
-
-    /* Style pop up */
-    div.daterangepicker.ltr.show-ranges.opensright {
-        border: 1px solid rgb(32, 44, 65);
-        background:rgb(32, 44, 65);
-        border-radius: 0.5rem;
-        padding: 0.75rem;
-        color: white;
-        outline: none;
-    }
-
-    /* Style item pop up when hover */
-    .daterangepicker .ranges li:hover {
-        background: #0088CC;
-    }
-
-    /* Style calendar table background */
-    .daterangepicker .calendar-table {
-        border: none;
-        border-radius: 4px;
-        background-color: rgb(32, 44, 65);
-    }
-
-    /* Style out of range or out current month */
-    .daterangepicker td.off, .daterangepicker td.off.in-range, .daterangepicker td.off.start-date, .daterangepicker td.off.end-date {
-        background-color: transparent;
-        border-color: transparent;
-        color: #999;
-    }
-
-    /* Style date when hover */
-    .daterangepicker .calendar-table td:hover {
-        background-color: #0088CC;
-        color: rgb(32, 44, 65);
-    }
-
-    /* Style date in range */
-    .daterangepicker td.in-range {
-        background-color: #357ebd;
-        border-color: transparent;
-        color: white;
-        border-radius: 0;
-    }
-
-    /* Style date in end date range */
-    .daterangepicker td.weekend.active.end-date.in-range.available, .daterangepicker td.active.end-date.in-range.available {
-        border-top-right-radius: 4px;
-        border-bottom-right-radius: 4px;
-    }
-
-    /* Style prev arrow icon */
-    .daterangepicker .calendar-table .prev span {
-        color: white;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        border-radius: 0;
-        display: inline-block;
-        padding: 3px;
-    }
-
-    /* Style next arrow icon */
-    .daterangepicker .calendar-table .next span {
-        color: white;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        border-radius: 0;
-        display: inline-block;
-        padding: 3px;
-    }
-
-    /* Style background of prev arrow when hover */
-    .daterangepicker .calendar-table .prev:hover {
-        background: #0088CC;
-    }
-
-    /* Style background of next arrow when hover */
-    .daterangepicker .calendar-table .next:hover {
-        background: #0088CC;
-    }
-
-    /* Style for popup markers */
-    .popup-card {
-    font-family: Arial, sans-serif;
-    font-size: 13px;
-    line-height: 1.4;
-    max-width: 200px;
-    }
-
-    .popup-header {
-        font-weight: bold;
-        font-size: 14px;
-        color: #2c3e50;
-        margin-bottom: 4px;
-    }
-
-    .popup-body {
-        margin-bottom: 6px;
-        color: #555;
-    }
-
-    .popup-btn {
-        background-color: #3498db;
-        border: none;
-        color: white;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        transition: background-color 0.2s ease;
-    }
-
-    .popup-btn:hover {
-        background-color: #2980b9;
-    }
-
-</style>
-
-<script type="text/javascript">
-    $('select[name="company"], select[name="employee"]').on('change', function() {
-        const company = $('select[name="company"]').val();
-        const employee = $('select[name="employee"]').val();
-
-        const url = new URL(window.location.href);
-        const params = url.searchParams;
-
-        // Update or delete parameter by selected value
-        if (company) {
-            params.set('company', company);
-        } else {
-            params.delete('company');
-        }
-
-        if (employee) {
-            params.set('employee', employee);
-        } else {
-            params.delete('employee');
-        }
-
-        // Update URL without reload
-        window.history.pushState({}, '', `${url.pathname}?${params.toString()}`);
-    });
-
-    $(function() {
-        // get data from django context
-        const selectedDateRange = "{{ selected_date_range }}";
-        
-        const start = selectedDateRange ? selectedDateRange.split('_')[0] : moment().startOf('isoWeek');
-        const end = selectedDateRange ? selectedDateRange.split('_')[1] : moment().endOf('isoWeek');
-
-        function cb(start, end) {
-            $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-
-            // Additional: update URL when user select date
-            const picker = $('#reportrange').data('daterangepicker');
-            const startDate = picker.startDate.locale('id').format('YYYY-MM-DD');
-            const endDate = picker.endDate.locale('id').format('YYYY-MM-DD');
-            const dateRangeValue = `${startDate}_${endDate}`;
-
-            const url = new URL(window.location.href);
-            url.searchParams.set('date_range', dateRangeValue);
-            window.history.pushState({}, '', url);
-            $('#date_range').val(dateRangeValue)
-        }
-
-        $('#reportrange').daterangepicker({
-            startDate: start,
-            endDate: end,
-            ranges: {
-                'Today': [moment(), moment()],
-                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                'This Week': [moment().startOf('isoWeek'), moment().endOf('isoWeek')],
-                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-            }
-        }, cb);
-
-        //cb(start, end);
-        // Ensures the date range in the URL is picked up when the page is reloaded.
-        if (selectedDateRange) {
-            const [startStr, endStr] = selectedDateRange.split('_');
-            const start = moment(startStr, 'YYYY-MM-DD').locale('id');
-            const end = moment(endStr, 'YYYY-MM-DD').locale('id');
-            $('#reportrange').data('daterangepicker').setStartDate(start);
-            $('#reportrange').data('daterangepicker').setEndDate(end);
-            cb(start, end);  // Update UI with current date range value
-        } else {
-            cb(start, end);  // Default
-        }
-    });
-</script>
-
+{% block extra_js %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    var activities = JSON.parse(document.getElementById("activities-data").textContent);
+$('select[name="company"], select[name="employee"]').on('change', function() {
+    var company = $('select[name="company"]').val();
+    var employee = $('select[name="employee"]').val();
+    var url = new URL(window.location.href);
+    if (company) url.searchParams.set('company', company); else url.searchParams.delete('company');
+    if (employee) url.searchParams.set('employee', employee); else url.searchParams.delete('employee');
+    window.history.pushState({}, '', url);
+});
 
+$(function() {
+    var selectedDateRange = "{{ selected_date_range }}";
+    var start = selectedDateRange ? selectedDateRange.split('_')[0] : moment().startOf('isoWeek');
+    var end   = selectedDateRange ? selectedDateRange.split('_')[1] : moment().endOf('isoWeek');
+    function cb(start, end) {
+        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' – ' + end.format('MMMM D, YYYY'));
+        var picker = $('#reportrange').data('daterangepicker');
+        var s = picker.startDate.format('YYYY-MM-DD');
+        var e = picker.endDate.format('YYYY-MM-DD');
+        var v = s + '_' + e;
+        var url = new URL(window.location.href); url.searchParams.set('date_range', v); window.history.pushState({}, '', url);
+        $('#date_range').val(v);
+    }
+    $('#reportrange').daterangepicker({
+        startDate: start, endDate: end,
+        ranges: { 'Today': [moment(), moment()], 'Yesterday': [moment().subtract(1,'days'), moment().subtract(1,'days')], 'Last 7 Days': [moment().subtract(6,'days'), moment()], 'Last 30 Days': [moment().subtract(29,'days'), moment()], 'This Week': [moment().startOf('isoWeek'), moment().endOf('isoWeek')], 'This Month': [moment().startOf('month'), moment().endOf('month')], 'Last Month': [moment().subtract(1,'month').startOf('month'), moment().subtract(1,'month').endOf('month')] }
+    }, cb);
+    if (selectedDateRange) { var parts = selectedDateRange.split('_'); cb(moment(parts[0]), moment(parts[1])); } else { cb(start, end); }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var activities = JSON.parse(document.getElementById('activities-data').textContent);
     var map = L.map('map').setView([-2.5, 118], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    var checkoutIcon = L.icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-    });
-
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    var checkoutIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34], shadowSize:[41,41] });
     var bounds = [];
     activities.forEach(function(act) {
-        //Check-in Marker
         if (act.lat && act.lng) {
-            var popupHtml = `
-                <div class="popup-card">
-                    <div class="popup-header">👤 ${act.employee}</div>
-                    <div class="popup-body">📅 <b>Check-in:</b><br/>${act.time}</div>
-                    <button class="popup-btn" onclick="window.location.href='${act.detail_url}'">
-                        Detail
-                    </button>
-                </div>
-            `;
-            var marker = L.marker([act.lat, act.lng])
-                .addTo(map)
-                .bindPopup(popupHtml);
+            L.marker([act.lat, act.lng]).addTo(map).bindPopup('<div class="popup-card"><div class="popup-header">' + act.employee + '</div><div class="popup-body">Check-in: ' + act.time + '</div><button class="popup-btn" onclick="window.location.href=\'' + act.detail_url + '\'">Detail</button></div>');
             bounds.push([act.lat, act.lng]);
         }
-
-        //Checkout Marker 
         if (act.checkout_lat && act.checkout_lng) {
-            let checkoutLat = act.checkout_lat;
-            let checkoutLng = act.checkout_lng;
-
-            //If same as check-in, sedikit geser
-            if (act.lat && act.lng && checkoutLat === act.lat && checkoutLng === act.lng) {
-                checkoutLat = checkoutLat + 0.0001; 
-                checkoutLng = checkoutLng + 0.0001; 
-            }
-
-            var popupHtmlCheckout = `
-                <div class="popup-card">
-                    <div class="popup-header">👤 ${act.employee}</div>
-                    <div class="popup-body">📅 <b>Check-out:</b><br/>${act.checkout_time}</div>
-                    <button class="popup-btn" onclick="window.location.href='${act.detail_url}'">
-                        Detail
-                    </button>
-                </div>
-            `;
-            var markerCheckout = L.marker([checkoutLat, checkoutLng], { icon: checkoutIcon })
-                .addTo(map)
-                .bindPopup(popupHtmlCheckout);
-            bounds.push([checkoutLat, checkoutLng]);
+            var cl = act.checkout_lat + (act.lat === act.checkout_lat ? 0.0001 : 0);
+            var clng = act.checkout_lng + (act.lng === act.checkout_lng ? 0.0001 : 0);
+            L.marker([cl, clng], { icon: checkoutIcon }).addTo(map).bindPopup('<div class="popup-card"><div class="popup-header">' + act.employee + '</div><div class="popup-body">Check-out: ' + act.checkout_time + '</div><button class="popup-btn" onclick="window.location.href=\'' + act.detail_url + '\'">Detail</button></div>');
+            bounds.push([cl, clng]);
         }
     });
-
-    if (bounds.length > 0) {
-        map.fitBounds(bounds);
-    }
+    if (bounds.length) map.fitBounds(bounds);
 });
 </script>
-
-
-
 {% endblock %}

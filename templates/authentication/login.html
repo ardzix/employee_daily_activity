@@ -1,686 +1,479 @@
 {% extends 'base.html' %}
 
-{% block title %}Login - Employee Daily Activity Tracker{% endblock %}
+{% block title %}Login — Employee Daily Activity Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-wrap {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+        background: var(--bg-layout);
+    }
+    .login-box {
+        width: 100%;
+        max-width: 420px;
+    }
+    .login-card {
+        background: var(--bg-container);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+    }
+    .login-header {
+        padding: 32px 32px 0;
+        text-align: center;
+    }
+    .login-logo {
+        width: 64px; height: 64px;
+        border-radius: 16px;
+        background: var(--ant-primary);
+        display: inline-flex; align-items: center; justify-content: center;
+        margin-bottom: 16px;
+    }
+    .login-title {
+        font-size: 22px; font-weight: 700;
+        color: var(--text-heading); margin: 0 0 6px;
+    }
+    .login-subtitle { font-size: 14px; color: var(--text-secondary); margin: 0 0 24px; }
+    .login-tabs {
+        display: flex;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 3px;
+        background: var(--bg-fill);
+        margin: 0 32px 24px;
+    }
+    .login-tab {
+        flex: 1; padding: 8px; border-radius: 4px; font-size: 14px;
+        font-weight: 500; cursor: pointer; border: none;
+        background: transparent; color: var(--text-secondary);
+        font-family: inherit; transition: all 0.2s;
+    }
+    .login-tab.active { background: var(--bg-container); color: var(--ant-primary); box-shadow: var(--shadow-sm); font-weight: 600; }
+    .login-body { padding: 0 32px 32px; }
+    .form-section-title {
+        font-size: 16px; font-weight: 600; color: var(--text-heading); margin: 0 0 4px;
+    }
+    .form-section-sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 20px; }
+    .divider-or {
+        display: flex; align-items: center; gap: 12px; margin: 16px 0;
+    }
+    .divider-or::before, .divider-or::after {
+        content: ''; flex: 1; height: 1px; background: var(--border-color);
+    }
+    .divider-or span { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; }
+    .google-btn {
+        width: 100%; display: flex; align-items: center; justify-content: center;
+        gap: 8px; padding: 9px 16px; border-radius: 6px; font-size: 14px; font-weight: 500;
+        border: 1px solid var(--border-color); background: var(--bg-container);
+        color: var(--text-color); cursor: pointer; font-family: inherit;
+        transition: all 0.2s; height: 40px;
+    }
+    .google-btn:hover { border-color: var(--ant-primary-hover); background: var(--ant-primary-bg); color: var(--ant-primary); }
+    .verification-icon {
+        width: 56px; height: 56px; border-radius: 50%;
+        background: var(--ant-warning-bg); display: inline-flex;
+        align-items: center; justify-content: center; margin-bottom: 12px;
+    }
+    .feature-list { list-style: none; padding: 0; margin: 0; }
+    .feature-list li {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 13px; color: var(--text-secondary); padding: 4px 0;
+    }
+    .feature-list li i { color: var(--ant-primary); font-size: 12px; }
+    .login-footer {
+        border-top: 1px solid var(--border-color);
+        padding: 20px 32px;
+        background: var(--bg-fill);
+    }
+    .link-primary { color: var(--ant-primary); text-decoration: none; }
+    .link-primary:hover { text-decoration: underline; color: var(--ant-primary-hover); }
+    .back-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--text-secondary); font-size: 13px; cursor: pointer;
+        background: none; border: none; padding: 0; font-family: inherit;
+    }
+    .back-btn:hover { color: var(--ant-primary); }
+    .otp-input {
+        letter-spacing: 0.3em; text-align: center; font-size: 20px; font-weight: 600;
+    }
+    .msg-box {
+        padding: 10px 14px; border-radius: 6px; border: 1px solid;
+        display: flex; align-items: flex-start; gap: 10px; font-size: 13px;
+        margin-top: 12px;
+    }
+    .msg-error   { background: var(--ant-error-bg);   border-color: var(--ant-error);   color: var(--ant-error);   }
+    .msg-success { background: var(--ant-success-bg); border-color: var(--ant-success); color: var(--ant-success); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4 py-12">
-    <div class="max-w-md w-full space-y-8">
-        <!-- Header -->
-        <div class="text-center">
-            <div class="mx-auto w-20 h-20 bg-nft-gradient rounded-full flex items-center justify-center mb-6">
-                <i class="fas fa-clipboard-check text-white text-2xl"></i>
+<div class="login-wrap">
+    <!-- Theme toggle floating in top-right for non-nav pages -->
+    <div style="position:fixed;top:16px;right:16px;z-index:50;">
+        <button class="theme-toggle" id="loginThemeToggle" title="Toggle theme" aria-label="Toggle light/dark theme">
+            <div class="theme-toggle-knob"></div>
+        </button>
+    </div>
+
+    <div class="login-box">
+        <!-- Brand -->
+        <div style="text-align:center;margin-bottom:24px;">
+            <div class="login-logo">
+                <i class="fas fa-clipboard-check" style="color:#fff;font-size:28px;"></i>
             </div>
-            <h2 class="text-3xl font-bold text-white">Welcome Back</h2>
-            <p class="mt-2 text-gray-400">{{ app_name }}</p>
+            <p style="font-size:14px;color:var(--text-secondary);margin:4px 0 0;">Employee Daily Activity Tracker</p>
         </div>
-        
-        <!-- Login Card -->
-        <div class="nft-card p-8 space-y-6 rounded-xl">
-            <!-- Auth Toggle -->
-            <div class="flex border border-nft-light rounded-lg p-1 mb-6">
-                <button type="button" id="loginTabBtn" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-nft-gradient rounded-md transition-all duration-200">
-                    Sign In
-                </button>
-                <button type="button" id="registerTabBtn" class="flex-1 px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-200">
-                    Register
-                </button>
-            </div>
-            
-            <!-- Login Form -->
-            <div id="loginSection">
-                <div class="text-center mb-6">
-                    <h3 class="text-xl font-semibold text-white mb-2">Sign in to your account</h3>
-                    <p class="text-gray-400 text-sm">Use your Arnatech credentials to continue</p>
-                </div>
-                
-                <form id="loginForm" class="space-y-4">
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-                        <input type="email" id="email" name="email" required
-                               class="w-full px-3 py-2 bg-nft-gray border border-nft-light rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nft-primary focus:border-transparent"
-                               placeholder="your.email@arnatech.id">
-                    </div>
-                    
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                        <input type="password" id="password" name="password" required
-                               class="w-full px-3 py-2 bg-nft-gray border border-nft-light rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nft-primary focus:border-transparent"
-                               placeholder="Your password">
-                    </div>
-                    
-                    <button type="submit" id="loginBtn"
-                            class="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-nft-gradient hover:bg-nft-gradient-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-nft-primary transition-all duration-200">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        <span id="loginBtnText">Sign In</span>
-                        <i class="fas fa-spinner fa-spin ml-2 hidden" id="loginSpinner"></i>
-                    </button>
-                    <button type="button" onclick="handleGoogleLogin()" id="googleLoginBtn" class="w-full flex items-center justify-center px-4 py-3 rounded-lg shadow-sm text-sm font-medium text-gray-800 bg-white hover:bg-gray-100 transition-all duration-200 relative">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2">
-                        <span id="googleBtnText">Sign in with Google</span>
-                        <i class="fas fa-spinner fa-spin ml-2 hidden" id="googleSpinner"></i>
-                    </button>
 
-                </form>
+        <div class="login-card">
+            <!-- Tabs -->
+            <div class="login-header">
+                <h1 class="login-title">Welcome Back</h1>
             </div>
-            
-            <!-- Registration Form -->
-            <div id="registerSection" class="hidden">
-                <div class="text-center mb-6">
-                    <h3 class="text-xl font-semibold text-white mb-2">Create new account</h3>
-                    <p class="text-gray-400 text-sm">Join Arnatech employee portal</p>
-                </div>
-                
-                <form id="registerForm" class="space-y-4">
-                    <div>
-                        <label for="reg_email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-                        <input type="email" id="reg_email" name="email" required
-                               class="w-full px-3 py-2 bg-nft-gray border border-nft-light rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nft-primary focus:border-transparent"
-                               placeholder="your.email@arnatech.id">
-                    </div>
-                    
-                    <div>
-                        <label for="reg_password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                        <input type="password" id="reg_password" name="password" required
-                               class="w-full px-3 py-2 bg-nft-gray border border-nft-light rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nft-primary focus:border-transparent"
-                               placeholder="Create a strong password">
-                    </div>
-                    
-                    <div>
-                        <label for="reg_confirm_password" class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
-                        <input type="password" id="reg_confirm_password" name="confirm_password" required
-                               class="w-full px-3 py-2 bg-nft-gray border border-nft-light rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nft-primary focus:border-transparent"
-                               placeholder="Confirm your password">
-                    </div>
-                    
-                    <button type="submit" id="registerBtn"
-                            class="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-nft-gradient hover:bg-nft-gradient-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-nft-primary transition-all duration-200">
-                        <i class="fas fa-user-plus mr-2"></i>
-                        <span id="registerBtnText">Create Account</span>
-                        <i class="fas fa-spinner fa-spin ml-2 hidden" id="registerSpinner"></i>
-                    </button>
-                </form>
+            <div class="login-tabs">
+                <button class="login-tab active" id="loginTabBtn" type="button">Sign In</button>
+                <button class="login-tab" id="registerTabBtn" type="button">Register</button>
             </div>
-            
-            <!-- Email Verification Form -->
-            <div id="verificationSection" class="hidden">
-                <div class="text-center mb-6">
-                    <div class="mx-auto w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-envelope text-yellow-400 text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Verify Your Email</h3>
-                    <p class="text-gray-400 text-sm">We've sent a 6-digit OTP to your email address</p>
-                    <p class="text-nft-primary text-sm font-medium mt-2" id="verificationEmail"></p>
-                </div>
-                
-                <form id="verificationForm" class="space-y-4">
-                    <div>
-                        <label for="otp" class="block text-sm font-medium text-gray-300 mb-1">Verification Code</label>
-                        <input type="text" id="otp" name="otp" maxlength="6" required
-                               class="w-full px-3 py-2 bg-nft-gray border border-nft-light rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nft-primary focus:border-transparent text-center text-lg tracking-wider"
-                               placeholder="000000">
-                    </div>
-                    
-                    <button type="submit" id="verifyBtn"
-                            class="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-nft-gradient hover:bg-nft-gradient-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-nft-primary transition-all duration-200">
-                        <i class="fas fa-check mr-2"></i>
-                        <span id="verifyBtnText">Verify Email</span>
-                        <i class="fas fa-spinner fa-spin ml-2 hidden" id="verifySpinner"></i>
-                    </button>
-                    
-                    <div class="text-center">
-                        <p class="text-gray-400 text-sm">Didn't receive the code? Check your spam folder or contact support.</p>
-                        <button type="button" id="resendBtn"
-                                class="text-nft-primary hover:underline text-sm font-medium mt-1">
-                            Resend OTP
+
+            <div class="login-body">
+                <!-- Login Form -->
+                <div id="loginSection">
+                    <p class="form-section-title">Sign in to your account</p>
+                    <p class="form-section-sub">Use your Arnatech credentials to continue</p>
+                    <form id="loginForm" autocomplete="on">
+                        <div class="ant-form-item">
+                            <label class="ant-label" for="email">Email</label>
+                            <input type="email" id="email" name="email" required class="ant-input"
+                                   placeholder="your.email@arnatech.id" autocomplete="email">
+                        </div>
+                        <div class="ant-form-item">
+                            <label class="ant-label" for="password">Password</label>
+                            <input type="password" id="password" name="password" required class="ant-input"
+                                   placeholder="Your password" autocomplete="current-password">
+                        </div>
+                        <button type="submit" id="loginBtn" class="ant-btn ant-btn-primary ant-btn-lg" style="width:100%;margin-bottom:10px;">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span id="loginBtnText">Sign In</span>
+                            <i class="fas fa-spinner fa-spin" id="loginSpinner" style="display:none;"></i>
                         </button>
+                        <div class="divider-or"><span>or</span></div>
+                        <button type="button" onclick="handleGoogleLogin()" id="googleLoginBtn" class="google-btn">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:18px;height:18px;">
+                            <span id="googleBtnText">Sign in with Google</span>
+                            <i class="fas fa-spinner fa-spin" id="googleSpinner" style="display:none;margin-left:4px;"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerSection" style="display:none;">
+                    <p class="form-section-title">Create new account</p>
+                    <p class="form-section-sub">Join Arnatech employee portal</p>
+                    <form id="registerForm" autocomplete="on">
+                        <div class="ant-form-item">
+                            <label class="ant-label" for="reg_email">Email</label>
+                            <input type="email" id="reg_email" name="email" required class="ant-input"
+                                   placeholder="your.email@arnatech.id">
+                        </div>
+                        <div class="ant-form-item">
+                            <label class="ant-label" for="reg_password">Password</label>
+                            <input type="password" id="reg_password" name="password" required class="ant-input"
+                                   placeholder="Create a strong password">
+                        </div>
+                        <div class="ant-form-item">
+                            <label class="ant-label" for="reg_confirm_password">Confirm Password</label>
+                            <input type="password" id="reg_confirm_password" name="confirm_password" required class="ant-input"
+                                   placeholder="Confirm your password">
+                        </div>
+                        <button type="submit" id="registerBtn" class="ant-btn ant-btn-primary ant-btn-lg" style="width:100%;">
+                            <i class="fas fa-user-plus"></i>
+                            <span id="registerBtnText">Create Account</span>
+                            <i class="fas fa-spinner fa-spin" id="registerSpinner" style="display:none;"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Email Verification -->
+                <div id="verificationSection" style="display:none;">
+                    <div style="text-align:center;margin-bottom:20px;">
+                        <div class="verification-icon">
+                            <i class="fas fa-envelope" style="color:var(--ant-warning);font-size:24px;"></i>
+                        </div>
+                        <p class="form-section-title">Verify Your Email</p>
+                        <p class="form-section-sub">We've sent a 6-digit OTP to</p>
+                        <p id="verificationEmail" style="font-weight:600;color:var(--ant-primary);font-size:14px;"></p>
                     </div>
-                    
-                    <button type="button" id="backToRegisterBtn"
-                            class="w-full flex items-center justify-center px-4 py-2 border border-nft-light text-gray-300 rounded-lg hover:bg-nft-gray transition-all duration-200">
-                        <i class="fas fa-arrow-left mr-2"></i>
-                        Back to Registration
+                    <form id="verificationForm">
+                        <div class="ant-form-item">
+                            <label class="ant-label" for="otp">Verification Code</label>
+                            <input type="text" id="otp" name="otp" maxlength="6" required
+                                   class="ant-input otp-input" placeholder="000000">
+                        </div>
+                        <button type="submit" id="verifyBtn" class="ant-btn ant-btn-primary ant-btn-lg" style="width:100%;margin-bottom:10px;">
+                            <i class="fas fa-check"></i>
+                            <span id="verifyBtnText">Verify Email</span>
+                            <i class="fas fa-spinner fa-spin" id="verifySpinner" style="display:none;"></i>
+                        </button>
+                        <p style="font-size:12px;color:var(--text-secondary);text-align:center;margin:8px 0;">
+                            Didn't receive the code? Check spam or
+                            <button type="button" id="resendBtn" class="link-primary" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0;font-family:inherit;">Resend OTP</button>
+                        </p>
+                        <button type="button" id="backToRegisterBtn" class="back-btn" style="width:100%;justify-content:center;margin-top:4px;">
+                            <i class="fas fa-arrow-left"></i> Back to Registration
+                        </button>
+                    </form>
+                </div>
+
+                <!-- MFA Form -->
+                <form id="mfaForm" style="display:none;">
+                    <div style="text-align:center;margin-bottom:20px;">
+                        <div style="width:52px;height:52px;border-radius:50%;background:var(--ant-primary-bg);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                            <i class="fas fa-shield-alt" style="color:var(--ant-primary);font-size:22px;"></i>
+                        </div>
+                        <p class="form-section-title">Two-factor authentication</p>
+                        <p id="mfaHint" class="form-section-sub">Enter the 6-digit code from your authenticator app</p>
+                        <p id="mfaServerMessage" style="color:var(--ant-primary);font-size:12px;display:none;"></p>
+                    </div>
+                    <div class="ant-form-item">
+                        <label class="ant-label" for="mfa_token">MFA Token</label>
+                        <input type="text" id="mfa_token" name="mfa_token" maxlength="6" required
+                               class="ant-input otp-input" placeholder="000000">
+                    </div>
+                    <button type="submit" id="mfaBtn" class="ant-btn ant-btn-primary ant-btn-lg" style="width:100%;margin-bottom:10px;">
+                        <i class="fas fa-check"></i>
+                        <span id="mfaBtnText">Verify</span>
+                        <i class="fas fa-spinner fa-spin" id="mfaSpinner" style="display:none;"></i>
+                    </button>
+                    <button type="button" id="backToLoginBtn" class="back-btn" style="width:100%;justify-content:center;">
+                        <i class="fas fa-arrow-left"></i> Back to Login
                     </button>
                 </form>
+
+                <!-- Error / Success messages -->
+                <div id="errorMessage" class="msg-box msg-error" style="display:none;">
+                    <i class="fas fa-exclamation-circle" style="flex-shrink:0;"></i>
+                    <span id="errorText"></span>
+                </div>
+                <div id="successMessage" class="msg-box msg-success" style="display:none;">
+                    <i class="fas fa-check-circle" style="flex-shrink:0;"></i>
+                    <span id="successText"></span>
+                </div>
             </div>
 
-            <!-- MFA step 2: pre-auth token from SSO (MFA-aware login) -->
-            <form id="mfaForm" class="space-y-4 hidden">
-                <div class="text-center mb-4">
-                    <i class="fas fa-shield-alt text-nft-primary text-2xl mb-2"></i>
-                    <h4 class="text-lg font-semibold text-white">Two-factor authentication</h4>
-                    <p class="text-gray-400 text-sm" id="mfaHint">Enter the 6-digit code from your authenticator app</p>
-                    <p class="text-nft-primary text-xs mt-2 hidden" id="mfaServerMessage"></p>
-                </div>
-                
-                <div>
-                    <label for="mfa_token" class="block text-sm font-medium text-gray-300 mb-1">MFA Token</label>
-                    <input type="text" id="mfa_token" name="mfa_token" maxlength="6" required
-                           class="w-full px-3 py-2 bg-nft-gray border border-nft-light rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nft-primary focus:border-transparent text-center text-lg tracking-wider"
-                           placeholder="000000">
-                </div>
-                
-                <button type="submit" id="mfaBtn"
-                        class="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-nft-gradient hover:bg-nft-gradient-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-nft-primary transition-all duration-200">
-                    <i class="fas fa-check mr-2"></i>
-                    <span id="mfaBtnText">Verify</span>
-                    <i class="fas fa-spinner fa-spin ml-2 hidden" id="mfaSpinner"></i>
-                </button>
-                
-                <button type="button" id="backToLoginBtn"
-                        class="w-full flex items-center justify-center px-4 py-2 border border-nft-light text-gray-300 rounded-lg hover:bg-nft-gray transition-all duration-200">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Back to Login
-                </button>
-            </form>
-            
-            <!-- Error Message -->
-            <div id="errorMessage" class="hidden p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-circle text-red-400 mr-2"></i>
-                    <span class="text-red-400 text-sm" id="errorText"></span>
-                </div>
-            </div>
-            
-            <!-- Success Message -->
-            <div id="successMessage" class="hidden p-3 bg-green-500/20 border border-green-500/50 rounded-lg">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-400 mr-2"></i>
-                    <span class="text-green-400 text-sm" id="successText"></span>
-                </div>
-            </div>
-            
             <!-- Features -->
-            <div class="border-t border-nft-light pt-6">
-                <h4 class="text-sm font-medium text-gray-300 mb-3">What you can do:</h4>
-                <ul class="space-y-2 text-sm text-gray-400">
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-nft-primary mr-2"></i>
-                        Daily check-in and check-out
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-nft-primary mr-2"></i>
-                        Track goals and activities
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-nft-primary mr-2"></i>
-                        View activity history
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-nft-primary mr-2"></i>
-                        Receive attendance insights
-                    </li>
+            <div class="login-footer">
+                <p style="font-size:12px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 10px;">What you can do</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check-circle"></i> Daily check-in and check-out</li>
+                    <li><i class="fas fa-check-circle"></i> Track goals and activities</li>
+                    <li><i class="fas fa-check-circle"></i> View activity history</li>
+                    <li><i class="fas fa-check-circle"></i> Receive attendance insights</li>
                 </ul>
             </div>
         </div>
-        
-        <!-- Help -->
-        <div class="text-center">
-            <p class="text-sm text-gray-400">
-                Need help? Contact 
-                <a href="mailto:support@arnatech.id" class="text-nft-primary hover:underline">
-                    support@arnatech.id
-                </a>
-            </p>
-        </div>
-    </div>
-</div>
 
-<!-- Background Animation -->
-<div class="fixed inset-0 -z-10 overflow-hidden">
-    <div class="absolute -top-40 -right-40 w-80 h-80 bg-nft-primary/10 rounded-full blur-3xl animate-pulse"></div>
-    <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-nft-secondary/10 rounded-full blur-3xl animate-pulse"></div>
+        <p style="text-align:center;font-size:13px;color:var(--text-tertiary);margin-top:16px;">
+            Need help? Contact <a href="mailto:support@arnatech.id" class="link-primary">support@arnatech.id</a>
+        </p>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 let currentEmail = '';
-/** Pre-auth SSO untuk langkah MFA (wajib sebelum POST /auth/api/mfa/verify/) */
 let mfaPreAuthToken = '';
 let isRegistering = false;
 let mfaVerifyInFlight = false;
 
-// Tab switching
-document.getElementById('loginTabBtn').addEventListener('click', () => switchTab('login'));
-document.getElementById('registerTabBtn').addEventListener('click', () => switchTab('register'));
+// Login page theme toggle (no nav bar on this page)
+var loginToggle = document.getElementById('loginThemeToggle');
+if (loginToggle) {
+    loginToggle.addEventListener('click', function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('arna-theme', next);
+    });
+}
+
+document.getElementById('loginTabBtn').addEventListener('click', function () { switchTab('login'); });
+document.getElementById('registerTabBtn').addEventListener('click', function () { switchTab('register'); });
 
 function switchTab(tab) {
-    const loginTab = document.getElementById('loginTabBtn');
-    const registerTab = document.getElementById('registerTabBtn');
-    const loginSection = document.getElementById('loginSection');
-    const registerSection = document.getElementById('registerSection');
-    
-    hideAllForms();
-    hideMessages();
-    
+    hideAllForms(); hideMessages();
+    var loginTab = document.getElementById('loginTabBtn');
+    var registerTab = document.getElementById('registerTabBtn');
     if (tab === 'login') {
-        loginTab.classList.add('bg-nft-gradient', 'text-white');
-        loginTab.classList.remove('text-gray-400');
-        registerTab.classList.remove('bg-nft-gradient', 'text-white');
-        registerTab.classList.add('text-gray-400');
-        
-        loginSection.classList.remove('hidden');
-        registerSection.classList.add('hidden');
+        loginTab.classList.add('active'); registerTab.classList.remove('active');
+        document.getElementById('loginSection').style.display = 'block';
+        document.getElementById('registerSection').style.display = 'none';
         isRegistering = false;
     } else {
-        registerTab.classList.add('bg-nft-gradient', 'text-white');
-        registerTab.classList.remove('text-gray-400');
-        loginTab.classList.remove('bg-nft-gradient', 'text-white');
-        loginTab.classList.add('text-gray-400');
-        
-        registerSection.classList.remove('hidden');
-        loginSection.classList.add('hidden');
+        registerTab.classList.add('active'); loginTab.classList.remove('active');
+        document.getElementById('registerSection').style.display = 'block';
+        document.getElementById('loginSection').style.display = 'none';
         isRegistering = true;
     }
 }
 
-// Registration form handler
-document.getElementById('registerForm').addEventListener('submit', async function(e) {
+document.getElementById('registerForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    
-    const email = document.getElementById('reg_email').value;
-    const password = document.getElementById('reg_password').value;
-    const confirmPassword = document.getElementById('reg_confirm_password').value;
-    
-    // Validate password match
-    if (password !== confirmPassword) {
-        showError('Passwords do not match');
-        return;
-    }
-    
-    // Show loading state
-    setLoadingState('register', true);
-    hideMessages();
-    
+    var email = document.getElementById('reg_email').value;
+    var password = document.getElementById('reg_password').value;
+    var confirm = document.getElementById('reg_confirm_password').value;
+    if (password !== confirm) { showError('Passwords do not match'); return; }
+    setLoadingState('register', true); hideMessages();
     try {
-        const response = await fetch('/auth/api/register/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            // Registration successful, show verification form
-            currentEmail = email;
-            showVerificationForm();
-            showSuccess('Registration successful! Please check your email for verification code.');
-        } else {
-            showError(data.error || 'Registration failed');
-        }
-    } catch (error) {
-        showError('Network error. Please try again.');
-    } finally {
-        setLoadingState('register', false);
-    }
+        const r = await fetch('/auth/api/register/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
+        const data = await r.json();
+        if (r.ok) { currentEmail = email; showVerificationForm(); showSuccess('Registration successful! Check your email for the verification code.'); }
+        else { showError(data.error || 'Registration failed'); }
+    } catch { showError('Network error. Please try again.'); }
+    finally { setLoadingState('register', false); }
 });
 
-// Email verification form handler
-document.getElementById('verificationForm').addEventListener('submit', async function(e) {
+document.getElementById('verificationForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    
-    const otp = document.getElementById('otp').value;
-    
-    // Show loading state
-    setLoadingState('verify', true);
-    hideMessages();
-    
+    var otp = document.getElementById('otp').value;
+    setLoadingState('verify', true); hideMessages();
     try {
-        const response = await fetch('/auth/api/verify-email/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                email: currentEmail, 
-                otp: otp 
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            // Email verification successful
-            showSuccess('Email verified successfully! You can now sign in.');
-            setTimeout(() => {
-                switchTab('login');
-                // Pre-fill login email
-                document.getElementById('email').value = currentEmail;
-            }, 2000);
-        } else {
-            showError(data.error || 'Email verification failed');
-        }
-    } catch (error) {
-        showError('Network error. Please try again.');
-    } finally {
-        setLoadingState('verify', false);
-    }
+        const r = await fetch('/auth/api/verify-email/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: currentEmail, otp}) });
+        const data = await r.json();
+        if (r.ok) { showSuccess('Email verified! You can now sign in.'); setTimeout(function () { switchTab('login'); document.getElementById('email').value = currentEmail; }, 2000); }
+        else { showError(data.error || 'Verification failed'); }
+    } catch { showError('Network error. Please try again.'); }
+    finally { setLoadingState('verify', false); }
 });
 
-// Resend OTP handler
-document.getElementById('resendBtn').addEventListener('click', async function() {
-    const btn = this;
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-    
+document.getElementById('resendBtn').addEventListener('click', async function () {
+    var btn = this; btn.disabled = true; btn.textContent = 'Sending…';
     try {
-        const response = await fetch('/auth/api/resend-email-otp/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: currentEmail })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showSuccess('OTP resent successfully! Check your email.');
-            btn.textContent = 'Resent!';
-            setTimeout(() => {
-                btn.textContent = 'Resend OTP';
-                btn.disabled = false;
-            }, 60000); // 1 minute delay
-        } else {
-            showError(data.error || 'Failed to resend OTP');
-            btn.textContent = 'Resend OTP';
-            btn.disabled = false;
-        }
-    } catch (error) {
-        showError('Network error. Please try again.');
-        btn.textContent = 'Resend OTP';
-        btn.disabled = false;
-    }
+        const r = await fetch('/auth/api/resend-email-otp/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: currentEmail}) });
+        const data = await r.json();
+        if (r.ok) { showSuccess('OTP resent! Check your email.'); btn.textContent = 'Resent!'; setTimeout(function () { btn.textContent = 'Resend OTP'; btn.disabled = false; }, 60000); }
+        else { showError(data.error || 'Failed to resend OTP'); btn.textContent = 'Resend OTP'; btn.disabled = false; }
+    } catch { showError('Network error.'); btn.textContent = 'Resend OTP'; btn.disabled = false; }
 });
 
-// Google Login — global untuk onclick di template
 window.handleGoogleLogin = async function () {
-    toggleSpinner(true);
-    hideMessages();
-
-    google.accounts.id.initialize({
-        client_id: "{{ google_client_id }}",
-        callback: handleCredentialResponse,
-        auto_select: false,
-        prompt_parent_id: "g_id_onload",
-    });
-
-    google.accounts.id.prompt(() => {
-        toggleSpinner(false);
-    });
+    toggleSpinner(true); hideMessages();
+    google.accounts.id.initialize({ client_id: "{{ google_client_id }}", callback: handleCredentialResponse, auto_select: false });
+    google.accounts.id.prompt(function () { toggleSpinner(false); });
 };
 
 function toggleSpinner(show) {
-    const spinner = document.getElementById("googleSpinner");
-    const btnText = document.getElementById("googleBtnText");
-    
-    if (show) {
-        spinner.classList.remove("hidden");
-        btnText.textContent = "Signing in...";
-    } else {
-        spinner.classList.add("hidden");
-        btnText.textContent = "Sign in with Google";
-    }
+    var s = document.getElementById('googleSpinner'), t = document.getElementById('googleBtnText');
+    s.style.display = show ? 'inline-block' : 'none';
+    t.textContent = show ? 'Signing in…' : 'Sign in with Google';
 }
 
 async function handleCredentialResponse(response) {
-    const token = response.credential; // Google ID Token
-
-    fetch("/auth/api/google-login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token })
-    })
-    .then(res => res.json().then(data => ({ ok: res.ok, data })))
-    .then(({ ok, data }) => {
+    const token = response.credential;
+    fetch('/auth/api/google-login/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token}) })
+    .then(r => r.json().then(d => ({ok:r.ok, d})))
+    .then(({ok, d}) => {
         if (ok) {
-            if (data.mfa_required) {
-                currentEmail = data.email || '';
-                mfaPreAuthToken = (data.token || '').trim();
-                if (!mfaPreAuthToken) {
-                    showError(data.error || 'Token MFA sementara tidak diterima. Coba login lagi.');
-                    return;
-                }
-                showMFAForm(data.message);
-            } else {
-                window.location.href = data.redirect_url || "/dashboard/";
-            }
-        } else {
-            showError(data.error || "Google login failed");
-        }
+            if (d.mfa_required) { currentEmail = d.email||''; mfaPreAuthToken = (d.token||'').trim(); if (!mfaPreAuthToken) { showError(d.error||'Token tidak diterima'); return; } showMFAForm(d.message); }
+            else { window.location.href = d.redirect_url || '/dashboard/'; }
+        } else { showError(d.error || 'Google login failed'); }
     })
-    .catch(() => {
-        showError("Network error. Please try again.");
-    })
-    .finally(() => {
-        toggleSpinner(false);
+    .catch(function () { showError('Network error.'); })
+    .finally(function () { toggleSpinner(false); });
+}
+
+document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var email = document.getElementById('email').value;
+    var password = document.getElementById('password').value;
+    setLoadingState('login', true); hideMessages();
+    try {
+        const r = await fetch('/auth/api/login/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
+        const data = await r.json();
+        if (r.ok) {
+            if (data.mfa_required) { currentEmail = email; mfaPreAuthToken = (data.token||'').trim(); if (!mfaPreAuthToken) { showError(data.error||'Token MFA tidak diterima'); return; } showMFAForm(data.message); }
+            else if (data.success) { window.location.href = data.redirect_url || '/dashboard/'; }
+        } else { showError(data.error || 'Login failed'); }
+    } catch { showError('Network error. Please try again.'); }
+    finally { setLoadingState('login', false); }
+});
+
+document.getElementById('mfaForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var token = (document.getElementById('mfa_token').value||'').replace(/\D/g,'');
+    if (!mfaPreAuthToken) { showError('MFA session invalid. Please sign in again.'); return; }
+    if (token.length !== 6) { showError('Enter 6-digit MFA code.'); return; }
+    if (mfaVerifyInFlight) return;
+    mfaVerifyInFlight = true; setLoadingState('mfa', true); hideMessages();
+    var ctrl = new AbortController();
+    var t = setTimeout(function () { ctrl.abort(); }, 45000);
+    try {
+        const r = await fetch('/auth/api/mfa/verify/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token: mfaPreAuthToken, mfa_token: token}), signal: ctrl.signal, credentials:'same-origin' });
+        const data = await r.json().catch(function () { return {}; });
+        if (r.ok && data.success) { window.location.href = data.redirect_url || '/dashboard/'; return; }
+        showError(data.error || 'MFA verification failed');
+    } catch (err) {
+        showError(err.name === 'AbortError' ? 'MFA timed out. Try again.' : 'Network error.');
+    } finally { clearTimeout(t); mfaVerifyInFlight = false; setLoadingState('mfa', false); }
+});
+
+document.getElementById('backToLoginBtn').addEventListener('click', function () { showLoginForm(); document.getElementById('password').value = ''; });
+document.getElementById('backToRegisterBtn').addEventListener('click', function () { showRegisterForm(); });
+
+function showVerificationForm() { hideAllForms(); document.getElementById('verificationSection').style.display = 'block'; document.getElementById('verificationEmail').textContent = currentEmail; document.getElementById('otp').focus(); }
+function showMFAForm(msg) {
+    hideAllForms(); document.getElementById('mfaForm').style.display = 'block';
+    var el = document.getElementById('mfaServerMessage');
+    if (msg) { el.textContent = msg; el.style.display = 'block'; } else { el.style.display = 'none'; }
+    document.getElementById('mfa_token').value = ''; document.getElementById('mfa_token').focus();
+}
+function showLoginForm() { hideAllForms(); switchTab('login'); mfaPreAuthToken = ''; var el = document.getElementById('mfaServerMessage'); if (el) { el.textContent = ''; el.style.display = 'none'; } }
+function showRegisterForm() { hideAllForms(); switchTab('register'); }
+
+function hideAllForms() {
+    ['loginSection','registerSection','verificationSection','mfaForm'].forEach(function (id) {
+        var el = document.getElementById(id); if (el) el.style.display = 'none';
     });
 }
 
-//  Login form handler
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    // Show loading state
-    setLoadingState('login', true);
-    hideMessages();
-    
-    try {
-        const response = await fetch('/auth/api/login/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            if (data.mfa_required) {
-                currentEmail = email;
-                mfaPreAuthToken = (data.token || '').trim();
-                if (!mfaPreAuthToken) {
-                    showError(data.error || 'Token MFA sementara tidak diterima. Coba login lagi.');
-                    return;
-                }
-                showMFAForm(data.message);
-            } else if (data.success) {
-                window.location.href = data.redirect_url || '/dashboard/';
-            }
-        } else {
-            showError(data.error || 'Login failed');
-        }
-    } catch (error) {
-        showError('Network error. Please try again.');
-    } finally {
-        setLoadingState('login', false);
-    }
-});
-
-// MFA form handler
-document.getElementById('mfaForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const mfaToken = (document.getElementById('mfa_token').value || '').replace(/\D/g, '');
-    
-    if (!mfaPreAuthToken) {
-        showError('MFA session is invalid. Please sign in again.');
-        return;
-    }
-    if (mfaToken.length !== 6) {
-        showError('Masukkan kode MFA 6 digit.');
-        return;
-    }
-    if (mfaVerifyInFlight) {
-        return;
-    }
-    mfaVerifyInFlight = true;
-    setLoadingState('mfa', true);
-    hideMessages();
-
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 45000);
-
-    try {
-        const response = await fetch('/auth/api/mfa/verify/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                token: mfaPreAuthToken,
-                mfa_token: mfaToken
-            }),
-            signal: controller.signal,
-            credentials: 'same-origin',
-        });
-        
-        const data = await response.json().catch(() => ({}));
-        
-        if (response.ok && data.success) {
-            window.location.href = data.redirect_url || '/dashboard/';
-            return;
-        }
-        showError(data.error || 'MFA verification failed');
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            showError('MFA verification timed out. Check your network and try again.');
-        } else {
-            showError('Network error. Please try again.');
-        }
-    } finally {
-        clearTimeout(t);
-        mfaVerifyInFlight = false;
-        setLoadingState('mfa', false);
-    }
-});
-
-// Navigation buttons
-document.getElementById('backToLoginBtn').addEventListener('click', function() {
-    showLoginForm();
-    document.getElementById('password').value = ''; // Clear password for security
-});
-
-document.getElementById('backToRegisterBtn').addEventListener('click', function() {
-    showRegisterForm();
-});
-
-// Helper functions
-function showVerificationForm() {
-    hideAllForms();
-    document.getElementById('verificationSection').classList.remove('hidden');
-    document.getElementById('verificationEmail').textContent = currentEmail;
-    document.getElementById('otp').focus();
-}
-
-function showMFAForm(serverMessage) {
-    hideAllForms();
-    document.getElementById('mfaForm').classList.remove('hidden');
-    const el = document.getElementById('mfaServerMessage');
-    if (serverMessage) {
-        el.textContent = serverMessage;
-        el.classList.remove('hidden');
-    } else {
-        el.textContent = '';
-        el.classList.add('hidden');
-    }
-    document.getElementById('mfa_token').value = '';
-    document.getElementById('mfa_token').focus();
-}
-
-function showLoginForm() {
-    hideAllForms();
-    switchTab('login');
-    document.getElementById('mfa_token').value = '';
-    mfaPreAuthToken = '';
-    const el = document.getElementById('mfaServerMessage');
-    if (el) { el.textContent = ''; el.classList.add('hidden'); }
-}
-
-function showRegisterForm() {
-    hideAllForms();
-    switchTab('register');
-}
-
-function hideAllForms() {
-    document.getElementById('loginSection').classList.add('hidden');
-    document.getElementById('registerSection').classList.add('hidden');
-    document.getElementById('verificationSection').classList.add('hidden');
-    document.getElementById('mfaForm').classList.add('hidden');
-}
-
 function setLoadingState(form, loading) {
-    const states = {
-        login: { btn: 'loginBtn', text: 'loginBtnText', spinner: 'loginSpinner', loadingText: 'Signing In...', normalText: 'Sign In' },
-        register: { btn: 'registerBtn', text: 'registerBtnText', spinner: 'registerSpinner', loadingText: 'Creating Account...', normalText: 'Create Account' },
-        verify: { btn: 'verifyBtn', text: 'verifyBtnText', spinner: 'verifySpinner', loadingText: 'Verifying...', normalText: 'Verify Email' },
-        mfa: { btn: 'mfaBtn', text: 'mfaBtnText', spinner: 'mfaSpinner', loadingText: 'Verifying...', normalText: 'Verify' }
+    var map = {
+        login:    { btn:'loginBtn',    text:'loginBtnText',    spinner:'loginSpinner',    load:'Signing In…',          norm:'Sign In' },
+        register: { btn:'registerBtn', text:'registerBtnText', spinner:'registerSpinner', load:'Creating Account…',    norm:'Create Account' },
+        verify:   { btn:'verifyBtn',   text:'verifyBtnText',   spinner:'verifySpinner',   load:'Verifying…',           norm:'Verify Email' },
+        mfa:      { btn:'mfaBtn',      text:'mfaBtnText',      spinner:'mfaSpinner',      load:'Verifying…',           norm:'Verify' },
     };
-    
-    const state = states[form];
-    if (state) {
-        const btn = document.getElementById(state.btn);
-        const text = document.getElementById(state.text);
-        const spinner = document.getElementById(state.spinner);
-        
-        btn.disabled = loading;
-        text.textContent = loading ? state.loadingText : state.normalText;
-        spinner.classList.toggle('hidden', !loading);
-    }
+    var s = map[form]; if (!s) return;
+    var btn = document.getElementById(s.btn), txt = document.getElementById(s.text), sp = document.getElementById(s.spinner);
+    if (btn) btn.disabled = loading;
+    if (txt) txt.textContent = loading ? s.load : s.norm;
+    if (sp)  sp.style.display = loading ? 'inline-block' : 'none';
 }
 
-function showError(message) {
-    const errorDiv = document.getElementById('errorMessage');
-    const errorText = document.getElementById('errorText');
-    
-    errorText.textContent = message;
-    errorDiv.classList.remove('hidden');
-    
-    // Auto-hide after 8 seconds
-    setTimeout(() => {
-        errorDiv.classList.add('hidden');
-    }, 8000);
+function showError(msg) {
+    var d = document.getElementById('errorMessage'), t = document.getElementById('errorText');
+    t.textContent = msg; d.style.display = 'flex';
+    setTimeout(function () { d.style.display = 'none'; }, 8000);
 }
-
-function showSuccess(message) {
-    const successDiv = document.getElementById('successMessage');
-    const successText = document.getElementById('successText');
-    
-    successText.textContent = message;
-    successDiv.classList.remove('hidden');
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        successDiv.classList.add('hidden');
-    }, 5000);
+function showSuccess(msg) {
+    var d = document.getElementById('successMessage'), t = document.getElementById('successText');
+    t.textContent = msg; d.style.display = 'flex';
+    setTimeout(function () { d.style.display = 'none'; }, 5000);
 }
-
 function hideMessages() {
-    document.getElementById('errorMessage').classList.add('hidden');
-    document.getElementById('successMessage').classList.add('hidden');
+    document.getElementById('errorMessage').style.display = 'none';
+    document.getElementById('successMessage').style.display = 'none';
 }
 
-// Auto-focus and validation for OTP inputs
-document.getElementById('otp').addEventListener('input', function(e) {
-    // Only allow numbers
+document.getElementById('otp').addEventListener('input', function (e) {
     e.target.value = e.target.value.replace(/[^0-9]/g, '');
-    
-    // Auto-submit when 6 digits are entered
-    if (e.target.value.length === 6) {
-        document.getElementById('verificationForm').dispatchEvent(new Event('submit'));
-    }
+    if (e.target.value.length === 6) document.getElementById('verificationForm').dispatchEvent(new Event('submit'));
 });
-
-// MFA: filter digit saja — user tekan "Verify" (hindari double submit / spinner nyangkut)
-document.getElementById('mfa_token').addEventListener('input', function(e) {
+document.getElementById('mfa_token').addEventListener('input', function (e) {
     e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
 });
 </script>
-{% endblock %} 
+{% endblock %}

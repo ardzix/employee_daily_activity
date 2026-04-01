@@ -1,318 +1,209 @@
 {% extends 'base.html' %}
 
-{% block title %}Profile - Employee Daily Activity Tracker{% endblock %}
+{% block title %}My Profile — Employee Daily Activity Tracker{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-white">My Profile</h1>
-            <p class="text-gray-400 mt-2">Manage your account information and settings</p>
-        </div>
-        
-        <!-- Messages -->
-        {% if messages %}
-            <div class="mb-6">
-                {% for message in messages %}
-                    <div class="rounded-lg px-4 py-3 mb-4 {% if message.tags == 'success' %}bg-green-500/20 border border-green-500 text-green-400{% elif message.tags == 'error' %}bg-red-500/20 border border-red-500 text-red-400{% else %}bg-blue-500/20 border border-blue-500 text-blue-400{% endif %}">
-                        <div class="flex items-center">
-                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
-                            <span>{{ message }}</span>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Main Profile Information -->
-            <div class="lg:col-span-2">
-                <div class="nft-card p-6 rounded-xl">
-                    <div class="mb-6 pb-4 border-b border-nft-light">
-                        <h2 class="text-xl font-semibold text-white">Profile</h2>
-                        <p class="text-gray-400 text-sm mt-1">Data from your Arnatech SSO account. Edit name, photo, and bio in the Account portal.</p>
-                    </div>
+<div style="max-width:1100px;margin:0 auto;padding:32px 24px;">
 
-                    <div class="flex flex-col sm:flex-row gap-8">
-                        <div class="flex-shrink-0 flex justify-center sm:justify-start">
-                            <div class="relative w-32 h-32 rounded-full overflow-hidden border-2 border-nft-light bg-gradient-to-br from-nft-gray to-gray-900 shadow-lg flex items-center justify-center">
+    <div class="page-header">
+        <h1 class="page-title">My Profile</h1>
+        <p class="page-subtitle">Manage your account information and settings</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;">
+        <!-- Main Profile -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <!-- SSO Profile -->
+            <div class="ant-card">
+                <div class="ant-card-head" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span><i class="fas fa-user" style="margin-right:8px;color:var(--ant-primary);"></i>Profile</span>
+                    <a href="{{ account_portal_profile_url }}" target="_blank" rel="noopener noreferrer" class="ant-btn ant-btn-default ant-btn-sm">
+                        <i class="fas fa-external-link-alt" style="font-size:11px;"></i> Edit in Account Portal
+                    </a>
+                </div>
+                <div class="ant-card-body">
+                    <p style="font-size:13px;color:var(--text-secondary);margin:0 0 20px;">Data from your Arnatech SSO account. Edit name, photo, and bio in the Account portal.</p>
+
+                    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                        <!-- Avatar -->
+                        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;">
+                            <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;border:2px solid var(--border-color);background:var(--bg-fill);display:flex;align-items:center;justify-content:center;position:relative;">
                                 {% if sso_profile.profile_picture %}
-                                <img src="{{ sso_profile.profile_picture }}"
-                                     alt=""
-                                     class="absolute inset-0 w-full h-full object-cover"
-                                     width="128" height="128"
-                                     loading="lazy"
-                                     referrerpolicy="no-referrer"
-                                     onerror="this.style.display='none'; var el=document.getElementById('profile-avatar-fallback'); if(el) el.classList.remove('hidden');">
+                                <img src="{{ sso_profile.profile_picture }}" alt="Profile"
+                                     style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                                     loading="lazy" referrerpolicy="no-referrer"
+                                     onerror="this.style.display='none';document.getElementById('profile-avatar-fallback').style.display='flex';">
                                 {% endif %}
-                                <span id="profile-avatar-fallback" class="{% if sso_profile.profile_picture %}hidden {% endif %}flex items-center justify-center w-full h-full text-gray-400">
-                                    <i class="fas fa-user text-5xl opacity-60"></i>
+                                <span id="profile-avatar-fallback" style="{% if sso_profile.profile_picture %}display:none;{% endif %}width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                                    <i class="fas fa-user" style="font-size:40px;color:var(--text-tertiary);opacity:0.7;"></i>
                                 </span>
                             </div>
                         </div>
-                        <div class="flex-1 space-y-5 min-w-0">
+
+                        <!-- Info grid -->
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;">
                             <div>
-                                <p class="text-sm text-gray-400 mb-1">Full name</p>
-                                <p class="text-white font-semibold text-lg break-words">{{ display_full_name }}</p>
+                                <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">Full Name</p>
+                                <p style="font-size:16px;font-weight:700;color:var(--text-heading);margin:0;">{{ display_full_name }}</p>
                             </div>
-                            <div>
-                                <p class="text-sm text-gray-400 mb-1">Email</p>
-                                <p class="text-white font-medium break-all">{{ user.email }}</p>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                                <div>
+                                    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">Email</p>
+                                    <p style="font-size:14px;font-weight:500;color:var(--text-heading);margin:0;word-break:break-all;">{{ user.email }}</p>
+                                </div>
+                                {% if sso_profile.user_name and sso_profile.user_name != user.email %}
+                                <div>
+                                    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">Username</p>
+                                    <p style="font-size:14px;color:var(--text-heading);margin:0;">{{ sso_profile.user_name }}</p>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">Phone Number</p>
+                                    <p style="font-size:14px;color:var(--text-heading);margin:0;">{% if sso_profile.phone_number %}{{ sso_profile.phone_number }}{% else %}<span style="color:var(--text-tertiary);font-style:italic;">—</span>{% endif %}</p>
+                                </div>
+                                <div>
+                                    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">Last Login</p>
+                                    <p style="font-size:14px;color:var(--text-heading);margin:0;">{% if user.last_login %}{{ user.last_login|date:"M j, Y H:i" }}{% else %}Never{% endif %}</p>
+                                </div>
                             </div>
-                            {% if sso_profile.user_name and sso_profile.user_name != user.email %}
+                            {% if sso_profile.bio %}
                             <div>
-                                <p class="text-sm text-gray-400 mb-1">User name</p>
-                                <p class="text-white font-medium break-words">{{ sso_profile.user_name }}</p>
+                                <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">Bio</p>
+                                <p style="font-size:14px;color:var(--text-color);margin:0;">{{ sso_profile.bio }}</p>
                             </div>
                             {% endif %}
                             <div>
-                                <p class="text-sm text-gray-400 mb-1">Bio</p>
-                                <p class="text-white break-words">{% if sso_profile.bio %}{{ sso_profile.bio }}{% else %}<span class="text-gray-500 italic">—</span>{% endif %}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-400 mb-1">Phone number</p>
-                                <p class="text-white font-medium">{% if sso_profile.phone_number %}{{ sso_profile.phone_number }}{% else %}<span class="text-gray-500 italic">—</span>{% endif %}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-400 mb-1">SSO user ID</p>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-2.5 flex items-center justify-between gap-2">
-                                    <span class="text-white text-sm font-mono break-all">{{ user.sso_id|default:user.username }}</span>
-                                    <span class="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded shrink-0">Read-only</span>
+                                <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">SSO User ID</p>
+                                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;">
+                                    <span style="font-family:monospace;font-size:12px;color:var(--text-color);word-break:break-all;">{{ user.sso_id|default:user.username }}</span>
+                                    <span class="ant-tag" style="flex-shrink:0;">Read-only</span>
                                 </div>
                             </div>
-                            <div>
-                                <p class="text-sm text-gray-400 mb-1">Last login</p>
-                                <p class="text-white font-medium">
-                                    {% if user.last_login %}
-                                        {{ user.last_login|date:"M j, Y H:i" }}
-                                    {% else %}
-                                        Never
-                                    {% endif %}
-                                </p>
-                            </div>
-                            <p class="pt-2">
-                                <a href="{{ account_portal_profile_url }}"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="inline-flex items-center text-nft-primary hover:text-white font-medium transition-colors">
-                                    <i class="fas fa-external-link-alt mr-2 text-sm"></i>
-                                    Edit in profile settings
-                                </a>
-                            </p>
                         </div>
                     </div>
-                    
-                    {% if employee %}
-                    <!-- Employee Information -->
-                    <div class="border-t border-nft-light pt-6 mt-6">
-                        <div class="flex items-center mb-4">
-                            <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-id-card text-blue-400"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-white">Employment Details</h3>
+                </div>
+            </div>
+
+            <!-- Employment Details -->
+            {% if employee %}
+            <div class="ant-card">
+                <div class="ant-card-head"><i class="fas fa-id-card" style="margin-right:8px;color:var(--ant-primary);"></i>Employment Details</div>
+                <div class="ant-card-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        {% for label, value in forloop.parentloop|dictsortreversed:"label" %}{% endfor %}
+                        <div>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Employee ID</p>
+                            <div style="padding:9px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;font-size:13px;font-weight:600;color:var(--text-heading);font-family:monospace;">{{ employee.employee_id }}</div>
                         </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Employee ID</label>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                    <span class="text-white font-medium">{{ employee.employee_id }}</span>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Company</label>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                    <span class="text-white font-medium">{{ employee.company.name }}</span>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Position</label>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                    <span class="text-white font-medium">{{ employee.position }}</span>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Department</label>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                    <span class="text-white font-medium">{{ employee.department|default:"Not assigned" }}</span>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Work Type</label>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                    <span class="text-white font-medium">{{ employee.get_work_type_display }}</span>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Employment Status</label>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                    <span class="px-3 py-1 rounded-full text-sm font-medium
-                                        {% if employee.employment_status == 'active' %}bg-green-500/20 text-green-400
-                                        {% elif employee.employment_status == 'on_leave' %}bg-yellow-500/20 text-yellow-400
-                                        {% else %}bg-gray-500/20 text-gray-400
-                                        {% endif %}">
-                                        {{ employee.get_employment_status_display }}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Hire Date</label>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                    <span class="text-white font-medium">{{ employee.hire_date|date:"M j, Y" }}</span>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">Phone</label>
-                                <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                    <span class="text-white font-medium">{{ employee.phone|default:"Not provided" }}</span>
-                                </div>
+                        <div>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Company</p>
+                            <div style="padding:9px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;font-size:13px;font-weight:600;color:var(--text-heading);">{{ employee.company.name }}</div>
+                        </div>
+                        <div>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Position</p>
+                            <div style="padding:9px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;font-size:13px;font-weight:600;color:var(--text-heading);">{{ employee.position }}</div>
+                        </div>
+                        <div>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Department</p>
+                            <div style="padding:9px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;font-size:13px;font-weight:600;color:var(--text-heading);">{{ employee.department|default:"Not assigned" }}</div>
+                        </div>
+                        <div>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Work Type</p>
+                            <div style="padding:9px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;font-size:13px;color:var(--text-heading);">{{ employee.get_work_type_display }}</div>
+                        </div>
+                        <div>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Employment Status</p>
+                            <div style="padding:6px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;display:flex;align-items:center;">
+                                <span class="ant-tag {% if employee.employment_status == 'active' %}ant-tag-success{% elif employee.employment_status == 'on_leave' %}ant-tag-warning{% else %}ant-tag{% endif %}">{{ employee.get_employment_status_display }}</span>
                             </div>
                         </div>
-                        
+                        <div>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Hire Date</p>
+                            <div style="padding:9px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;font-size:13px;color:var(--text-heading);">{{ employee.hire_date|date:"M j, Y" }}</div>
+                        </div>
+                        <div>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Phone</p>
+                            <div style="padding:9px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;font-size:13px;color:var(--text-heading);">{{ employee.phone|default:"Not provided" }}</div>
+                        </div>
                         {% if employee.manager %}
-                        <div class="mt-6">
-                            <label class="block text-sm font-medium text-gray-300 mb-2">Manager</label>
-                            <div class="bg-nft-gray border border-nft-light rounded-lg px-4 py-3">
-                                <span class="text-white font-medium">{{ employee.manager.full_name }} ({{ employee.manager.employee_id }})</span>
-                            </div>
+                        <div style="grid-column:1/-1;">
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Manager</p>
+                            <div style="padding:9px 12px;background:var(--bg-fill);border:1px solid var(--border-color);border-radius:6px;font-size:13px;color:var(--text-heading);">{{ employee.manager.full_name }} ({{ employee.manager.employee_id }})</div>
                         </div>
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+            <!-- Work Schedule -->
+            {% if employee %}
+            <div class="ant-card">
+                <div class="ant-card-head"><i class="fas fa-clock" style="margin-right:8px;color:#722ed1;"></i>Work Schedule</div>
+                <div class="ant-card-body" style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:13px;color:var(--text-secondary);">Start Time</span>
+                        <span style="font-weight:600;color:var(--text-heading);">{{ employee.effective_work_start_time|time:"H:i" }}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:13px;color:var(--text-secondary);">End Time</span>
+                        <span style="font-weight:600;color:var(--text-heading);">{{ employee.effective_work_end_time|time:"H:i" }}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:13px;color:var(--text-secondary);">Timezone</span>
+                        <span style="font-weight:600;color:var(--text-heading);">{{ employee.company.timezone }}</span>
+                    </div>
+                    {% if employee.work_start_time or employee.work_end_time %}
+                    <div style="padding:8px;background:var(--ant-primary-bg);border-radius:4px;font-size:11px;color:var(--ant-primary);display:flex;align-items:center;gap:6px;">
+                        <i class="fas fa-info-circle"></i> Custom schedule overrides company defaults
                     </div>
                     {% endif %}
                 </div>
             </div>
-            
-            <!-- Sidebar -->
-            <div class="space-y-6">
-                <!-- Work Schedule -->
-                {% if employee %}
-                <div class="nft-card p-6 rounded-xl">
-                    <div class="flex items-center mb-4">
-                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3">
-                            <i class="fas fa-clock text-purple-400"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold text-white">Work Schedule</h3>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-400">Start Time</span>
-                            <span class="text-white font-medium">{{ employee.effective_work_start_time|time:"H:i" }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-400">End Time</span>
-                            <span class="text-white font-medium">{{ employee.effective_work_end_time|time:"H:i" }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-gray-400">Timezone</span>
-                            <span class="text-white font-medium">{{ employee.company.timezone }}</span>
-                        </div>
-                        
-                        {% if employee.work_start_time or employee.work_end_time %}
-                        <div class="pt-3 border-t border-nft-light">
-                            <div class="flex items-center text-xs text-gray-400">
-                                <i class="fas fa-info-circle mr-2"></i>
-                                <span>Custom schedule overrides company defaults</span>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="ant-card">
+                <div class="ant-card-head"><i class="fas fa-bolt" style="margin-right:8px;color:var(--ant-warning);"></i>Quick Actions</div>
+                <div class="ant-card-body" style="display:flex;flex-direction:column;gap:10px;">
+                    <a href="{% url 'dashboard:index' %}" class="ant-btn ant-btn-primary" style="width:100%;justify-content:center;text-decoration:none;"><i class="fas fa-home"></i> Go to Dashboard</a>
+                    <a href="{% url 'activities:activity_list' %}" class="ant-btn ant-btn-default" style="width:100%;justify-content:center;text-decoration:none;"><i class="fas fa-tasks"></i> Daily Activities</a>
+                    <a href="{% url 'authentication:logout' %}" class="ant-btn ant-btn-danger" style="width:100%;justify-content:center;text-decoration:none;"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
-                {% endif %}
-                
-                <!-- Quick Actions -->
-                <div class="nft-card p-6 rounded-xl">
-                    <div class="flex items-center mb-4">
-                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center mr-3">
-                            <i class="fas fa-bolt text-green-400"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold text-white">Quick Actions</h3>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <a href="{% url 'dashboard:index' %}" 
-                           class="w-full flex items-center justify-center px-4 py-3 bg-nft-gradient hover:bg-nft-gradient-hover text-white rounded-lg transition-all duration-200 group">
-                            <i class="fas fa-home mr-2 group-hover:scale-110 transition-transform"></i>
-                            <span class="font-medium">Go to Dashboard</span>
-                        </a>
-                        
-                        <a href="{% url 'activities:activity_list' %}" 
-                           class="w-full flex items-center justify-center px-4 py-3 border border-nft-primary text-nft-primary hover:bg-nft-primary hover:text-white rounded-lg transition-all duration-200 group">
-                            <i class="fas fa-tasks mr-2 group-hover:scale-110 transition-transform"></i>
-                            <span class="font-medium">Daily Activities</span>
-                        </a>
-                        
-                        <a href="{% url 'authentication:logout' %}" 
-                           class="w-full flex items-center justify-center px-4 py-3 border border-red-500 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all duration-200 group">
-                            <i class="fas fa-sign-out-alt mr-2 group-hover:scale-110 transition-transform"></i>
-                            <span class="font-medium">Logout</span>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Account Security -->
-                <div class="nft-card p-6 rounded-xl">
-                    <div class="flex items-center mb-4">
-                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
-                            <i class="fas fa-shield-alt text-blue-400"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold text-white">Account Security</h3>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <div class="flex items-center p-3 bg-nft-gray/50 rounded-lg">
-                            <div class="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-check-circle text-green-400 text-sm"></i>
-                            </div>
-                            <div>
-                                <p class="text-white font-medium text-sm">SSO Authentication</p>
-                                <p class="text-gray-400 text-xs">Secure single sign-on</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center p-3 bg-nft-gray/50 rounded-lg">
-                            <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-shield-alt text-blue-400 text-sm"></i>
-                            </div>
-                            <div>
-                                <p class="text-white font-medium text-sm">JWT Token Based</p>
-                                <p class="text-gray-400 text-xs">Secure token authentication</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center p-3 bg-nft-gray/50 rounded-lg">
-                            <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-lock text-purple-400 text-sm"></i>
-                            </div>
-                            <div>
-                                <p class="text-white font-medium text-sm">Encrypted Sessions</p>
-                                <p class="text-gray-400 text-xs">End-to-end encryption</p>
-                            </div>
+            </div>
+
+            <!-- Account Security -->
+            <div class="ant-card">
+                <div class="ant-card-head"><i class="fas fa-shield-alt" style="margin-right:8px;color:var(--ant-primary);"></i>Account Security</div>
+                <div class="ant-card-body" style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--ant-success-bg);border-radius:6px;">
+                        <i class="fas fa-check-circle" style="color:var(--ant-success);flex-shrink:0;"></i>
+                        <div>
+                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0;">SSO Authentication</p>
+                            <p style="font-size:11px;color:var(--text-secondary);margin:0;">Secure single sign-on</p>
                         </div>
                     </div>
-                    
-                    <div class="mt-4 pt-4 border-t border-nft-light">
-                        <div class="flex items-start">
-                            <div class="w-6 h-6 bg-yellow-500/20 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                                <i class="fas fa-info-circle text-yellow-400 text-xs"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-400">
-                                    Your account is protected by Arnatech's security systems. 
-                                    Contact IT support for security concerns.
-                                </p>
-                            </div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--ant-primary-bg);border-radius:6px;">
+                        <i class="fas fa-shield-alt" style="color:var(--ant-primary);flex-shrink:0;"></i>
+                        <div>
+                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0;">JWT Token Based</p>
+                            <p style="font-size:11px;color:var(--text-secondary);margin:0;">Secure token authentication</p>
                         </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(114,46,209,0.1);border-radius:6px;">
+                        <i class="fas fa-lock" style="color:#722ed1;flex-shrink:0;"></i>
+                        <div>
+                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0;">Encrypted Sessions</p>
+                            <p style="font-size:11px;color:var(--text-secondary);margin:0;">End-to-end encryption</p>
+                        </div>
+                    </div>
+                    <div style="padding:8px 10px;background:var(--ant-warning-bg);border-radius:4px;font-size:11px;color:var(--text-secondary);display:flex;align-items:flex-start;gap:6px;">
+                        <i class="fas fa-info-circle" style="color:var(--ant-warning);margin-top:1px;flex-shrink:0;"></i>
+                        Your account is protected by Arnatech's security systems. Contact IT support for security concerns.
                     </div>
                 </div>
             </div>
