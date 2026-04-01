@@ -4,7 +4,11 @@ from django.shortcuts import redirect
 from django.http import JsonResponse
 from django.conf import settings
 
-from authentication.sso_cookies import copy_public_sso_cookies_to_session, set_public_sso_auth_cookies
+from authentication.sso_cookies import (
+    copy_public_sso_cookies_to_session,
+    refresh_sso_session_tokens,
+    set_public_sso_auth_cookies,
+)
 
 
 class JWTAuthenticationMiddleware(MiddlewareMixin):
@@ -37,7 +41,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
         ):
             return None
 
-        # Sinkronkan arna_sso_* → session (lintas subdomain dengan Account portal)
+        # Sync arna_sso_* cookies into session (shared parent domain with Account portal)
         copy_public_sso_cookies_to_session(request)
 
         # Skip authentication for certain paths
@@ -74,7 +78,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             else:
                 # Access token is invalid/expired, try to refresh
                 if refresh_token:
-                    new_access_token = self.refresh_access_token(refresh_token, request)
+                    new_access_token = refresh_sso_session_tokens(request)
                     if new_access_token:
                         # Try with new token
                         user = self.validate_token_and_get_user(new_access_token)
@@ -95,37 +99,3 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
         from authentication.views import authenticate_with_token
         return authenticate_with_token(access_token)
     
-    def refresh_access_token(self, refresh_token, request):
-        """Attempt to refresh the access token using SSO service"""
-        import requests
-        from django.conf import settings
-        
-        try:
-            response = requests.post(
-                f"{settings.SSO_BASE_URL}/api/auth/token/refresh/",
-                json={'refresh': refresh_token},
-                headers={'Content-Type': 'application/json'},
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                new_access_token = data.get('access')
-                new_refresh_token = data.get('refresh')  # Simple JWT rotates refresh tokens
-                
-                if new_access_token:
-                    request.session['access_token'] = new_access_token
-                    if new_refresh_token:
-                        request.session['refresh_token'] = new_refresh_token
-                    request.session.save()
-                    # Public cookies updated in process_response
-                    request._public_sso_cookie_tokens = (
-                        new_access_token,
-                        new_refresh_token or refresh_token,
-                    )
-                    return new_access_token
-            
-            return None
-            
-        except Exception as e:
-            return None

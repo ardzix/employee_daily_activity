@@ -12,7 +12,11 @@ import requests
 import json
 from employees.models import Employee
 from .forms import UserProfileForm
-from .sso_cookies import set_public_sso_auth_cookies, clear_public_sso_auth_cookies
+from .sso_cookies import (
+    clear_public_sso_auth_cookies,
+    refresh_sso_session_tokens,
+    set_public_sso_auth_cookies,
+)
 import jwt
 import os
 
@@ -22,7 +26,7 @@ User = get_user_model()
 def try_sso_session_login(request):
     """
     After middleware copied arna_sso_* into the session, attempt Django login.
-    Used for /auth/login/ and / where JWT middleware skips full auth.
+    Used for /auth/login/ and / where JWT middleware skips full auth (no refresh there).
     """
     if request.user.is_authenticated:
         return
@@ -30,6 +34,9 @@ def try_sso_session_login(request):
     if not access:
         return
     user = authenticate_with_token(access)
+    if not user and request.session.get('refresh_token'):
+        access = refresh_sso_session_tokens(request) or access
+        user = authenticate_with_token(access)
     if user:
         login(request, user)
 
