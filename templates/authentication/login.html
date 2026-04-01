@@ -143,12 +143,12 @@
                 </form>
             </div>
 
-            <!-- MFA Form (hidden by default) — langkah 2 setelah login MFA-aware (pre-auth token dari SSO) -->
+            <!-- MFA step 2: pre-auth token from SSO (MFA-aware login) -->
             <form id="mfaForm" class="space-y-4 hidden">
                 <div class="text-center mb-4">
                     <i class="fas fa-shield-alt text-nft-primary text-2xl mb-2"></i>
-                    <h4 class="text-lg font-semibold text-white">Verifikasi dua faktor</h4>
-                    <p class="text-gray-400 text-sm" id="mfaHint">Masukkan kode 6 digit dari aplikasi authenticator Anda</p>
+                    <h4 class="text-lg font-semibold text-white">Two-factor authentication</h4>
+                    <p class="text-gray-400 text-sm" id="mfaHint">Enter the 6-digit code from your authenticator app</p>
                     <p class="text-nft-primary text-xs mt-2 hidden" id="mfaServerMessage"></p>
                 </div>
                 
@@ -511,7 +511,7 @@ document.getElementById('mfaForm').addEventListener('submit', async function(e) 
     const mfaToken = (document.getElementById('mfa_token').value || '').replace(/\D/g, '');
     
     if (!mfaPreAuthToken) {
-        showError('Sesi verifikasi MFA tidak valid. Silakan login ulang.');
+        showError('MFA session is invalid. Please sign in again.');
         return;
     }
     if (mfaToken.length !== 6) {
@@ -551,7 +551,7 @@ document.getElementById('mfaForm').addEventListener('submit', async function(e) 
         showError(data.error || 'MFA verification failed');
     } catch (error) {
         if (error.name === 'AbortError') {
-            showError('Verifikasi MFA habis waktu. Periksa jaringan lalu coba lagi.');
+            showError('MFA verification timed out. Check your network and try again.');
         } else {
             showError('Network error. Please try again.');
         }

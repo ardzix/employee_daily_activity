@@ -19,7 +19,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
         super().__init__(get_response)
 
     def process_response(self, request, response):
-        """Setel ulang cookie publik jika refresh token di middleware mengganti JWT."""
+        """Refresh public SSO cookies when this middleware rotates JWTs via refresh."""
         tokens = getattr(request, '_public_sso_cookie_tokens', None)
         if tokens and getattr(settings, 'PUBLIC_AUTH_COOKIE_DOMAIN', '').strip():
             access, refresh = tokens
@@ -29,7 +29,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """Process incoming requests - use Django sessions primarily"""
         
-        # Tanpa cookie publik ke static/media
+        # No SSO cookie sync for static/media
         if (
             request.path.startswith('/static/')
             or request.path.startswith('/media/')
@@ -118,7 +118,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
                     if new_refresh_token:
                         request.session['refresh_token'] = new_refresh_token
                     request.session.save()
-                    # Perbarui cookie publik di process_response
+                    # Public cookies updated in process_response
                     request._public_sso_cookie_tokens = (
                         new_access_token,
                         new_refresh_token or refresh_token,

@@ -1,8 +1,8 @@
 """
-Cookie publik lintas subdomain (nama disepakati dengan portal Account SSO).
+Public SSO cookies shared across subdomains (names must match the Account portal).
 
-Dengan PUBLIC_AUTH_COOKIE_DOMAIN=.arnatech.id, browser mengirim
-arna_sso_access_token / arna_sso_refresh_token ke semua subdomain.
+When PUBLIC_AUTH_COOKIE_DOMAIN is set (e.g. .arnatech.id), the browser sends
+arna_sso_access_token and arna_sso_refresh_token to all subdomains under that domain.
 """
 from django.conf import settings
 
@@ -38,7 +38,7 @@ def _cookie_params(max_age):
 
 
 def set_public_sso_auth_cookies(response, access_token, refresh_token, max_age=None):
-    """Set cookie publik agar subdomain lain (mis. account.*) bisa memakai token yang sama."""
+    """Set public cookies so other subdomains (e.g. account.*) can reuse the same tokens."""
     if not getattr(settings, 'PUBLIC_AUTH_COOKIE_DOMAIN', '').strip():
         return response
     age = max_age if max_age is not None else getattr(settings, 'SESSION_COOKIE_AGE', 86400)
@@ -58,11 +58,11 @@ def set_public_sso_auth_cookies(response, access_token, refresh_token, max_age=N
 
 
 def clear_public_sso_auth_cookies(response):
-    """Hapus cookie publik (domain harus sama seperti saat set)."""
+    """Clear public cookies (domain/path must match how they were set)."""
     if not getattr(settings, 'PUBLIC_AUTH_COOKIE_DOMAIN', '').strip():
         return response
     opts = _cookie_params(0)
-    # Django menghapus cookie dengan max_age=0
+    # max_age=0 clears the cookie in browsers
     response.set_cookie(settings.SSO_PUBLIC_ACCESS_COOKIE_NAME, '', **opts)
     response.set_cookie(settings.SSO_PUBLIC_REFRESH_COOKIE_NAME, '', **opts)
     return response

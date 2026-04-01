@@ -21,8 +21,8 @@ User = get_user_model()
 
 def try_sso_session_login(request):
     """
-    Setelah middleware menyalin arna_sso_* ke session, coba login Django.
-    Dipakai di halaman /auth/login/ dan / (belum melewati JWT middleware auth).
+    After middleware copied arna_sso_* into the session, attempt Django login.
+    Used for /auth/login/ and / where JWT middleware skips full auth.
     """
     if request.user.is_authenticated:
         return
@@ -322,7 +322,7 @@ def api_login(request):
                 pre_auth = _mfa_pre_auth_token_from_sso(response_data)
                 if not pre_auth:
                     return JsonResponse({
-                        'error': 'Layanan login tidak mengembalikan token MFA sementara. Hubungi admin atau coba lagi.',
+                        'error': 'Login service did not return an MFA pre-auth token. Contact support or try again.',
                         'mfa_required': True,
                     }, status=502)
                 return JsonResponse({
@@ -434,7 +434,7 @@ def api_google_login(request):
                 pre_auth = _mfa_pre_auth_token_from_sso(response_data)
                 if not pre_auth:
                     return JsonResponse({
-                        'error': 'Layanan login tidak mengembalikan token MFA sementara. Hubungi admin atau coba lagi.',
+                        'error': 'Login service did not return an MFA pre-auth token. Contact support or try again.',
                         'mfa_required': True,
                     }, status=502)
                 return JsonResponse({
@@ -519,7 +519,7 @@ def mfa_verify(request):
         
         if not pre_auth_token or not mfa_token:
             return JsonResponse({
-                'error': 'Token langkah login dan kode MFA (6 digit) wajib diisi.'
+                'error': 'Login pre-auth token and 6-digit MFA code are required.'
             }, status=400)
         
         # Call SSO MFA verify API
@@ -601,9 +601,9 @@ def mfa_verify(request):
         elif sso_response.status_code == 401:
             try:
                 response_data = sso_response.json()
-                error_msg = response_data.get('detail', response_data.get('message', 'Token langkah login kedaluwarsa atau tidak valid. Silakan login ulang.'))
+                error_msg = response_data.get('detail', response_data.get('message', 'Login pre-auth token expired or invalid. Please sign in again.'))
             except Exception:
-                error_msg = 'Token langkah login kedaluwarsa atau tidak valid. Silakan login ulang.'
+                error_msg = 'Login pre-auth token expired or invalid. Please sign in again.'
             return JsonResponse({'error': error_msg}, status=401)
         elif sso_response.status_code == 404:
             return JsonResponse({'error': 'User not found. Please try logging in again.'}, status=404)
