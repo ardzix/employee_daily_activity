@@ -188,6 +188,9 @@ SSO_PUBLIC_ACCESS_COOKIE_NAME = 'arna_sso_access_token'
 SSO_PUBLIC_REFRESH_COOKIE_NAME = 'arna_sso_refresh_token'
 # SameSite for sibling subdomains: Lax is typical; None requires Secure.
 SSO_PUBLIC_COOKIE_SAMESITE = os.getenv('SSO_PUBLIC_COOKIE_SAMESITE', 'Lax')
+# HttpOnly=False so SPAs on other subdomains can read tokens from document.cookie.
+# Set SSO_PUBLIC_COOKIE_HTTPONLY=True to harden (tokens not readable from JS; SPAs must use another channel).
+SSO_PUBLIC_COOKIE_HTTPONLY = os.getenv('SSO_PUBLIC_COOKIE_HTTPONLY', 'False').lower() == 'true'
 
 # Session Configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'

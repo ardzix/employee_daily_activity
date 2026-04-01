@@ -76,7 +76,7 @@ def _cookie_params(max_age):
         'path': '/',
         'domain': domain,
         'secure': secure,
-        'httponly': True,
+        'httponly': getattr(settings, 'SSO_PUBLIC_COOKIE_HTTPONLY', False),
         'samesite': getattr(settings, 'SSO_PUBLIC_COOKIE_SAMESITE', 'Lax'),
     }
 
