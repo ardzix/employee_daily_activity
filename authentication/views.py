@@ -649,9 +649,10 @@ def logout_view(request):
     
     # Django logout
     logout(request)
-    
+
     messages.success(request, 'You have been successfully logged out.')
-    return redirect('authentication:login')
+    response = redirect('authentication:login')
+    return clear_public_sso_auth_cookies(response)
 
 
 @login_required
@@ -712,7 +713,8 @@ def refresh_token_view(request):
             # Refresh token is invalid, need to login again
             request.session.flush()
             logout(request)
-            return JsonResponse({'error': 'Token expired, please login again'}, status=401)
+            resp = JsonResponse({'error': 'Token expired, please login again'}, status=401)
+            return clear_public_sso_auth_cookies(resp)
             
     except Exception as e:
         return JsonResponse({'error': f'Token refresh failed: {str(e)}'}, status=500)
