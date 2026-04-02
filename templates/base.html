@@ -658,7 +658,7 @@
             </div>
             <div class="ant-modal-footer">
                 <button type="button" id="cancel-checkin" class="ant-btn ant-btn-default">Cancel</button>
-                <button type="submit" form="check-in-form" class="ant-btn ant-btn-success ant-btn-lg">
+                <button type="submit" id="checkin-submit-btn" form="check-in-form" class="ant-btn ant-btn-success ant-btn-lg">
                     <i class="fas fa-clock"></i> Clock In
                 </button>
             </div>
@@ -711,7 +711,7 @@
             </div>
             <div class="ant-modal-footer">
                 <button type="button" id="cancel-checkout" class="ant-btn ant-btn-default">Cancel</button>
-                <button type="submit" form="check-out-form" class="ant-btn ant-btn-primary ant-btn-lg">
+                <button type="submit" id="checkout-submit-btn" form="check-out-form" class="ant-btn ant-btn-primary ant-btn-lg">
                     <i class="fas fa-clock"></i> Clock Out
                 </button>
             </div>
@@ -996,7 +996,7 @@
             formData.append('planned_activities', JSON.stringify(acts));
             formData.append('daily_goals', JSON.stringify(goals));
             formData.append('morning_problems', checkInForm.querySelector('[name="morning_problems"]').value);
-            var btn = checkInForm.querySelector('button[type="submit"]');
+            var btn = document.getElementById('checkin-submit-btn');
             var orig = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking In…';
@@ -1068,7 +1068,7 @@
             formData.append('additional_activities', JSON.stringify(addl));
             formData.append('afternoon_problems', checkOutForm.querySelector('[name="afternoon_problems"]').value);
 
-            var btn = checkOutForm.querySelector('button[type="submit"]');
+            var btn = document.getElementById('checkout-submit-btn');
             var orig = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking Out…';
