@@ -1140,25 +1140,25 @@
                     <i class="fas fa-user-edit" style="color:var(--ant-warning);"></i>
                 </div>
                 <div>
-                    <h2 style="font-size:16px;font-weight:600;color:var(--text-heading);margin:0 0 4px;">Lengkapi data profil</h2>
-                    <p style="font-size:13px;color:var(--text-secondary);margin:0;">Profil SSO Anda belum lengkap. Mohon isi data berikut di portal Akun Arnatech.</p>
+                    <h2 style="font-size:16px;font-weight:600;color:var(--text-heading);margin:0 0 4px;">Complete your profile</h2>
+                    <p style="font-size:13px;color:var(--text-secondary);margin:0;">Your SSO profile is incomplete. Please provide the following in the Arnatech Account portal.</p>
                 </div>
             </div>
             <ul style="margin:0 0 20px 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;">
                 {% if 'full_name' in profile_reminder_missing %}
-                <li style="font-size:14px;color:var(--text-secondary);">Nama lengkap</li>
+                <li style="font-size:14px;color:var(--text-secondary);">Full name</li>
                 {% endif %}
                 {% if 'profile_picture' in profile_reminder_missing %}
-                <li style="font-size:14px;color:var(--text-secondary);">Foto profil</li>
+                <li style="font-size:14px;color:var(--text-secondary);">Profile photo</li>
                 {% endif %}
                 {% if 'phone_number' in profile_reminder_missing %}
-                <li style="font-size:14px;color:var(--text-secondary);">Nomor telepon</li>
+                <li style="font-size:14px;color:var(--text-secondary);">Phone number</li>
                 {% endif %}
             </ul>
             <div style="display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" id="profile-completion-dismiss" class="ant-btn ant-btn-default">Tutup</button>
+                <button type="button" id="profile-completion-dismiss" class="ant-btn ant-btn-default">Close</button>
                 <a href="{{ account_portal_profile_url }}" target="_blank" rel="noopener noreferrer" class="ant-btn ant-btn-primary">
-                    <i class="fas fa-external-link-alt" style="font-size:11px;"></i> Lengkapi di pengaturan akun
+                    <i class="fas fa-external-link-alt" style="font-size:11px;"></i> Open account settings
                 </a>
             </div>
         </div>
@@ -1192,8 +1192,8 @@
                         <i class="fas fa-lock" style="color:var(--ant-primary);font-size:20px;"></i>
                     </div>
                     <div>
-                        <h2 id="sec-reminder-title" style="font-size:17px;font-weight:700;color:var(--text-heading);margin:0 0 4px;">Tingkatkan keamanan akunmu</h2>
-                        <p style="font-size:13px;color:var(--text-secondary);margin:0;">Akun kamu belum mengaktifkan semua fitur keamanan yang tersedia.</p>
+                        <h2 id="sec-reminder-title" style="font-size:17px;font-weight:700;color:var(--text-heading);margin:0 0 4px;">Strengthen your account security</h2>
+                        <p style="font-size:13px;color:var(--text-secondary);margin:0;">You have not enabled all available security features on your account.</p>
                     </div>
                 </div>
 
@@ -1205,8 +1205,8 @@
                             <i class="fas fa-key" style="color:#52c41a;font-size:16px;"></i>
                         </div>
                         <div>
-                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0 0 2px;">Passkey belum dikonfigurasi</p>
-                            <p style="font-size:12px;color:var(--text-secondary);margin:0;">Login lebih mudah dan aman menggunakan sidik jari atau Face ID tanpa perlu password.</p>
+                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0 0 2px;">Passkey not configured</p>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0;">Sign in faster and more securely using fingerprint or Face ID—no password required.</p>
                         </div>
                     </div>
                     <!-- MFA item -->
@@ -1215,8 +1215,8 @@
                             <i class="fas fa-shield-alt" style="color:var(--ant-primary);font-size:16px;"></i>
                         </div>
                         <div>
-                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0 0 2px;">MFA belum diaktifkan</p>
-                            <p style="font-size:12px;color:var(--text-secondary);margin:0;">Two-factor authentication melindungi akun meski password kamu bocor.</p>
+                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0 0 2px;">MFA not enabled</p>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0;">Two-factor authentication protects your account even if your password is compromised.</p>
                         </div>
                     </div>
                 </div>
@@ -1225,14 +1225,14 @@
             <!-- Footer buttons -->
             <div style="padding:14px 24px 20px;display:flex;flex-direction:column;gap:8px;">
                 <a id="sec-reminder-ok" href="/auth/profile/" class="ant-btn ant-btn-primary" style="width:100%;justify-content:center;text-decoration:none;font-size:14px;">
-                    <i class="fas fa-shield-alt"></i> Setup sekarang
+                    <i class="fas fa-shield-alt"></i> Proceed to set up
                 </a>
                 <div style="display:flex;gap:8px;">
                     <button type="button" id="sec-reminder-later" class="ant-btn ant-btn-default" style="flex:1;justify-content:center;font-size:13px;">
-                        <i class="fas fa-clock"></i> Ingatkan lagi nanti
+                        <i class="fas fa-clock"></i> Remind me later
                     </button>
                     <button type="button" id="sec-reminder-never" class="ant-btn ant-btn-default" style="flex:1;justify-content:center;font-size:13px;color:var(--text-secondary);">
-                        <i class="fas fa-ban"></i> Jangan tampilkan lagi
+                        <i class="fas fa-ban"></i> Never ask again
                     </button>
                 </div>
             </div>
@@ -1242,7 +1242,6 @@
     <script>
     (function () {
         var STORAGE_KEY = 'arna-security-reminder-dismissed';
-        var CHECK_INTERVAL_MS = 30 * 60 * 1000; // re-check at most once per 30 min per session
 
         // Skip if user opted out permanently
         if (localStorage.getItem(STORAGE_KEY) === 'never') return;
@@ -1273,7 +1272,7 @@
             hideModal();
         });
 
-        // "Setup sekarang" just navigates via its href, also mark session
+        // "Proceed to set up" link uses href; also mark session so reminder does not re-show in this tab
         document.getElementById('sec-reminder-ok').addEventListener('click', function () {
             sessionStorage.setItem(STORAGE_KEY, '1');
         });
