@@ -161,6 +161,11 @@
                             <i class="fas fa-spinner fa-spin" id="loginSpinner" style="display:none;"></i>
                         </button>
                         <div class="divider-or"><span>or</span></div>
+                        <button type="button" id="passkeyLoginBtn" class="google-btn" onclick="handlePasskeyLogin()" style="margin-bottom:8px;">
+                            <i class="fas fa-key" style="font-size:16px;color:var(--ant-primary);"></i>
+                            <span id="passkeyLoginBtnText">Sign in with Passkey</span>
+                            <i class="fas fa-spinner fa-spin" id="passkeyLoginSpinner" style="display:none;margin-left:4px;"></i>
+                        </button>
                         <button type="button" onclick="handleGoogleLogin()" id="googleLoginBtn" class="google-btn">
                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:18px;height:18px;">
                             <span id="googleBtnText">Sign in with Google</span>
@@ -475,5 +480,84 @@ document.getElementById('otp').addEventListener('input', function (e) {
 document.getElementById('mfa_token').addEventListener('input', function (e) {
     e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
 });
+
+// ── Passkey Login ─────────────────────────────────────────────────────────
+const _b64dec = s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
+const _b64enc = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+
+function _setPasskeyBtnState(loading) {
+    var btn  = document.getElementById('passkeyLoginBtn');
+    var txt  = document.getElementById('passkeyLoginBtnText');
+    var spin = document.getElementById('passkeyLoginSpinner');
+    btn.disabled = loading;
+    txt.textContent = loading ? 'Authenticating…' : 'Sign in with Passkey';
+    spin.style.display = loading ? 'inline-block' : 'none';
+}
+
+window.handlePasskeyLogin = async function () {
+    if (!window.PublicKeyCredential) {
+        showError('Your browser does not support passkeys. Please use a modern browser.');
+        return;
+    }
+    _setPasskeyBtnState(true); hideMessages();
+    try {
+        // 1. Begin — get challenge from server
+        const begR = await fetch('/auth/api/passkeys/login/begin/', { credentials: 'same-origin' });
+        if (!begR.ok) {
+            const d = await begR.json().catch(function(){return{};});
+            showError(d.error || 'Could not start passkey login. Try again.');
+            return;
+        }
+        const opts = await begR.json();
+
+        // 2. Decode base64url → ArrayBuffer
+        opts.publicKey.challenge = _b64dec(opts.publicKey.challenge);
+        if (opts.publicKey.allowCredentials) {
+            opts.publicKey.allowCredentials = opts.publicKey.allowCredentials.map(c => ({...c, id: _b64dec(c.id)}));
+        }
+
+        // 3. Browser prompt (Touch ID / Windows Hello / YubiKey…)
+        const assertion = await navigator.credentials.get(opts);
+
+        // 4. Complete — send assertion to server
+        const complR = await fetch('/auth/api/passkeys/login/complete/', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id:     assertion.id,
+                rawId:  _b64enc(assertion.rawId),
+                type:   assertion.type,
+                response: {
+                    authenticatorData: _b64enc(assertion.response.authenticatorData),
+                    clientDataJSON:    _b64enc(assertion.response.clientDataJSON),
+                    signature:         _b64enc(assertion.response.signature),
+                    userHandle:        assertion.response.userHandle ? _b64enc(assertion.response.userHandle) : null,
+                },
+            }),
+        });
+        const data = await complR.json().catch(function(){return{};});
+        if (complR.ok && data.success) {
+            window.location.href = data.redirect_url || '/dashboard/';
+        } else {
+            showError(data.error || data.detail || 'Passkey login failed. Please try again.');
+        }
+    } catch (err) {
+        if (err.name === 'NotAllowedError') {
+            showError('Passkey authentication was cancelled or timed out.');
+        } else if (err.name === 'SecurityError') {
+            showError('Passkey error: security policy mismatch. Please contact support.');
+        } else {
+            showError(err.message || 'Passkey login failed.');
+        }
+    } finally {
+        _setPasskeyBtnState(false);
+    }
+};
+
+// Hide passkey button if browser has no WebAuthn support
+if (!window.PublicKeyCredential) {
+    var pkBtn = document.getElementById('passkeyLoginBtn');
+    if (pkBtn) pkBtn.style.display = 'none';
+}
 </script>
 {% endblock %}

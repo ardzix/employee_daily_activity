@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>{% block title %}Arnatech Employee Daily Activity Tracker{% endblock %}</title>
 
     <!-- Tailwind CSS CDN -->
@@ -492,6 +493,26 @@
             border-radius: 8px;
             box-shadow: var(--shadow-lg);
         }
+        /* ── Security Setup Reminder ───────────────────────────── */
+        #security-reminder-modal {
+            position: fixed; inset: 0; z-index: 210;
+            display: flex; align-items: center; justify-content: center;
+            padding: 16px; background: var(--bg-mask); backdrop-filter: blur(4px);
+        }
+        #security-reminder-card {
+            position: relative; max-width: 460px; width: 100%;
+            background: var(--bg-container); border: 1px solid var(--border-color);
+            border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden;
+        }
+        .sec-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--bg-fill);
+        }
+        .sec-item-icon {
+            width: 36px; height: 36px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
     </style>
 
     <script>
@@ -511,7 +532,7 @@
     <nav class="ant-nav">
         <a href="{% url 'dashboard:index' %}" class="ant-nav-brand">
             <i class="fas fa-clipboard-check"></i>
-            <span>Arnatech EDA</span>
+            <span>Arnatech Employee Clock-in</span>
         </a>
 
         <div class="ant-nav-menu">
@@ -1149,6 +1170,139 @@
         function hide() { modal.style.display = 'none'; }
         document.getElementById('profile-completion-dismiss')?.addEventListener('click', hide);
         document.getElementById('profile-completion-backdrop')?.addEventListener('click', hide);
+    })();
+    </script>
+    {% endif %}
+
+    <!-- ── Security Setup Reminder ────────────────────────────
+         Shown once after login if MFA or Passkey is not set up.
+         Suppressed permanently when user clicks "Never ask again".
+    ──────────────────────────────────────────────────────────── -->
+    {% if user.is_authenticated %}
+    <div id="security-reminder-modal" style="display:none;" aria-modal="true" role="dialog" aria-labelledby="sec-reminder-title">
+
+        <div id="security-reminder-card">
+            <!-- Gradient accent bar -->
+            <div style="height:4px;background:linear-gradient(90deg,var(--ant-primary),#52c41a);"></div>
+
+            <div style="padding:24px 24px 0;">
+                <!-- Header -->
+                <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;">
+                    <div style="width:44px;height:44px;border-radius:10px;background:var(--ant-primary-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-lock" style="color:var(--ant-primary);font-size:20px;"></i>
+                    </div>
+                    <div>
+                        <h2 id="sec-reminder-title" style="font-size:17px;font-weight:700;color:var(--text-heading);margin:0 0 4px;">Tingkatkan keamanan akunmu</h2>
+                        <p style="font-size:13px;color:var(--text-secondary);margin:0;">Akun kamu belum mengaktifkan semua fitur keamanan yang tersedia.</p>
+                    </div>
+                </div>
+
+                <!-- Items -->
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+                    <!-- Passkey item -->
+                    <div class="sec-item" id="sec-item-passkey" style="display:none;">
+                        <div class="sec-item-icon" style="background:rgba(82,196,26,0.12);">
+                            <i class="fas fa-key" style="color:#52c41a;font-size:16px;"></i>
+                        </div>
+                        <div>
+                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0 0 2px;">Passkey belum dikonfigurasi</p>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0;">Login lebih mudah dan aman menggunakan sidik jari atau Face ID tanpa perlu password.</p>
+                        </div>
+                    </div>
+                    <!-- MFA item -->
+                    <div class="sec-item" id="sec-item-mfa" style="display:none;">
+                        <div class="sec-item-icon" style="background:var(--ant-primary-bg);">
+                            <i class="fas fa-shield-alt" style="color:var(--ant-primary);font-size:16px;"></i>
+                        </div>
+                        <div>
+                            <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0 0 2px;">MFA belum diaktifkan</p>
+                            <p style="font-size:12px;color:var(--text-secondary);margin:0;">Two-factor authentication melindungi akun meski password kamu bocor.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer buttons -->
+            <div style="padding:14px 24px 20px;display:flex;flex-direction:column;gap:8px;">
+                <a id="sec-reminder-ok" href="/auth/profile/" class="ant-btn ant-btn-primary" style="width:100%;justify-content:center;text-decoration:none;font-size:14px;">
+                    <i class="fas fa-shield-alt"></i> Setup sekarang
+                </a>
+                <div style="display:flex;gap:8px;">
+                    <button type="button" id="sec-reminder-later" class="ant-btn ant-btn-default" style="flex:1;justify-content:center;font-size:13px;">
+                        <i class="fas fa-clock"></i> Ingatkan lagi nanti
+                    </button>
+                    <button type="button" id="sec-reminder-never" class="ant-btn ant-btn-default" style="flex:1;justify-content:center;font-size:13px;color:var(--text-secondary);">
+                        <i class="fas fa-ban"></i> Jangan tampilkan lagi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var STORAGE_KEY = 'arna-security-reminder-dismissed';
+        var CHECK_INTERVAL_MS = 30 * 60 * 1000; // re-check at most once per 30 min per session
+
+        // Skip if user opted out permanently
+        if (localStorage.getItem(STORAGE_KEY) === 'never') return;
+
+        // Skip if already shown this session (sessionStorage flag)
+        if (sessionStorage.getItem(STORAGE_KEY) === '1') return;
+
+        var modal = document.getElementById('security-reminder-modal');
+        if (!modal) return;
+
+        function showModal(missingMfa, missingPasskey) {
+            if (!missingMfa && !missingPasskey) return;
+            if (missingPasskey) document.getElementById('sec-item-passkey').style.display = 'flex';
+            if (missingMfa)     document.getElementById('sec-item-mfa').style.display    = 'flex';
+            modal.style.display = 'flex';
+            sessionStorage.setItem(STORAGE_KEY, '1');
+        }
+
+        function hideModal() { modal.style.display = 'none'; }
+
+        document.getElementById('sec-reminder-later').addEventListener('click', function () {
+            hideModal();
+            // Remove session flag so it can show again next login, but not this session tab
+        });
+
+        document.getElementById('sec-reminder-never').addEventListener('click', function () {
+            localStorage.setItem(STORAGE_KEY, 'never');
+            hideModal();
+        });
+
+        // "Setup sekarang" just navigates via its href, also mark session
+        document.getElementById('sec-reminder-ok').addEventListener('click', function () {
+            sessionStorage.setItem(STORAGE_KEY, '1');
+        });
+
+        // Async check — runs after page paint so it doesn't block rendering
+        requestAnimationFrame(function () {
+            setTimeout(function () {
+                var mfaOk = false, pkOk = false, fetched = 0;
+
+                function tryShow() {
+                    fetched++;
+                    if (fetched < 2) return;
+                    showModal(!mfaOk, !pkOk);
+                }
+
+                fetch('/auth/api/mfa/status/', { credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) { mfaOk = !!d.mfa_enabled; })
+                    .catch(function () { mfaOk = true; /* on error assume ok, don't nag */ })
+                    .finally(tryShow);
+
+                fetch('/auth/api/passkeys/', { credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) { pkOk = Array.isArray(d) && d.length > 0; })
+                    .catch(function () { pkOk = true; })
+                    .finally(tryShow);
+
+            }, 1200); // short delay so page content loads first
+        });
     })();
     </script>
     {% endif %}

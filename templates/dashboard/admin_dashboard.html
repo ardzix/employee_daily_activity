@@ -330,7 +330,7 @@ $(function() {
 document.addEventListener('DOMContentLoaded', function() {
     var activities = JSON.parse(document.getElementById('activities-data').textContent);
     var map = L.map('map').setView([-2.5, 118], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    L.tileLayer('{% url "dashboard:osm_tile" z=999 x=999 y=999 %}'.replace('/999/999/999.png', '/{z}/{x}/{y}.png'), { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors' }).addTo(map);
     var checkoutIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34], shadowSize:[41,41] });
     var bounds = [];
     activities.forEach(function(act) {

@@ -211,6 +211,29 @@ PROFILE_COMPLETION_REMINDER_CACHE_SECONDS = int(
     os.getenv('PROFILE_COMPLETION_REMINDER_CACHE_SECONDS', '300'),
 )
 
+# OpenStreetMap tile proxy — https://operations.osmfoundation.org/policies/tiles/
+# Browser requests cannot set a custom User-Agent; we fetch tiles server-side with
+# identifiable headers. Set PUBLIC_SITE_URL or OSM_TILE_REFERER in production.
+_OSM_DEFAULT_UA = (
+    'EmployeeDailyActivity/1.0 '
+    '(employee daily activity tracker; contact: https://arnatech.id)'
+)
+OSM_TILE_USER_AGENT = os.getenv('OSM_TILE_USER_AGENT', _OSM_DEFAULT_UA).strip() or _OSM_DEFAULT_UA
+OSM_TILE_UPSTREAM = os.getenv('OSM_TILE_UPSTREAM', 'https://tile.openstreetmap.org').rstrip('/')
+OSM_TILE_REFERER = os.getenv(
+    'OSM_TILE_REFERER',
+    os.getenv('PUBLIC_SITE_URL', 'https://clockin.arnatech.id'),
+).strip().rstrip('/')
+OSM_TILE_MAX_ZOOM = int(os.getenv('OSM_TILE_MAX_ZOOM', '19'))
+OSM_TILE_UPSTREAM_TIMEOUT = float(os.getenv('OSM_TILE_UPSTREAM_TIMEOUT', '15'))
+OSM_TILE_CLIENT_CACHE_SECONDS = int(os.getenv('OSM_TILE_CLIENT_CACHE_SECONDS', str(7 * 24 * 3600)))
+
+# Send Referrer-Policy so cross-origin requests can include origin (tile compliance when not proxied).
+SECURE_REFERRER_POLICY = os.getenv(
+    'SECURE_REFERRER_POLICY',
+    'strict-origin-when-cross-origin',
+)
+
 # Custom User Model
 AUTH_USER_MODEL = 'authentication.User'
 

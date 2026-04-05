@@ -720,6 +720,192 @@ def refresh_token_view(request):
         return JsonResponse({'error': f'Token refresh failed: {str(e)}'}, status=500)
 
 
+# ── MFA Proxy Views ───────────────────────────────────────────────────────────
+
+@login_required
+@require_http_methods(["GET"])
+def api_mfa_status(request):
+    access_token = request.session.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    try:
+        r = requests.get(
+            f"{settings.SSO_BASE_URL}/api/auth/mfa/status/",
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=15,
+        )
+        return JsonResponse(r.json(), status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_mfa_set(request):
+    access_token = request.session.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    try:
+        r = requests.post(
+            f"{settings.SSO_BASE_URL}/api/auth/mfa/set/",
+            headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'},
+            timeout=15,
+        )
+        return JsonResponse(r.json(), status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_mfa_disable(request):
+    access_token = request.session.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    try:
+        body = json.loads(request.body) if request.body else {}
+        r = requests.post(
+            f"{settings.SSO_BASE_URL}/api/auth/mfa/disable/",
+            json=body,
+            headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'},
+            timeout=15,
+        )
+        return JsonResponse(r.json(), status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+# ── Passkey Proxy Views (authenticated — registration & management) ─────────
+
+@login_required
+@require_http_methods(["GET"])
+def api_passkeys_list(request):
+    access_token = request.session.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    try:
+        r = requests.get(
+            f"{settings.SSO_BASE_URL}/api/auth/passkeys/",
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=15,
+        )
+        data = r.json() if r.content else []
+        return JsonResponse(data, safe=False, status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+@login_required
+@require_http_methods(["GET"])
+def api_passkeys_register_begin(request):
+    access_token = request.session.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    try:
+        r = requests.get(
+            f"{settings.SSO_BASE_URL}/api/auth/passkeys/register/begin/",
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=15,
+        )
+        # Capture SSO session cookies so we can replay them in the complete step
+        request.session['sso_passkey_reg_cookies'] = dict(r.cookies)
+        return JsonResponse(r.json(), status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_passkeys_register_complete(request):
+    access_token = request.session.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    sso_cookies = request.session.pop('sso_passkey_reg_cookies', {})
+    try:
+        body = json.loads(request.body)
+        r = requests.post(
+            f"{settings.SSO_BASE_URL}/api/auth/passkeys/register/complete/",
+            json=body,
+            headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'},
+            cookies=sso_cookies,
+            timeout=15,
+        )
+        return JsonResponse(r.json(), status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def api_passkeys_delete(request, passkey_id):
+    access_token = request.session.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'Not authenticated'}, status=401)
+    try:
+        r = requests.delete(
+            f"{settings.SSO_BASE_URL}/api/auth/passkeys/{passkey_id}/",
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=15,
+        )
+        data = r.json() if r.content else {'status': 'OK'}
+        return JsonResponse(data, status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+# ── Passkey Login (public — no auth required) ──────────────────────────────
+
+@require_http_methods(["GET"])
+def api_passkeys_login_begin(request):
+    try:
+        r = requests.get(
+            f"{settings.SSO_BASE_URL}/api/auth/passkeys/login/begin/",
+            timeout=15,
+        )
+        request.session['sso_passkey_login_cookies'] = dict(r.cookies)
+        return JsonResponse(r.json(), status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_passkeys_login_complete(request):
+    sso_cookies = request.session.pop('sso_passkey_login_cookies', {})
+    try:
+        body = json.loads(request.body)
+        r = requests.post(
+            f"{settings.SSO_BASE_URL}/api/auth/passkeys/login/complete/",
+            json=body,
+            headers={'Content-Type': 'application/json'},
+            cookies=sso_cookies,
+            timeout=15,
+        )
+        if r.status_code == 200:
+            response_data = r.json()
+            access_token = response_data.get('access')
+            refresh_token = response_data.get('refresh')
+            if access_token and refresh_token:
+                request.session['access_token'] = access_token
+                request.session['refresh_token'] = refresh_token
+                user = authenticate_with_token(access_token)
+                if user:
+                    login(request, user)
+                    resp = JsonResponse({'success': True, 'redirect_url': '/dashboard/'})
+                    return set_public_sso_auth_cookies(resp, access_token, refresh_token)
+            return JsonResponse({'error': 'Invalid passkey login response from SSO'}, status=500)
+        data = r.json() if r.content else {'error': 'Passkey login failed'}
+        return JsonResponse(data, status=r.status_code)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+# ── User Authentication Helper ─────────────────────────────────────────────
+
 def authenticate_with_token(access_token):
     """Authenticate user using access token by validating JWT and extracting user info"""
     try:

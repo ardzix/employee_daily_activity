@@ -172,6 +172,21 @@
                 <div class="ant-card-body" style="display:flex;flex-direction:column;gap:10px;">
                     <a href="{% url 'dashboard:index' %}" class="ant-btn ant-btn-primary" style="width:100%;justify-content:center;text-decoration:none;"><i class="fas fa-home"></i> Go to Dashboard</a>
                     <a href="{% url 'activities:activity_list' %}" class="ant-btn ant-btn-default" style="width:100%;justify-content:center;text-decoration:none;"><i class="fas fa-tasks"></i> Daily Activities</a>
+
+                    <!-- MFA -->
+                    <button type="button" id="mfaQuickBtn" class="ant-btn ant-btn-default" style="width:100%;justify-content:center;" onclick="openMfaModal()">
+                        <i class="fas fa-shield-alt"></i>
+                        <span id="mfaQuickLabel">MFA Authentication</span>
+                        <span id="mfaStatusBadge" style="display:none;margin-left:6px;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600;"></span>
+                    </button>
+
+                    <!-- Passkey -->
+                    <button type="button" id="passkeyQuickBtn" class="ant-btn ant-btn-default" style="width:100%;justify-content:center;" onclick="openPasskeyModal()">
+                        <i class="fas fa-key"></i>
+                        <span>Passkeys</span>
+                        <span id="passkeyCountBadge" style="display:none;margin-left:6px;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600;background:var(--ant-primary-bg);color:var(--ant-primary);border:1px solid var(--ant-primary);"></span>
+                    </button>
+
                     <a href="{% url 'authentication:logout' %}" class="ant-btn ant-btn-danger" style="width:100%;justify-content:center;text-decoration:none;"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
@@ -210,4 +225,358 @@
         </div>
     </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MFA MODAL
+══════════════════════════════════════════════════════════════════ -->
+<div id="mfaModal" class="ant-modal-mask" style="display:none;">
+  <div class="ant-modal" style="max-width:480px;">
+    <div class="ant-modal-header">
+      <div class="ant-modal-title"><i class="fas fa-shield-alt" style="color:var(--ant-primary);"></i> MFA Authentication</div>
+      <button class="ant-modal-close" onclick="closeMfaModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="ant-modal-body">
+      <div id="mfaStatusBanner" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:8px;margin-bottom:20px;border:1px solid;">
+        <i id="mfaStatusIcon" class="fas fa-circle-notch fa-spin" style="font-size:18px;flex-shrink:0;color:var(--text-secondary);"></i>
+        <div>
+          <p style="font-size:14px;font-weight:600;color:var(--text-heading);margin:0 0 2px;" id="mfaStatusTitle">Checking status…</p>
+          <p style="font-size:12px;color:var(--text-secondary);margin:0;" id="mfaStatusDesc"></p>
+        </div>
+      </div>
+
+      <div id="mfaSetupSection" style="display:none;">
+        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 16px;">Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.).</p>
+        <div id="mfaQrWrap" style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:16px;">
+          <div id="mfaQrCanvas" style="padding:12px;background:#fff;border-radius:8px;border:1px solid var(--border-color);display:inline-block;"></div>
+          <div style="text-align:center;">
+            <p style="font-size:11px;color:var(--text-secondary);margin:0 0 4px;">Or enter manually:</p>
+            <code id="mfaSecretDisplay" style="font-size:13px;letter-spacing:0.15em;color:var(--text-heading);background:var(--bg-fill);padding:6px 10px;border-radius:4px;border:1px solid var(--border-color);word-break:break-all;"></code>
+          </div>
+        </div>
+        <div style="padding:10px 12px;background:var(--ant-warning-bg);border-radius:6px;border:1px solid var(--ant-warning);font-size:12px;color:var(--text-secondary);display:flex;gap:8px;align-items:flex-start;">
+          <i class="fas fa-info-circle" style="color:var(--ant-warning);margin-top:1px;flex-shrink:0;"></i>
+          MFA is now configured. Sign in again to verify it works before your session expires.
+        </div>
+      </div>
+
+      <div id="mfaDisableSection" style="display:none;">
+        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 14px;">Verify your identity to disable MFA. Provide your account password <em>or</em> current TOTP code.</p>
+        <div class="ant-form-item">
+          <label class="ant-label">Account Password (optional)</label>
+          <input type="password" id="mfaDisablePassword" class="ant-input" placeholder="Your current password" autocomplete="current-password">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin:10px 0;">
+          <div style="flex:1;height:1px;background:var(--border-color);"></div>
+          <span style="font-size:11px;color:var(--text-tertiary);">OR</span>
+          <div style="flex:1;height:1px;background:var(--border-color);"></div>
+        </div>
+        <div class="ant-form-item">
+          <label class="ant-label">Current TOTP Code (optional)</label>
+          <input type="text" id="mfaDisableTotp" class="ant-input" maxlength="6" placeholder="000000"
+                 style="letter-spacing:0.3em;text-align:center;font-size:20px;font-weight:600;">
+        </div>
+      </div>
+
+      <div id="mfaModalError" style="display:none;padding:10px 12px;border-radius:6px;border:1px solid var(--ant-error);background:var(--ant-error-bg);color:var(--ant-error);font-size:13px;margin-top:12px;display:flex;gap:8px;align-items:flex-start;">
+        <i class="fas fa-exclamation-circle" style="flex-shrink:0;margin-top:1px;"></i><span id="mfaModalErrorText"></span>
+      </div>
+      <div id="mfaModalSuccess" style="display:none;padding:10px 12px;border-radius:6px;border:1px solid var(--ant-success);background:var(--ant-success-bg);color:var(--ant-success);font-size:13px;margin-top:12px;display:flex;gap:8px;align-items:flex-start;">
+        <i class="fas fa-check-circle" style="flex-shrink:0;margin-top:1px;"></i><span id="mfaModalSuccessText"></span>
+      </div>
+    </div>
+    <div class="ant-modal-footer">
+      <button type="button" class="ant-btn ant-btn-default" onclick="closeMfaModal()">Close</button>
+      <button type="button" id="mfaSetupBtn" class="ant-btn ant-btn-primary" style="display:none;" onclick="doMfaSetup()">
+        <i class="fas fa-qrcode"></i>&nbsp;<span id="mfaSetupBtnText">Generate QR Code</span>
+        <i class="fas fa-spinner fa-spin" id="mfaSetupSpinner" style="display:none;margin-left:6px;"></i>
+      </button>
+      <button type="button" id="mfaDisableBtn" class="ant-btn ant-btn-danger" style="display:none;" onclick="doMfaDisable()">
+        <i class="fas fa-times-circle"></i>&nbsp;<span id="mfaDisableBtnText">Disable MFA</span>
+        <i class="fas fa-spinner fa-spin" id="mfaDisableSpinner" style="display:none;margin-left:6px;"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     PASSKEY MODAL
+══════════════════════════════════════════════════════════════════ -->
+<div id="passkeyModal" class="ant-modal-mask" style="display:none;">
+  <div class="ant-modal" style="max-width:520px;">
+    <div class="ant-modal-header">
+      <div class="ant-modal-title"><i class="fas fa-key" style="color:var(--ant-primary);"></i> Passkeys</div>
+      <button class="ant-modal-close" onclick="closePasskeyModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="ant-modal-body">
+      <p style="font-size:13px;color:var(--text-secondary);margin:0 0 16px;">Passkeys let you sign in using biometrics or a hardware key — no password needed.</p>
+      <div id="passkeyList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        <div style="text-align:center;padding:24px;color:var(--text-tertiary);font-size:13px;">
+          <i class="fas fa-spinner fa-spin" style="font-size:20px;margin-bottom:8px;display:block;"></i>Loading passkeys…
+        </div>
+      </div>
+      <div id="passkeyRegSection" style="border-top:1px solid var(--border-color);padding-top:14px;">
+        <div class="ant-form-item" style="margin-bottom:10px;">
+          <label class="ant-label">Key Name (optional)</label>
+          <input type="text" id="passkeyNewName" class="ant-input" placeholder="e.g. MacBook Touch ID, YubiKey…" maxlength="60">
+        </div>
+      </div>
+      <div id="passkeyModalError" style="display:none;padding:10px 12px;border-radius:6px;border:1px solid var(--ant-error);background:var(--ant-error-bg);color:var(--ant-error);font-size:13px;margin-top:8px;display:flex;gap:8px;align-items:flex-start;">
+        <i class="fas fa-exclamation-circle" style="flex-shrink:0;margin-top:1px;"></i><span id="passkeyModalErrorText"></span>
+      </div>
+      <div id="passkeyModalSuccess" style="display:none;padding:10px 12px;border-radius:6px;border:1px solid var(--ant-success);background:var(--ant-success-bg);color:var(--ant-success);font-size:13px;margin-top:8px;display:flex;gap:8px;align-items:flex-start;">
+        <i class="fas fa-check-circle" style="flex-shrink:0;margin-top:1px;"></i><span id="passkeyModalSuccessText"></span>
+      </div>
+    </div>
+    <div class="ant-modal-footer">
+      <button type="button" class="ant-btn ant-btn-default" onclick="closePasskeyModal()">Close</button>
+      <button type="button" id="passkeyRegBtn" class="ant-btn ant-btn-primary" onclick="doPasskeyRegister()">
+        <i class="fas fa-plus"></i>&nbsp;<span id="passkeyRegBtnText">Register New Passkey</span>
+        <i class="fas fa-spinner fa-spin" id="passkeyRegSpinner" style="display:none;margin-left:6px;"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+// ── Base64url helpers (WebAuthn) ──────────────────────────────────────────
+const b64dec = s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
+const b64enc = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+
+function getCsrf() {
+    return document.cookie.split(';').reduce(function(v,c){
+        const p=c.trim().split('='); return p[0]==='csrftoken'?decodeURIComponent(p[1]):v;
+    }, '');
+}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function _setMsg(errId, succId, errTxtId, succTxtId, type, msg) {
+    document.getElementById(errId).style.display='none';
+    document.getElementById(succId).style.display='none';
+    if (!msg) return;
+    if (type==='error'){document.getElementById(errTxtId).textContent=msg;document.getElementById(errId).style.display='flex';}
+    else{document.getElementById(succTxtId).textContent=msg;document.getElementById(succId).style.display='flex';}
+}
+function mfaMsg(t,m){_setMsg('mfaModalError','mfaModalSuccess','mfaModalErrorText','mfaModalSuccessText',t,m);}
+function pkMsg(t,m){_setMsg('passkeyModalError','passkeyModalSuccess','passkeyModalErrorText','passkeyModalSuccessText',t,m);}
+
+// ══════════════════════════════════════════════════════
+// MFA
+// ══════════════════════════════════════════════════════
+let _mfaEnabled = null;
+
+function openMfaModal(){
+    mfaMsg(null,null);
+    ['mfaSetupSection','mfaDisableSection'].forEach(function(id){document.getElementById(id).style.display='none';});
+    ['mfaSetupBtn','mfaDisableBtn'].forEach(function(id){document.getElementById(id).style.display='none';});
+    document.getElementById('mfaStatusTitle').textContent='Checking status…';
+    document.getElementById('mfaStatusDesc').textContent='';
+    document.getElementById('mfaStatusIcon').className='fas fa-circle-notch fa-spin';
+    document.getElementById('mfaStatusIcon').style.color='var(--text-secondary)';
+    document.getElementById('mfaStatusBanner').style.background='var(--bg-fill)';
+    document.getElementById('mfaStatusBanner').style.borderColor='var(--border-color)';
+    document.getElementById('mfaModal').style.display='flex';
+    loadMfaStatus();
+}
+function closeMfaModal(){
+    document.getElementById('mfaModal').style.display='none';
+    document.getElementById('mfaDisablePassword').value='';
+    document.getElementById('mfaDisableTotp').value='';
+    document.getElementById('mfaQrCanvas').innerHTML='';
+}
+
+function _setMfaBanner(enabled){
+    const banner=document.getElementById('mfaStatusBanner');
+    const icon=document.getElementById('mfaStatusIcon');
+    if(enabled){
+        banner.style.background='var(--ant-success-bg)';banner.style.borderColor='var(--ant-success)';
+        icon.className='fas fa-check-circle';icon.style.color='var(--ant-success)';
+        document.getElementById('mfaStatusTitle').textContent='MFA is Enabled';
+        document.getElementById('mfaStatusDesc').textContent='Two-factor authentication is active on your account.';
+        document.getElementById('mfaDisableSection').style.display='block';
+        document.getElementById('mfaDisableBtn').style.display='inline-flex';
+        document.getElementById('mfaSetupSection').style.display='none';
+        document.getElementById('mfaSetupBtn').style.display='none';
+    }else{
+        banner.style.background='var(--ant-warning-bg)';banner.style.borderColor='var(--ant-warning)';
+        icon.className='fas fa-exclamation-triangle';icon.style.color='var(--ant-warning)';
+        document.getElementById('mfaStatusTitle').textContent='MFA is Not Enabled';
+        document.getElementById('mfaStatusDesc').textContent='Add an extra layer of security to your account.';
+        document.getElementById('mfaSetupBtn').style.display='inline-flex';
+        document.getElementById('mfaDisableSection').style.display='none';
+        document.getElementById('mfaDisableBtn').style.display='none';
+    }
+    const qbadge=document.getElementById('mfaStatusBadge');
+    qbadge.textContent=enabled?'ON':'OFF';
+    qbadge.style.background=enabled?'var(--ant-success-bg)':'var(--ant-error-bg)';
+    qbadge.style.color=enabled?'var(--ant-success)':'var(--ant-error)';
+    qbadge.style.border=`1px solid ${enabled?'var(--ant-success)':'var(--ant-error)'}`;
+    qbadge.style.display='inline-block';
+}
+
+async function loadMfaStatus(){
+    try{
+        const r=await fetch('/auth/api/mfa/status/',{credentials:'same-origin'});
+        const d=await r.json();
+        _mfaEnabled=!!d.mfa_enabled;
+        _setMfaBanner(_mfaEnabled);
+    }catch{mfaMsg('error','Network error — please try again.');}
+}
+
+async function doMfaSetup(){
+    document.getElementById('mfaSetupBtnText').textContent='Generating…';
+    document.getElementById('mfaSetupSpinner').style.display='inline-block';
+    document.getElementById('mfaSetupBtn').disabled=true;
+    mfaMsg(null,null);
+    try{
+        const r=await fetch('/auth/api/mfa/set/',{method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':getCsrf()}});
+        const d=await r.json();
+        if(!r.ok){mfaMsg('error',d.error||d.detail||'Setup failed');return;}
+        const canvas=document.getElementById('mfaQrCanvas');
+        canvas.innerHTML='';
+        new QRCode(canvas,{text:d.qr_code_url,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+        document.getElementById('mfaSecretDisplay').textContent=d.mfa_secret;
+        document.getElementById('mfaSetupSection').style.display='block';
+        document.getElementById('mfaSetupBtn').style.display='none';
+        mfaMsg('success','MFA configured! Scan the QR code with your authenticator app, then sign in again to verify.');
+        _mfaEnabled=true;
+        const qbadge=document.getElementById('mfaStatusBadge');
+        qbadge.textContent='ON';qbadge.style.display='inline-block';
+        qbadge.style.background='var(--ant-success-bg)';qbadge.style.color='var(--ant-success)';
+        qbadge.style.border='1px solid var(--ant-success)';
+    }catch{mfaMsg('error','Network error — please try again.');}
+    finally{
+        document.getElementById('mfaSetupBtnText').textContent='Generate QR Code';
+        document.getElementById('mfaSetupSpinner').style.display='none';
+        document.getElementById('mfaSetupBtn').disabled=false;
+    }
+}
+
+async function doMfaDisable(){
+    const pwd=document.getElementById('mfaDisablePassword').value.trim();
+    const totp=document.getElementById('mfaDisableTotp').value.replace(/\D/g,'');
+    if(!pwd&&!totp){mfaMsg('error','Enter your password OR a 6-digit TOTP code.');return;}
+    const body={};if(pwd)body.password=pwd;if(totp)body.totp=totp;
+    document.getElementById('mfaDisableBtnText').textContent='Disabling…';
+    document.getElementById('mfaDisableSpinner').style.display='inline-block';
+    document.getElementById('mfaDisableBtn').disabled=true;mfaMsg(null,null);
+    try{
+        const r=await fetch('/auth/api/mfa/disable/',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},body:JSON.stringify(body)});
+        const d=await r.json();
+        if(!r.ok){mfaMsg('error',d.error||d.detail||'Disable failed');return;}
+        mfaMsg('success','MFA has been disabled successfully.');
+        _mfaEnabled=false;_setMfaBanner(false);
+    }catch{mfaMsg('error','Network error — please try again.');}
+    finally{
+        document.getElementById('mfaDisableBtnText').textContent='Disable MFA';
+        document.getElementById('mfaDisableSpinner').style.display='none';
+        document.getElementById('mfaDisableBtn').disabled=false;
+    }
+}
+
+// ══════════════════════════════════════════════════════
+// Passkeys
+// ══════════════════════════════════════════════════════
+function openPasskeyModal(){
+    pkMsg(null,null);document.getElementById('passkeyNewName').value='';
+    document.getElementById('passkeyModal').style.display='flex';
+    loadPasskeys();
+}
+function closePasskeyModal(){document.getElementById('passkeyModal').style.display='none';}
+
+async function loadPasskeys(){
+    const list=document.getElementById('passkeyList');
+    list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-tertiary);font-size:13px;"><i class="fas fa-spinner fa-spin" style="font-size:20px;margin-bottom:8px;display:block;"></i>Loading…</div>';
+    try{
+        const r=await fetch('/auth/api/passkeys/',{credentials:'same-origin'});
+        const keys=await r.json();
+        const badge=document.getElementById('passkeyCountBadge');
+        if(!Array.isArray(keys)||keys.length===0){
+            list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;"><i class="fas fa-key" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>No passkeys registered yet.</div>';
+            badge.style.display='none';return;
+        }
+        badge.textContent=keys.length;badge.style.display='inline-block';
+        list.innerHTML='';
+        keys.forEach(function(k){
+            const lastUsed=k.last_used?new Date(k.last_used).toLocaleDateString():'Never';
+            const created=k.created_at?new Date(k.created_at).toLocaleDateString():'—';
+            const row=document.createElement('div');
+            row.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-fill);';
+            row.innerHTML=`<div style="width:36px;height:36px;border-radius:8px;background:var(--ant-primary-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-key" style="color:var(--ant-primary);font-size:15px;"></i></div><div style="flex:1;min-width:0;"><p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(k.name||'Unnamed Key')}</p><p style="font-size:11px;color:var(--text-secondary);margin:0;">Platform: ${escHtml(k.platform||'—')} &nbsp;·&nbsp; Added: ${created} &nbsp;·&nbsp; Last used: ${lastUsed}</p></div><button type="button" onclick="deletePasskey(${k.id},this)" style="flex-shrink:0;padding:6px 10px;border-radius:6px;border:1px solid var(--ant-error);background:transparent;color:var(--ant-error);cursor:pointer;font-size:12px;font-family:inherit;"><i class="fas fa-trash"></i></button>`;
+            list.appendChild(row);
+        });
+    }catch{pkMsg('error','Could not load passkeys.');}
+}
+
+async function deletePasskey(id,btn){
+    if(!confirm('Delete this passkey? This cannot be undone.'))return;
+    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+    try{
+        const r=await fetch(`/auth/api/passkeys/${id}/`,{method:'DELETE',credentials:'same-origin',headers:{'X-CSRFToken':getCsrf()}});
+        if(r.ok){pkMsg('success','Passkey deleted.');loadPasskeys();}
+        else{const d=await r.json().catch(function(){return{};});pkMsg('error',d.error||d.detail||'Delete failed');btn.disabled=false;btn.innerHTML='<i class="fas fa-trash"></i>';}
+    }catch{pkMsg('error','Network error.');btn.disabled=false;btn.innerHTML='<i class="fas fa-trash"></i>';}
+}
+
+async function doPasskeyRegister(){
+    if(!window.PublicKeyCredential){pkMsg('error','Your browser does not support passkeys.');return;}
+    const name=document.getElementById('passkeyNewName').value.trim()||'My Device';
+    document.getElementById('passkeyRegBtnText').textContent='Registering…';
+    document.getElementById('passkeyRegSpinner').style.display='inline-block';
+    document.getElementById('passkeyRegBtn').disabled=true;pkMsg(null,null);
+    try{
+        const begR=await fetch('/auth/api/passkeys/register/begin/',{credentials:'same-origin'});
+        if(!begR.ok){const d=await begR.json();pkMsg('error',d.error||'Could not start registration');return;}
+        const opts=await begR.json();
+        opts.publicKey.challenge=b64dec(opts.publicKey.challenge);
+        opts.publicKey.user.id=b64dec(opts.publicKey.user.id);
+        if(opts.publicKey.excludeCredentials)
+            opts.publicKey.excludeCredentials=opts.publicKey.excludeCredentials.map(c=>({...c,id:b64dec(c.id)}));
+        const cred=await navigator.credentials.create(opts);
+        const complR=await fetch('/auth/api/passkeys/register/complete/',{
+            method:'POST',credentials:'same-origin',
+            headers:{'Content-Type':'application/json','X-CSRFToken':getCsrf()},
+            body:JSON.stringify({id:cred.id,rawId:b64enc(cred.rawId),type:cred.type,key_name:name,
+                response:{attestationObject:b64enc(cred.response.attestationObject),clientDataJSON:b64enc(cred.response.clientDataJSON)}}),
+        });
+        const cd=await complR.json();
+        if(complR.ok){pkMsg('success',`Passkey "${cd.key_name||name}" registered!`);document.getElementById('passkeyNewName').value='';loadPasskeys();}
+        else pkMsg('error',cd.error||cd.detail||'Registration failed');
+    }catch(err){
+        if(err.name==='NotAllowedError')pkMsg('error','Registration was cancelled or timed out.');
+        else pkMsg('error',err.message||'Passkey registration failed');
+    }finally{
+        document.getElementById('passkeyRegBtnText').textContent='Register New Passkey';
+        document.getElementById('passkeyRegSpinner').style.display='none';
+        document.getElementById('passkeyRegBtn').disabled=false;
+    }
+}
+
+// ── Load badges on page open ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+    fetch('/auth/api/mfa/status/',{credentials:'same-origin'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+        _mfaEnabled=!!d.mfa_enabled;
+        const b=document.getElementById('mfaStatusBadge');
+        b.textContent=_mfaEnabled?'ON':'OFF';
+        b.style.background=_mfaEnabled?'var(--ant-success-bg)':'var(--ant-error-bg)';
+        b.style.color=_mfaEnabled?'var(--ant-success)':'var(--ant-error)';
+        b.style.border=`1px solid ${_mfaEnabled?'var(--ant-success)':'var(--ant-error)'}`;
+        b.style.display='inline-block';
+    }).catch(function(){});
+
+    fetch('/auth/api/passkeys/',{credentials:'same-origin'})
+    .then(function(r){return r.json();})
+    .then(function(keys){
+        if(Array.isArray(keys)&&keys.length>0){
+            const b=document.getElementById('passkeyCountBadge');
+            b.textContent=keys.length;b.style.display='inline-block';
+        }
+    }).catch(function(){});
+});
+</script>
 {% endblock %}

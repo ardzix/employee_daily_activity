@@ -3,12 +3,14 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Count, Q, Avg
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from datetime import date, datetime, timedelta
 from activities.models import DailyActivity
 from employees.models import Employee, Company
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
+from django.views.decorators.http import require_GET
+import requests
+from django.conf import settings as django_settings
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
@@ -431,3 +433,48 @@ def export_admin_dashboard(request):
     
     wb.save(response)
     return response
+
+
+def _osm_tile_coords_valid(z, x, y):
+    if not (isinstance(z, int) and isinstance(x, int) and isinstance(y, int)):
+        return False
+    if not (0 <= z <= django_settings.OSM_TILE_MAX_ZOOM):
+        return False
+    n = 1 << z
+    return 0 <= x < n and 0 <= y < n
+
+
+@login_required
+@user_passes_test(is_admin_or_hr)
+@require_GET
+def osm_tile_proxy(request, z, x, y):
+    """
+    Proxy OSM raster tiles with a compliant User-Agent and Referer (server-side),
+    and Cache-Control so browsers cache tiles for at least 7 days per OSM policy.
+    """
+    if not _osm_tile_coords_valid(z, x, y):
+        return HttpResponseBadRequest('Invalid tile coordinates')
+
+    upstream = f'{django_settings.OSM_TILE_UPSTREAM}/{z}/{x}/{y}.png'
+    referer = (django_settings.OSM_TILE_REFERER or '').strip().rstrip('/') or request.build_absolute_uri('/')
+    headers = {
+        'User-Agent': django_settings.OSM_TILE_USER_AGENT,
+        'Accept': 'image/png,image/webp,*/*;q=0.8',
+        'Referer': referer if referer.endswith('/') else referer + '/',
+    }
+    try:
+        upstream_resp = requests.get(upstream, headers=headers, timeout=django_settings.OSM_TILE_UPSTREAM_TIMEOUT)
+    except requests.RequestException:
+        return HttpResponse('Upstream tile fetch failed', status=502)
+
+    if upstream_resp.status_code == 404:
+        return HttpResponse(status=404)
+    if upstream_resp.status_code != 200:
+        return HttpResponse(status=502)
+
+    content_type = upstream_resp.headers.get('Content-Type', 'image/png')
+    out = HttpResponse(upstream_resp.content, content_type=content_type)
+    out['Cache-Control'] = f'public, max-age={django_settings.OSM_TILE_CLIENT_CACHE_SECONDS}'
+    if etag := upstream_resp.headers.get('ETag'):
+        out['ETag'] = etag
+    return out
