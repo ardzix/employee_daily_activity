@@ -105,42 +105,43 @@ def admin_dashboard_view(request):
     # Apply employee filter
     if employee_filter:
         activities_qs = activities_qs.filter(user__employee_profile__id=employee_filter)
+        employees_qs = employees_qs.filter(id=employee_filter)
     
     # Apply date filter
     if date_filter:
         activities_qs = activities_qs.filter(date__gte=start_date_range, date__lte=end_date_range)
     
-    # Calculate statistics
+    # Calculate statistics — only employees with active employment status
     total_employees = employees_qs.count()
-    
-    # Calculate total active users based on filters
-    active_users_filters = Q(is_active=True)
+    total_active_users = total_employees
 
-    if company_filter:
-        active_users_filters &= Q(employee_profile__company_id=company_filter)
-    
-    if employee_filter:
-        active_users_filters &= Q(employee_profile__id=employee_filter)
-
-    total_active_users = User.objects.filter(active_users_filters).count()
-    
     today_activities_filters = Q(date=today)
-
     if company_filter:
-        today_activities_filters &= Q(user__employee_profile__id=company_filter)
-    
+        today_activities_filters &= Q(user__employee_profile__company_id=company_filter)
     if employee_filter:
-        today_activities_filters &= Q(user__employee_profile__company_id=employee_filter)
+        today_activities_filters &= Q(user__employee_profile__id=employee_filter)
 
-    # Today's attendance
+    # Today's attendance — denominators scoped to employment_status=active employees only
     today_activities = DailyActivity.objects.filter(today_activities_filters)
+    active_employee_user_ids = set(employees_qs.values_list('user_id', flat=True))
+    checked_in_user_ids = set(
+        today_activities.filter(
+            checkin_time__isnull=False,
+            user_id__in=active_employee_user_ids,
+        ).values_list('user_id', flat=True)
+    )
+    checked_in_today_count = len(checked_in_user_ids)
+
     today_stats = {
         'total_expected': total_active_users,
-        'checked_in': today_activities.filter(checkin_time__isnull=False).count(),
-        'checked_out': today_activities.filter(checkout_time__isnull=False).count(),
+        'checked_in': checked_in_today_count,
+        'checked_out': today_activities.filter(
+            checkout_time__isnull=False,
+            user_id__in=active_employee_user_ids,
+        ).values('user_id').distinct().count(),
         'on_time': today_activities.filter(attendance_status='on_time').count(),
         'late': today_activities.filter(attendance_status='late').count(),
-        'absent': total_active_users - today_activities.filter(checkin_time__isnull=False).count(),
+        'absent': total_active_users - checked_in_today_count,
     }
     
     # Attendance trends
@@ -158,22 +159,12 @@ def admin_dashboard_view(request):
     # Late arrivals today
     late_today = today_activities.filter(attendance_status='late').select_related('user')
     
-    # Absent users today
-    checked_in_user_ids = today_activities.filter(
-        checkin_time__isnull=False
-    ).values_list('user_id', flat=True)
-    
-    absent_today = User.objects.filter(is_active=True).exclude(id__in=checked_in_user_ids)
-    
-    if company_filter:
-        absent_today = absent_today.filter(
-            employee_profile__company_id=company_filter
-        )
-    
-    if employee_filter:
-        absent_today = absent_today.filter(
-            employee_profile__id=employee_filter
-        )
+    absent_user_ids = active_employee_user_ids - checked_in_user_ids
+    absent_today = (
+        User.objects.filter(id__in=absent_user_ids, is_active=True)
+        .select_related('employee_profile', 'employee_profile__company')
+        .order_by('first_name', 'last_name', 'email')
+    )
     
     # Companies for filter
     companies = Company.objects.filter(is_active=True)
