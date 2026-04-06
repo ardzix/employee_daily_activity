@@ -2,15 +2,64 @@
 
 {% block title %}My Profile — Employee Daily Activity Tracker{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Profile page responsive ─────────────────────────────── */
+.profile-outer-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(16px, 4vw, 32px) clamp(12px, 3vw, 24px);
+}
+.profile-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+.profile-info-subgrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.profile-emp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.profile-text-break {
+    word-break: break-all;
+    overflow-wrap: break-word;
+    min-width: 0;
+}
+@media (max-width: 860px) {
+    /* Stack sidebar below main column */
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 560px) {
+    /* Sub-grids collapse to single column */
+    .profile-info-subgrid,
+    .profile-emp-grid {
+        grid-template-columns: 1fr;
+    }
+    /* Avatar + info stacks vertically */
+    .profile-sso-inner {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width:1100px;margin:0 auto;padding:32px 24px;">
+<div class="profile-outer-wrap">
 
     <div class="page-header">
         <h1 class="page-title">My Profile</h1>
         <p class="page-subtitle">Manage your account information and settings</p>
     </div>
 
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;">
+    <div class="profile-grid">
         <!-- Main Profile -->
         <div style="display:flex;flex-direction:column;gap:20px;">
 
@@ -25,7 +74,7 @@
                 <div class="ant-card-body">
                     <p style="font-size:13px;color:var(--text-secondary);margin:0 0 20px;">Data from your Arnatech SSO account. Edit name, photo, and bio in the Account portal.</p>
 
-                    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                    <div class="profile-sso-inner" style="display:flex;gap:24px;flex-wrap:wrap;">
                         <!-- Avatar -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;">
                             <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;border:2px solid var(--border-color);background:var(--bg-fill);display:flex;align-items:center;justify-content:center;position:relative;">
@@ -45,12 +94,12 @@
                         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;">
                             <div>
                                 <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">Full Name</p>
-                                <p style="font-size:16px;font-weight:700;color:var(--text-heading);margin:0;">{{ display_full_name }}</p>
+                                <p class="profile-text-break" style="font-size:16px;font-weight:700;color:var(--text-heading);margin:0;">{{ display_full_name }}</p>
                             </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                            <div class="profile-info-subgrid">
                                 <div>
                                     <p style="font-size:12px;color:var(--text-secondary);margin:0 0 3px;">Email</p>
-                                    <p style="font-size:14px;font-weight:500;color:var(--text-heading);margin:0;word-break:break-all;">{{ user.email }}</p>
+                                    <p class="profile-text-break" style="font-size:14px;font-weight:500;color:var(--text-heading);margin:0;">{{ user.email }}</p>
                                 </div>
                                 {% if sso_profile.user_name and sso_profile.user_name != user.email %}
                                 <div>
@@ -90,7 +139,7 @@
             <div class="ant-card">
                 <div class="ant-card-head"><i class="fas fa-id-card" style="margin-right:8px;color:var(--ant-primary);"></i>Employment Details</div>
                 <div class="ant-card-body">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="profile-emp-grid">
                         {% for label, value in forloop.parentloop|dictsortreversed:"label" %}{% endfor %}
                         <div>
                             <p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px;">Employee ID</p>

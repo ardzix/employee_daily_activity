@@ -465,18 +465,79 @@
         .priority-high     { color: var(--ant-warning); }
         .priority-critical { color: var(--ant-error); }
 
-        /* ── Responsive hide ──────────────────────────────────── */
+        /* ── Activity/goal item rows in modals ────────────────── */
+        .activity-row, .goal-row {
+            display: grid;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color-secondary);
+        }
+        /* activity: [title …………] [priority ▾] [🗑] */
+        .activity-row {
+            grid-template-columns: 1fr 120px 36px;
+            grid-template-areas: "main sel del";
+        }
+        /* goal: [title …] [target] [priority ▾] [🗑] */
+        .goal-row {
+            grid-template-columns: 1fr 90px 110px 36px;
+            grid-template-areas: "main tgt sel del";
+        }
+        .activity-row:last-child, .goal-row:last-child { border-bottom: none; }
+        .row-input-main   { grid-area: main; width: 100%; min-width: 0; }
+        .row-input-target { grid-area: tgt;  width: 100%; min-width: 0; }
+        .row-select       { grid-area: sel;  width: 100%; min-width: 0; }
+        .row-del-btn      { grid-area: del;  width: 36px; height: 36px;
+                            padding: 0 !important; justify-content: center; }
+
+        /* ── Responsive ───────────────────────────────────────── */
         @media (max-width: 768px) {
             .ant-nav-menu { display: none; }
             .md-hide { display: none !important; }
+
+            /* Nav: hide brand text, tighter padding */
+            .ant-nav-brand span { display: none; }
+            .ant-nav { padding: 0 12px; }
+
+            /* Notifications — full width strip at top */
+            .ant-notification { left: 8px; right: 8px; top: 64px; }
+            .ant-notification-item { min-width: 0; width: 100%; }
+
+            /* Modals — tighter padding */
+            .ant-modal-body   { padding: 16px; }
+            .ant-modal-header { padding: 12px 16px; }
+            .ant-modal-footer { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+            .ant-modal-footer .ant-btn { flex: 1 1 auto; justify-content: center; }
+            .ant-modal-title  { font-size: 15px; }
+
+            /* Activity row: 2 rows on mobile
+               row 1: title (full width)
+               row 2: priority select + delete button */
+            .activity-row {
+                grid-template-columns: 1fr 36px;
+                grid-template-rows: auto auto;
+                grid-template-areas:
+                    "main main"
+                    "sel  del";
+            }
+            /* Goal row: 2 rows on mobile
+               row 1: title (full width)
+               row 2: target input | priority select | delete button */
+            .goal-row {
+                grid-template-columns: 1fr 1fr 36px;
+                grid-template-rows: auto auto;
+                grid-template-areas:
+                    "main main main"
+                    "tgt  sel  del";
+            }
         }
 
-        /* ── Activity/goal item rows in modals ────────────────── */
-        .activity-row, .goal-row {
-            display: flex; gap: 10px; align-items: center;
-            padding: 10px 0; border-bottom: 1px solid var(--border-color-secondary);
+        /* Bottom-sheet modal on very small screens */
+        @media (max-width: 480px) {
+            .ant-modal-mask { padding: 0; align-items: flex-end; }
+            .ant-modal { border-radius: 16px 16px 0 0; max-height: 92vh; }
+            .stat-value { font-size: 22px; }
         }
-        .activity-row:last-child, .goal-row:last-child { border-bottom: none; }
         .additional-item {
             background: var(--bg-fill);
             border: 1px solid var(--border-color);
@@ -632,14 +693,14 @@
                         <label class="ant-label"><i class="fas fa-list-ul" style="margin-right:6px;color:var(--ant-primary);"></i>What do you plan to do today? *</label>
                         <div id="planned-activities-container" style="display:flex;flex-direction:column;gap:8px;">
                             <div class="activity-row planned-activity-item">
-                                <input type="text" name="planned_activity_title_1" required class="ant-input" placeholder="Enter planned activity..." style="flex:1;">
-                                <select name="planned_activity_priority_1" class="ant-input" style="width:120px;flex-shrink:0;">
+                                <input type="text" name="planned_activity_title_1" required class="ant-input row-input-main" placeholder="Enter planned activity...">
+                                <select name="planned_activity_priority_1" class="ant-input row-select">
                                     <option value="1">Low</option>
                                     <option value="2" selected>Medium</option>
                                     <option value="3">High</option>
                                     <option value="4">Critical</option>
                                 </select>
-                                <button type="button" class="remove-activity ant-btn ant-btn-ghost ant-btn-sm" style="flex-shrink:0;color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button>
+                                <button type="button" class="remove-activity ant-btn ant-btn-ghost ant-btn-sm row-del-btn" style="color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
                         <input type="hidden" name="lat" id="checkin-lat">
@@ -654,15 +715,15 @@
                         <label class="ant-label"><i class="fas fa-bullseye" style="margin-right:6px;color:var(--ant-success);"></i>Daily Goals *</label>
                         <div id="daily-goals-container" style="display:flex;flex-direction:column;gap:8px;">
                             <div class="goal-row daily-goal-item">
-                                <input type="text" name="daily_goal_title_1" required class="ant-input" placeholder="Enter daily goal..." style="flex:1;">
-                                <input type="text" name="daily_goal_target_1" class="ant-input" placeholder="Target" style="width:100px;flex-shrink:0;">
-                                <select name="daily_goal_priority_1" class="ant-input" style="width:120px;flex-shrink:0;">
+                                <input type="text" name="daily_goal_title_1" required class="ant-input row-input-main" placeholder="Enter daily goal...">
+                                <input type="text" name="daily_goal_target_1" class="ant-input row-input-target" placeholder="Target">
+                                <select name="daily_goal_priority_1" class="ant-input row-select">
                                     <option value="1">Low</option>
                                     <option value="2" selected>Medium</option>
                                     <option value="3">High</option>
                                     <option value="4">Critical</option>
                                 </select>
-                                <button type="button" class="remove-goal ant-btn ant-btn-ghost ant-btn-sm" style="flex-shrink:0;color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button>
+                                <button type="button" class="remove-goal ant-btn ant-btn-ghost ant-btn-sm row-del-btn" style="color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
                         <button type="button" id="add-goal" class="ant-btn ant-btn-default ant-btn-sm" style="margin-top:10px;color:var(--ant-success);border-color:var(--ant-success);">
@@ -815,18 +876,18 @@
 
         function activityRowHTML(idx) {
             return '<div class="activity-row planned-activity-item">' +
-                '<input type="text" name="planned_activity_title_' + idx + '" required class="ant-input" placeholder="Enter planned activity..." style="flex:1;">' +
-                '<select name="planned_activity_priority_' + idx + '" class="ant-input" style="width:120px;flex-shrink:0;">' +
+                '<input type="text" name="planned_activity_title_' + idx + '" required class="ant-input row-input-main" placeholder="Enter planned activity...">' +
+                '<select name="planned_activity_priority_' + idx + '" class="ant-input row-select">' +
                 '<option value="1">Low</option><option value="2" selected>Medium</option><option value="3">High</option><option value="4">Critical</option></select>' +
-                '<button type="button" class="remove-activity ant-btn ant-btn-ghost ant-btn-sm" style="flex-shrink:0;color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>';
+                '<button type="button" class="remove-activity ant-btn ant-btn-ghost ant-btn-sm row-del-btn" style="color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>';
         }
         function goalRowHTML(idx) {
             return '<div class="goal-row daily-goal-item">' +
-                '<input type="text" name="daily_goal_title_' + idx + '" required class="ant-input" placeholder="Enter daily goal..." style="flex:1;">' +
-                '<input type="text" name="daily_goal_target_' + idx + '" class="ant-input" placeholder="Target" style="width:100px;flex-shrink:0;">' +
-                '<select name="daily_goal_priority_' + idx + '" class="ant-input" style="width:120px;flex-shrink:0;">' +
+                '<input type="text" name="daily_goal_title_' + idx + '" required class="ant-input row-input-main" placeholder="Enter daily goal...">' +
+                '<input type="text" name="daily_goal_target_' + idx + '" class="ant-input row-input-target" placeholder="Target">' +
+                '<select name="daily_goal_priority_' + idx + '" class="ant-input row-select">' +
                 '<option value="1">Low</option><option value="2" selected>Medium</option><option value="3">High</option><option value="4">Critical</option></select>' +
-                '<button type="button" class="remove-goal ant-btn ant-btn-ghost ant-btn-sm" style="flex-shrink:0;color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>';
+                '<button type="button" class="remove-goal ant-btn ant-btn-ghost ant-btn-sm row-del-btn" style="color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>';
         }
 
         document.getElementById('add-activity').addEventListener('click', function () {

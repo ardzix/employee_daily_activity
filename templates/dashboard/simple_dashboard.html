@@ -3,13 +3,36 @@
 
 {% block title %}Dashboard — Employee Activity Tracker{% endblock %}
 
+{% block extra_css %}
+<style>
+    .sd-wrap { max-width:1000px; margin:0 auto; padding:32px 24px; }
+    .sd-grid  { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+    .sd-info-row {
+        display:flex; justify-content:space-between; align-items:flex-start;
+        padding:10px 0; border-bottom:1px solid var(--border-color-secondary); gap:12px;
+    }
+    .sd-info-row:last-child { border-bottom:none; }
+    .sd-info-label { color:var(--text-secondary); font-size:13px; white-space:nowrap; flex-shrink:0; }
+    .sd-info-value {
+        font-weight:600; font-size:13px; color:var(--text-heading);
+        text-align:right; word-break:break-all; min-width:0;
+    }
+    @media (max-width: 640px) {
+        .sd-wrap  { padding:16px; }
+        .sd-grid  { grid-template-columns:1fr; }
+        .sd-info-row { flex-direction:column; gap:4px; }
+        .sd-info-value { text-align:left; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width:1000px;margin:0 auto;padding:32px 24px;">
+<div class="sd-wrap">
 
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
         <div>
             <h1 class="page-title">Welcome!</h1>
-            <p class="page-subtitle">{{ user.username }}</p>
+            <p class="page-subtitle" style="word-break:break-all;">{{ user.email|default:user.username }}</p>
         </div>
         {% if is_admin %}
         <a href="{% url 'dashboard:admin' %}" class="ant-btn ant-btn-primary"><i class="fas fa-cog"></i> Admin Panel</a>
@@ -25,7 +48,7 @@
         </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div class="sd-grid">
         <!-- Quick Actions -->
         <div class="ant-card">
             <div class="ant-card-head"><i class="fas fa-bolt" style="margin-right:8px;color:var(--ant-warning);"></i>Quick Actions</div>
@@ -49,25 +72,25 @@
         <div class="ant-card">
             <div class="ant-card-head"><i class="fas fa-user" style="margin-right:8px;color:var(--ant-primary);"></i>Your Information</div>
             <div class="ant-card-body" style="display:flex;flex-direction:column;gap:0;">
-                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color-secondary);">
-                    <span style="color:var(--text-secondary);font-size:13px;">Username</span>
-                    <span style="font-weight:600;font-size:13px;color:var(--text-heading);">{{ user.username }}</span>
+                <div class="sd-info-row">
+                    <span class="sd-info-label">Username</span>
+                    <span class="sd-info-value">{{ user.username }}</span>
                 </div>
                 {% if user.email %}
-                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color-secondary);">
-                    <span style="color:var(--text-secondary);font-size:13px;">Email</span>
-                    <span style="font-weight:600;font-size:13px;color:var(--text-heading);">{{ user.email }}</span>
+                <div class="sd-info-row">
+                    <span class="sd-info-label">Email</span>
+                    <span class="sd-info-value">{{ user.email }}</span>
                 </div>
                 {% endif %}
                 {% if user.first_name or user.last_name %}
-                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color-secondary);">
-                    <span style="color:var(--text-secondary);font-size:13px;">Name</span>
-                    <span style="font-weight:600;font-size:13px;color:var(--text-heading);">{{ user.first_name }} {{ user.last_name }}</span>
+                <div class="sd-info-row">
+                    <span class="sd-info-label">Name</span>
+                    <span class="sd-info-value">{{ user.first_name }} {{ user.last_name }}</span>
                 </div>
                 {% endif %}
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-                    <span style="color:var(--text-secondary);font-size:13px;">Status</span>
-                    <span class="ant-tag ant-tag-warning">Profile Setup Pending</span>
+                <div class="sd-info-row" style="border-bottom:none;">
+                    <span class="sd-info-label">Status</span>
+                    <span class="ant-tag ant-tag-warning" style="flex-shrink:0;">Profile Setup Pending</span>
                 </div>
             </div>
         </div>
