@@ -335,13 +335,58 @@
     </div>
     <div class="ant-modal-footer">
       <button type="button" class="ant-btn ant-btn-default" onclick="closeMfaModal()">Close</button>
-      <button type="button" id="mfaSetupBtn" class="ant-btn ant-btn-primary" style="display:none;" onclick="doMfaSetup()">
-        <i class="fas fa-qrcode"></i>&nbsp;<span id="mfaSetupBtnText">Generate QR Code</span>
-        <i class="fas fa-spinner fa-spin" id="mfaSetupSpinner" style="display:none;margin-left:6px;"></i>
+      <button type="button" id="mfaSetupBtn" class="ant-btn ant-btn-primary" style="display:none;" onclick="confirmMfaSetup()">
+        <i class="fas fa-qrcode"></i>&nbsp;Setup MFA
       </button>
       <button type="button" id="mfaDisableBtn" class="ant-btn ant-btn-danger" style="display:none;" onclick="doMfaDisable()">
         <i class="fas fa-times-circle"></i>&nbsp;<span id="mfaDisableBtnText">Disable MFA</span>
         <i class="fas fa-spinner fa-spin" id="mfaDisableSpinner" style="display:none;margin-left:6px;"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MFA SETUP CONFIRMATION MODAL
+══════════════════════════════════════════════════════════════════ -->
+<div id="mfaConfirmModal" class="ant-modal-mask" style="display:none;z-index:1060;">
+  <div class="ant-modal" style="max-width:440px;">
+    <div class="ant-modal-header">
+      <div class="ant-modal-title">
+        <i class="fas fa-shield-alt" style="color:var(--ant-primary);margin-right:8px;"></i>Setup MFA
+      </div>
+      <button class="ant-modal-close" onclick="closeMfaConfirmModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="ant-modal-body">
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex-shrink:0;width:44px;height:44px;border-radius:50%;background:var(--ant-primary-bg);display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-mobile-alt" style="font-size:20px;color:var(--ant-primary);"></i>
+        </div>
+        <div>
+          <p style="font-size:14px;font-weight:600;color:var(--text-heading);margin:0 0 10px;">Prepare your authenticator app</p>
+          <p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px;line-height:1.6;">
+            You will setup MFA. Please prepare your authenticator app
+            <strong style="color:var(--text-heading);">(e.g. Google Authenticator, Authy, Microsoft Authenticator)</strong>
+            to scan the QR code after this confirmation.
+          </p>
+          <div style="padding:10px 12px;background:var(--ant-primary-bg);border-radius:6px;border:1px solid var(--ant-primary-border, var(--ant-primary));display:flex;gap:8px;align-items:flex-start;">
+            <i class="fas fa-info-circle" style="color:var(--ant-primary);flex-shrink:0;margin-top:2px;"></i>
+            <p style="font-size:12px;color:var(--text-secondary);margin:0;line-height:1.5;">
+              After setup, every time you log in you will be
+              <strong style="color:var(--text-heading);">2-step secured</strong> — your password
+              <em>plus</em> a time-based one-time passcode (TOTP) from your authenticator app.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ant-modal-footer">
+      <button type="button" class="ant-btn ant-btn-default" onclick="closeMfaConfirmModal()">
+        <i class="fas fa-times"></i>&nbsp;Cancel
+      </button>
+      <button type="button" class="ant-btn ant-btn-primary" onclick="proceedMfaSetup()">
+        <i class="fas fa-qrcode"></i>&nbsp;<span id="mfaConfirmBtnText">I'm ready — Generate QR</span>
+        <i class="fas fa-spinner fa-spin" id="mfaConfirmSpinner" style="display:none;margin-left:6px;"></i>
       </button>
     </div>
   </div>
@@ -475,11 +520,28 @@ async function loadMfaStatus(){
     }catch{mfaMsg('error','Network error — please try again.');}
 }
 
+function confirmMfaSetup(){
+    // Show confirmation modal before hitting the SSO API
+    document.getElementById('mfaConfirmBtnText').textContent="I'm ready — Generate QR";
+    document.getElementById('mfaConfirmSpinner').style.display='none';
+    document.getElementById('mfaConfirmModal').style.display='flex';
+}
+function closeMfaConfirmModal(){
+    document.getElementById('mfaConfirmModal').style.display='none';
+}
+async function proceedMfaSetup(){
+    // Called from confirmation modal — now actually hit the API
+    document.getElementById('mfaConfirmBtnText').textContent='Generating…';
+    document.getElementById('mfaConfirmSpinner').style.display='inline-block';
+    document.querySelector('#mfaConfirmModal .ant-btn-primary').disabled=true;
+    await doMfaSetup();
+    document.getElementById('mfaConfirmModal').style.display='none';
+    document.querySelector('#mfaConfirmModal .ant-btn-primary').disabled=false;
+}
+
 async function doMfaSetup(){
-    document.getElementById('mfaSetupBtnText').textContent='Generating…';
-    document.getElementById('mfaSetupSpinner').style.display='inline-block';
-    document.getElementById('mfaSetupBtn').disabled=true;
     mfaMsg(null,null);
+    document.getElementById('mfaSetupBtn').disabled=true;
     try{
         const r=await fetch('/auth/api/mfa/set/',{method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':getCsrf()}});
         const d=await r.json();
@@ -498,8 +560,6 @@ async function doMfaSetup(){
         qbadge.style.border='1px solid var(--ant-success)';
     }catch{mfaMsg('error','Network error — please try again.');}
     finally{
-        document.getElementById('mfaSetupBtnText').textContent='Generate QR Code';
-        document.getElementById('mfaSetupSpinner').style.display='none';
         document.getElementById('mfaSetupBtn').disabled=false;
     }
 }
