@@ -14,15 +14,32 @@
 .emp-stat-val  { font-size:22px; font-weight:700; color:var(--text-heading); line-height:1; }
 .emp-stat-lbl  { font-size:11px; color:var(--text-secondary); margin-top:2px; }
 
-/* Toolbar */
-.emp-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:16px; border-bottom:1px solid var(--border-color); }
-.emp-search-wrap { position:relative; flex:1; min-width:200px; }
-.emp-search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-tertiary); font-size:13px; pointer-events:none; }
-.emp-search-wrap input { padding-left:32px; }
-.emp-filter-group { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-.emp-filter-group select { min-width:140px; }
-.emp-result-bar { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--bg-fill); border-bottom:1px solid var(--border-color); font-size:12px; color:var(--text-secondary); flex-wrap:wrap; gap:8px; }
+/* Toolbar — single compact row */
+.emp-toolbar {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+.emp-search-wrap { position:relative; }
+.emp-search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-tertiary); font-size:12px; pointer-events:none; }
+.emp-search-wrap input { padding-left:30px; height:34px; font-size:13px; }
+.emp-toolbar select { height:34px; font-size:13px; cursor:pointer; }
+.emp-result-bar { display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:var(--bg-fill); border-bottom:1px solid var(--border-color); font-size:12px; color:var(--text-secondary); flex-wrap:wrap; gap:8px; }
 .emp-result-count { font-weight:600; color:var(--text-heading); }
+
+/* Toolbar responsive */
+@media (max-width:1100px) {
+    .emp-toolbar { grid-template-columns: 1fr 1fr 1fr; }
+    .emp-toolbar .emp-search-wrap { grid-column: 1 / -1; }
+}
+@media (max-width:640px) {
+    .emp-toolbar { grid-template-columns: 1fr 1fr; }
+    .emp-toolbar .emp-search-wrap { grid-column: 1 / -1; }
+    .emp-toolbar button { grid-column: 1 / -1; }
+}
 
 /* Table */
 .ant-table th { cursor:pointer; user-select:none; white-space:nowrap; }
@@ -42,10 +59,6 @@ mark.emp-hl { background:var(--ant-warning-bg); color:var(--text-heading); borde
 }
 @media (max-width:600px) {
     .emp-stats { grid-template-columns:1fr 1fr; }
-    .emp-toolbar { flex-direction:column; align-items:stretch; }
-    .emp-search-wrap { width:100%; }
-    .emp-filter-group { width:100%; }
-    .emp-filter-group select { flex:1; min-width:0; }
 }
 @media (max-width:480px) {
     .emp-stats { grid-template-columns:1fr; }
@@ -116,41 +129,39 @@ mark.emp-hl { background:var(--ant-warning-bg); color:var(--text-heading); borde
     <!-- Table card -->
     <div class="ant-card">
 
-        <!-- Toolbar -->
+        <!-- Toolbar: one compact row -->
         <div class="emp-toolbar">
             <div class="emp-search-wrap">
                 <i class="fas fa-search"></i>
-                <input type="text" id="empSearch" class="ant-input" placeholder="Search by name, ID, email, position…" oninput="applyFilters()">
+                <input type="text" id="empSearch" class="ant-input" placeholder="Search name, ID, email, position…" oninput="applyFilters()">
             </div>
-            <div class="emp-filter-group">
-                <select id="filterCompany" class="ant-input" onchange="applyFilters()" style="cursor:pointer;">
-                    <option value="">All Companies</option>
-                    {% for company in companies %}
-                    <option value="{{ company.name }}">{{ company.name }}</option>
-                    {% endfor %}
-                </select>
-                <select id="filterStatus" class="ant-input" onchange="applyFilters()" style="cursor:pointer;">
-                    <option value="">All Statuses</option>
-                    {% for val, label in status_choices %}
-                    <option value="{{ val }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
-                <select id="filterWorkType" class="ant-input" onchange="applyFilters()" style="cursor:pointer;">
-                    <option value="">All Work Types</option>
-                    {% for val, label in work_type_choices %}
-                    <option value="{{ val }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
-                <select id="filterDept" class="ant-input" onchange="applyFilters()" style="cursor:pointer;">
-                    <option value="">All Departments</option>
-                    {% for dept in departments %}
-                    <option value="{{ dept }}">{{ dept }}</option>
-                    {% endfor %}
-                </select>
-                <button type="button" class="ant-btn ant-btn-default ant-btn-sm" onclick="clearFilters()" title="Reset all filters">
-                    <i class="fas fa-times"></i> Reset
-                </button>
-            </div>
+            <select id="filterCompany" class="ant-input" onchange="applyFilters()">
+                <option value="">All Companies</option>
+                {% for company in companies %}
+                <option value="{{ company.name }}">{{ company.name }}</option>
+                {% endfor %}
+            </select>
+            <select id="filterStatus" class="ant-input" onchange="applyFilters()">
+                <option value="">All Statuses</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select id="filterWorkType" class="ant-input" onchange="applyFilters()">
+                <option value="">All Work Types</option>
+                {% for val, label in work_type_choices %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select id="filterDept" class="ant-input" onchange="applyFilters()">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}">{{ dept }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" class="ant-btn ant-btn-default ant-btn-sm" onclick="clearFilters()" title="Reset filters" style="white-space:nowrap;">
+                <i class="fas fa-times"></i> Reset
+            </button>
         </div>
 
         <!-- Result count + active filters -->
