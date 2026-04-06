@@ -56,8 +56,22 @@ def company_delete(request, pk):
 @login_required
 @user_passes_test(is_admin_or_hr)
 def employee_list(request):
-    employees = Employee.objects.all()
-    return render(request, 'employee/employee_list.html', {'employees': employees})
+    employees = Employee.objects.select_related('user', 'company', 'manager').all()
+    companies = Company.objects.filter(is_active=True).order_by('name')
+    departments = (
+        Employee.objects.exclude(department__isnull=True)
+        .exclude(department='')
+        .values_list('department', flat=True)
+        .distinct()
+        .order_by('department')
+    )
+    return render(request, 'employee/employee_list.html', {
+        'employees': employees,
+        'companies': companies,
+        'departments': departments,
+        'work_type_choices': Employee.WORK_TYPE_CHOICES,
+        'status_choices': Employee.EMPLOYMENT_STATUS_CHOICES,
+    })
 
 @login_required
 @user_passes_test(is_admin_or_hr)

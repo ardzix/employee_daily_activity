@@ -2,71 +2,444 @@
 
 {% block title %}Employee Management{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Employee list page ───────────────────────────────────── */
+.emp-wrap { max-width:1400px; margin:0 auto; padding:clamp(16px,4vw,32px) clamp(12px,3vw,24px); }
+
+/* Stats bar */
+.emp-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.emp-stat-card { background:var(--bg-component); border:1px solid var(--border-color); border-radius:8px; padding:14px 16px; display:flex; align-items:center; gap:12px; }
+.emp-stat-icon { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.emp-stat-val  { font-size:22px; font-weight:700; color:var(--text-heading); line-height:1; }
+.emp-stat-lbl  { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+
+/* Toolbar */
+.emp-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:16px; border-bottom:1px solid var(--border-color); }
+.emp-search-wrap { position:relative; flex:1; min-width:200px; }
+.emp-search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-tertiary); font-size:13px; pointer-events:none; }
+.emp-search-wrap input { padding-left:32px; }
+.emp-filter-group { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.emp-filter-group select { min-width:140px; }
+.emp-result-bar { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--bg-fill); border-bottom:1px solid var(--border-color); font-size:12px; color:var(--text-secondary); flex-wrap:wrap; gap:8px; }
+.emp-result-count { font-weight:600; color:var(--text-heading); }
+
+/* Table */
+.ant-table th { cursor:pointer; user-select:none; white-space:nowrap; }
+.ant-table th .sort-icon { margin-left:5px; opacity:0.35; font-size:10px; transition:opacity .15s; }
+.ant-table th.sort-asc .sort-icon,
+.ant-table th.sort-desc .sort-icon { opacity:1; color:var(--ant-primary); }
+.ant-table th:hover .sort-icon { opacity:0.7; }
+.ant-table th.no-sort { cursor:default; }
+
+/* Row highlight on search match */
+.emp-row-hidden { display:none; }
+mark.emp-hl { background:var(--ant-warning-bg); color:var(--text-heading); border-radius:2px; padding:0 2px; }
+
+/* Responsive */
+@media (max-width:900px) {
+    .emp-stats { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:600px) {
+    .emp-stats { grid-template-columns:1fr 1fr; }
+    .emp-toolbar { flex-direction:column; align-items:stretch; }
+    .emp-search-wrap { width:100%; }
+    .emp-filter-group { width:100%; }
+    .emp-filter-group select { flex:1; min-width:0; }
+}
+@media (max-width:480px) {
+    .emp-stats { grid-template-columns:1fr; }
+    /* Hide less-important columns on mobile */
+    .col-dept, .col-hire, .col-wtype { display:none; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width:1280px;margin:0 auto;padding:32px 24px;">
+<div class="emp-wrap">
+
+    <!-- Header -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
         <div>
             <h1 class="page-title"><i class="fas fa-users" style="color:var(--ant-primary);margin-right:10px;"></i>Employee Management</h1>
-            <p class="page-subtitle">Manage employee profiles</p>
+            <p class="page-subtitle">Manage, search, filter and sort employee profiles</p>
         </div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="ant-btn ant-btn-default" onclick="exportCsv()" title="Export to CSV">
+                <i class="fas fa-download"></i> Export CSV
+            </button>
             <a href="{% url 'dashboard:admin' %}" class="ant-btn ant-btn-default"><i class="fas fa-arrow-left"></i> Back</a>
-            <a href="{% url 'employee:employee_create' %}" class="ant-btn ant-btn-primary"><i class="fas fa-plus"></i> Add New Employee</a>
+            <a href="{% url 'employee:employee_create' %}" class="ant-btn ant-btn-primary"><i class="fas fa-plus"></i> Add Employee</a>
         </div>
     </div>
 
+    <!-- Stats bar -->
+    <div class="emp-stats">
+        <div class="emp-stat-card">
+            <div class="emp-stat-icon" style="background:var(--ant-primary-bg);">
+                <i class="fas fa-users" style="color:var(--ant-primary);"></i>
+            </div>
+            <div>
+                <div class="emp-stat-val" id="statTotal">{{ employees|length }}</div>
+                <div class="emp-stat-lbl">Total Employees</div>
+            </div>
+        </div>
+        <div class="emp-stat-card">
+            <div class="emp-stat-icon" style="background:var(--ant-success-bg);">
+                <i class="fas fa-check-circle" style="color:var(--ant-success);"></i>
+            </div>
+            <div>
+                <div class="emp-stat-val" id="statActive">{{ employees|length }}</div>
+                <div class="emp-stat-lbl">Active</div>
+            </div>
+        </div>
+        <div class="emp-stat-card">
+            <div class="emp-stat-icon" style="background:var(--ant-warning-bg);">
+                <i class="fas fa-pause-circle" style="color:var(--ant-warning);"></i>
+            </div>
+            <div>
+                <div class="emp-stat-val" id="statLeave">0</div>
+                <div class="emp-stat-lbl">On Leave</div>
+            </div>
+        </div>
+        <div class="emp-stat-card">
+            <div class="emp-stat-icon" style="background:var(--ant-error-bg);">
+                <i class="fas fa-times-circle" style="color:var(--ant-error);"></i>
+            </div>
+            <div>
+                <div class="emp-stat-val" id="statInactive">0</div>
+                <div class="emp-stat-lbl">Inactive / Terminated</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table card -->
     <div class="ant-card">
+
+        <!-- Toolbar -->
+        <div class="emp-toolbar">
+            <div class="emp-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="empSearch" class="ant-input" placeholder="Search by name, ID, email, position…" oninput="applyFilters()">
+            </div>
+            <div class="emp-filter-group">
+                <select id="filterCompany" class="ant-input" onchange="applyFilters()" style="cursor:pointer;">
+                    <option value="">All Companies</option>
+                    {% for company in companies %}
+                    <option value="{{ company.name }}">{{ company.name }}</option>
+                    {% endfor %}
+                </select>
+                <select id="filterStatus" class="ant-input" onchange="applyFilters()" style="cursor:pointer;">
+                    <option value="">All Statuses</option>
+                    {% for val, label in status_choices %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select id="filterWorkType" class="ant-input" onchange="applyFilters()" style="cursor:pointer;">
+                    <option value="">All Work Types</option>
+                    {% for val, label in work_type_choices %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select id="filterDept" class="ant-input" onchange="applyFilters()" style="cursor:pointer;">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept }}">{{ dept }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="ant-btn ant-btn-default ant-btn-sm" onclick="clearFilters()" title="Reset all filters">
+                    <i class="fas fa-times"></i> Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Result count + active filters -->
+        <div class="emp-result-bar">
+            <span>Showing <span class="emp-result-count" id="resultCount">{{ employees|length }}</span> of {{ employees|length }} employees</span>
+            <span id="activeFiltersBar" style="display:none;color:var(--ant-primary);">
+                <i class="fas fa-filter" style="margin-right:4px;"></i><span id="activeFiltersText"></span>
+            </span>
+        </div>
+
+        <!-- Table -->
         <div class="ant-card-body" style="padding:0;">
-            <div class="ant-table-wrap">
-                <table class="ant-table">
+            <div class="ant-table-wrap" style="overflow-x:auto;">
+                <table class="ant-table" id="empTable">
                     <thead>
                         <tr>
-                            <th>Employee</th>
-                            <th>ID</th>
-                            <th>Company</th>
-                            <th>Position</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th onclick="sortTable(0)" data-col="0">
+                                Employee <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(1)" data-col="1">
+                                ID <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(2)" data-col="2">
+                                Company <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(3)" data-col="3">
+                                Position <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(4)" data-col="4" class="col-dept">
+                                Department <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(5)" data-col="5" class="col-wtype">
+                                Work Type <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(6)" data-col="6" class="col-hire">
+                                Hire Date <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th onclick="sortTable(7)" data-col="7">
+                                Status <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="no-sort" style="cursor:default;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for employee in employees %}
-                        <tr>
+                    <tbody id="empTbody">
+                        {% for emp in employees %}
+                        <tr class="emp-row"
+                            data-name="{{ emp.full_name|lower }}"
+                            data-id="{{ emp.employee_id|lower }}"
+                            data-email="{{ emp.user.email|lower }}"
+                            data-position="{{ emp.position|lower }}"
+                            data-company="{{ emp.company.name }}"
+                            data-status="{{ emp.employment_status }}"
+                            data-worktype="{{ emp.work_type }}"
+                            data-dept="{{ emp.department|default:'' }}"
+                            data-hiredate="{{ emp.hire_date|date:'Y-m-d' }}">
                             <td>
                                 <div style="display:flex;align-items:center;gap:10px;">
-                                    <div class="ant-avatar" style="width:32px;height:32px;background:var(--ant-primary-bg);font-size:11px;">
+                                    <div class="ant-avatar" style="width:34px;height:34px;background:var(--ant-primary-bg);font-size:11px;flex-shrink:0;">
                                         <i class="fas fa-user" style="color:var(--ant-primary);"></i>
                                     </div>
-                                    <div>
-                                        <p style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0;">{{ employee.full_name }}</p>
-                                        <p style="font-size:11px;color:var(--text-secondary);margin:0;">{{ employee.user.email }}</p>
+                                    <div style="min-width:0;">
+                                        <p class="emp-cell-name" style="font-size:13px;font-weight:600;color:var(--text-heading);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">{{ emp.full_name }}</p>
+                                        <p class="emp-cell-email" style="font-size:11px;color:var(--text-secondary);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">{{ emp.user.email }}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td style="font-family:monospace;font-size:12px;color:var(--text-secondary);">{{ employee.employee_id }}</td>
-                            <td>{{ employee.company.name }}</td>
-                            <td>{{ employee.position }}</td>
+                            <td><code style="font-size:12px;color:var(--text-secondary);">{{ emp.employee_id }}</code></td>
+                            <td style="font-size:13px;">{{ emp.company.name }}</td>
+                            <td class="emp-cell-position" style="font-size:13px;">{{ emp.position }}</td>
+                            <td class="col-dept" style="font-size:13px;color:var(--text-secondary);">{{ emp.department|default:"—" }}</td>
+                            <td class="col-wtype">
+                                <span class="ant-tag {% if emp.work_type == 'remote' %}ant-tag-processing{% elif emp.work_type == 'hybrid' %}ant-tag-warning{% else %}ant-tag{% endif %}"
+                                      style="font-size:11px;">
+                                    {{ emp.get_work_type_display }}
+                                </span>
+                            </td>
+                            <td class="col-hire" style="font-size:12px;color:var(--text-secondary);white-space:nowrap;">
+                                {{ emp.hire_date|date:"M j, Y" }}
+                            </td>
                             <td>
-                                <span class="ant-tag {% if employee.employment_status == 'active' %}ant-tag-success{% elif employee.employment_status == 'on_leave' %}ant-tag-warning{% else %}ant-tag-error{% endif %}">
-                                    {{ employee.get_employment_status_display }}
+                                <span class="ant-tag {% if emp.employment_status == 'active' %}ant-tag-success{% elif emp.employment_status == 'on_leave' %}ant-tag-warning{% else %}ant-tag-error{% endif %}">
+                                    {{ emp.get_employment_status_display }}
                                 </span>
                             </td>
                             <td>
-                                <div style="display:flex;gap:6px;">
-                                    <a href="{% url 'employee:employee_update' employee.pk %}" class="ant-btn ant-btn-primary ant-btn-sm"><i class="fas fa-edit"></i> Edit</a>
-                                    <a href="{% url 'employee:employee_delete' employee.pk %}" class="ant-btn ant-btn-danger ant-btn-sm"><i class="fas fa-trash"></i> Delete</a>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                    <a href="{% url 'employee:employee_update' emp.pk %}" class="ant-btn ant-btn-primary ant-btn-sm" title="Edit"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="{% url 'employee:employee_delete' emp.pk %}" class="ant-btn ant-btn-danger ant-btn-sm" title="Delete"><i class="fas fa-trash"></i></a>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="6" style="text-align:center;color:var(--text-secondary);padding:32px;">No employees found.</td>
+                        <tr id="emptyRow">
+                            <td colspan="9" style="text-align:center;color:var(--text-secondary);padding:48px;">
+                                <i class="fas fa-users" style="font-size:32px;opacity:0.3;display:block;margin-bottom:10px;"></i>
+                                No employees found.
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+
+                <!-- No result row (shown by JS when filters yield 0) -->
+                <div id="noResultMsg" style="display:none;text-align:center;padding:48px;color:var(--text-secondary);">
+                    <i class="fas fa-search" style="font-size:28px;opacity:0.3;display:block;margin-bottom:10px;"></i>
+                    No employees match your filters.
+                    <br><button type="button" class="ant-btn ant-btn-default ant-btn-sm" style="margin-top:12px;" onclick="clearFilters()">Clear filters</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+let sortCol = -1, sortAsc = true;
+
+// ── Compute stats on load ─────────────────────────────────────────────────
+(function initStats(){
+    const rows = document.querySelectorAll('.emp-row');
+    let active=0, leave=0, inactive=0;
+    rows.forEach(function(r){
+        const s = r.dataset.status;
+        if(s==='active') active++;
+        else if(s==='on_leave') leave++;
+        else inactive++;
+    });
+    document.getElementById('statActive').textContent  = active;
+    document.getElementById('statLeave').textContent   = leave;
+    document.getElementById('statInactive').textContent= inactive;
+})();
+
+// ── Filter + Search ───────────────────────────────────────────────────────
+function applyFilters(){
+    const q       = document.getElementById('empSearch').value.trim().toLowerCase();
+    const company = document.getElementById('filterCompany').value;
+    const status  = document.getElementById('filterStatus').value;
+    const wtype   = document.getElementById('filterWorkType').value;
+    const dept    = document.getElementById('filterDept').value;
+
+    const rows  = document.querySelectorAll('.emp-row');
+    let visible = 0;
+
+    rows.forEach(function(row){
+        const matchQ = !q || (
+            row.dataset.name.includes(q) ||
+            row.dataset.id.includes(q) ||
+            row.dataset.email.includes(q) ||
+            row.dataset.position.includes(q)
+        );
+        const matchCompany = !company || row.dataset.company === company;
+        const matchStatus  = !status  || row.dataset.status  === status;
+        const matchWtype   = !wtype   || row.dataset.worktype === wtype;
+        const matchDept    = !dept    || row.dataset.dept     === dept;
+
+        if(matchQ && matchCompany && matchStatus && matchWtype && matchDept){
+            row.style.display = '';
+            visible++;
+            // Highlight search term in name, email, position cells
+            if(q){
+                highlightCell(row.querySelector('.emp-cell-name'),  q);
+                highlightCell(row.querySelector('.emp-cell-email'), q);
+                highlightCell(row.querySelector('.emp-cell-position'), q);
+            } else {
+                clearHighlight(row.querySelector('.emp-cell-name'));
+                clearHighlight(row.querySelector('.emp-cell-email'));
+                clearHighlight(row.querySelector('.emp-cell-position'));
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    document.getElementById('resultCount').textContent = visible;
+    document.getElementById('noResultMsg').style.display = (visible === 0 && rows.length > 0) ? 'block' : 'none';
+
+    // Active filters label
+    const filters = [];
+    if(q)       filters.push(`"${q}"`);
+    if(company) filters.push(`Company: ${company}`);
+    if(status)  filters.push(`Status: ${status}`);
+    if(wtype)   filters.push(`Work type: ${wtype}`);
+    if(dept)    filters.push(`Dept: ${dept}`);
+    const bar = document.getElementById('activeFiltersBar');
+    if(filters.length){
+        document.getElementById('activeFiltersText').textContent = filters.join(' · ');
+        bar.style.display = '';
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+function clearFilters(){
+    document.getElementById('empSearch').value = '';
+    document.getElementById('filterCompany').value = '';
+    document.getElementById('filterStatus').value  = '';
+    document.getElementById('filterWorkType').value= '';
+    document.getElementById('filterDept').value    = '';
+    applyFilters();
+}
+
+// ── Highlight helpers ─────────────────────────────────────────────────────
+function highlightCell(cell, q){
+    if(!cell) return;
+    const orig = cell.dataset.orig || cell.textContent;
+    cell.dataset.orig = orig;
+    const regex = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    cell.innerHTML = orig.replace(regex, '<mark class="emp-hl">$1</mark>');
+}
+function clearHighlight(cell){
+    if(!cell) return;
+    if(cell.dataset.orig){ cell.textContent = cell.dataset.orig; }
+}
+
+// ── Sort ──────────────────────────────────────────────────────────────────
+function sortTable(col){
+    const tbody = document.getElementById('empTbody');
+    const rows  = Array.from(tbody.querySelectorAll('.emp-row'));
+    if(!rows.length) return;
+
+    if(sortCol === col){ sortAsc = !sortAsc; }
+    else { sortCol = col; sortAsc = true; }
+
+    // Update header icons
+    document.querySelectorAll('#empTable thead th').forEach(function(th, i){
+        th.classList.remove('sort-asc','sort-desc');
+        const icon = th.querySelector('.sort-icon');
+        if(!icon) return;
+        if(i === col){
+            th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+            icon.className = 'fas ' + (sortAsc ? 'fa-sort-up' : 'fa-sort-down') + ' sort-icon';
+        } else {
+            icon.className = 'fas fa-sort sort-icon';
+        }
+    });
+
+    // Get cell text for comparison
+    function cellVal(row, c){
+        const cells = row.querySelectorAll('td');
+        const cell  = cells[c];
+        if(!cell) return '';
+        // Use data attributes for cleaner sort on col 0 (name) and col 7 (status)
+        if(c===0) return row.dataset.name;
+        if(c===7) return row.dataset.status;
+        if(c===6) return row.dataset.hiredate; // ISO date → sorts naturally
+        return cell.textContent.trim().toLowerCase();
+    }
+
+    rows.sort(function(a,b){
+        const va = cellVal(a, col);
+        const vb = cellVal(b, col);
+        if(va < vb) return sortAsc ? -1 :  1;
+        if(va > vb) return sortAsc ?  1 : -1;
+        return 0;
+    });
+
+    rows.forEach(function(r){ tbody.appendChild(r); });
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────
+function exportCsv(){
+    const headers = ['Name','Email','Employee ID','Company','Position','Department','Work Type','Hire Date','Status'];
+    const rows = Array.from(document.querySelectorAll('.emp-row')).filter(function(r){ return r.style.display !== 'none'; });
+
+    const csvRows = [headers.join(',')];
+    rows.forEach(function(r){
+        const cells = r.querySelectorAll('td');
+        function t(el){ return '"' + (el ? el.textContent.trim().replace(/"/g,'""') : '') + '"'; }
+        csvRows.push([
+            t(cells[0].querySelector('.emp-cell-name')),
+            t(cells[0].querySelector('.emp-cell-email')),
+            t(cells[1]),
+            t(cells[2]),
+            t(cells[3]),
+            t(cells[4]),
+            t(cells[5]),
+            t(cells[6]),
+            t(cells[7]),
+        ].join(','));
+    });
+
+    const blob = new Blob([csvRows.join('\n')], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'employees_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+</script>
 {% endblock %}
