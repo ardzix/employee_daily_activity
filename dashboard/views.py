@@ -88,28 +88,48 @@ def admin_dashboard_view(request):
     # Get filter parameters
     company_filter = request.GET.get('company', '')
     employee_filter = request.GET.get('employee', '')
-    date_filter = request.GET.get('date_range', f'{start_of_week}_{end_of_week}')
+    raw_date_range = request.GET.get('date_range', '')
 
-    start_date_range = date_filter.split('_')[0] if date_filter else ""
-    end_date_range = date_filter.split('_')[1] if date_filter else ""
-    
+    # Validate date range — reject anything that is not YYYY-MM-DD_YYYY-MM-DD
+    def _parse_date(s):
+        try:
+            return datetime.strptime(s.strip(), '%Y-%m-%d').date()
+        except (ValueError, AttributeError):
+            return None
+
+    start_date_range = None
+    end_date_range = None
+    if raw_date_range and '_' in raw_date_range:
+        parts = raw_date_range.split('_', 1)
+        sd = _parse_date(parts[0])
+        ed = _parse_date(parts[1])
+        if sd and ed:
+            start_date_range = sd
+            end_date_range = ed
+
+    # Fall back to current ISO week if invalid / missing
+    if not start_date_range or not end_date_range:
+        start_date_range = start_of_week
+        end_date_range = end_of_week
+
+    date_filter = f'{start_date_range}_{end_date_range}'
+
     # Base queryset
     activities_qs = DailyActivity.objects.all()
     employees_qs = Employee.objects.filter(employment_status='active')
-    
+
     # Apply company filter
     if company_filter:
         activities_qs = activities_qs.filter(user__employee_profile__company_id=company_filter)
         employees_qs = employees_qs.filter(company_id=company_filter)
-    
+
     # Apply employee filter
     if employee_filter:
         activities_qs = activities_qs.filter(user__employee_profile__id=employee_filter)
         employees_qs = employees_qs.filter(id=employee_filter)
-    
-    # Apply date filter
-    if date_filter:
-        activities_qs = activities_qs.filter(date__gte=start_date_range, date__lte=end_date_range)
+
+    # Apply date filter (always has valid dates at this point)
+    activities_qs = activities_qs.filter(date__gte=start_date_range, date__lte=end_date_range)
     
     # Calculate statistics — only employees with active employment status
     total_employees = employees_qs.count()

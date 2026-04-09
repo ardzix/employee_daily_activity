@@ -334,23 +334,55 @@ $('select[name="company"], select[name="employee"]').on('change', function() {
 });
 
 $(function() {
-    var selectedDateRange = "{{ selected_date_range }}";
-    var start = selectedDateRange ? selectedDateRange.split('_')[0] : moment().startOf('isoWeek');
-    var end   = selectedDateRange ? selectedDateRange.split('_')[1] : moment().endOf('isoWeek');
-    function cb(start, end) {
-        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' – ' + end.format('MMMM D, YYYY'));
-        var picker = $('#reportrange').data('daterangepicker');
-        var s = picker.startDate.format('YYYY-MM-DD');
-        var e = picker.endDate.format('YYYY-MM-DD');
-        var v = s + '_' + e;
-        var url = new URL(window.location.href); url.searchParams.set('date_range', v); window.history.pushState({}, '', url);
+    var rawRange = "{{ selected_date_range }}";
+
+    // Parse & validate dates from URL param; fall back to current ISO week
+    function parseSafe(str) {
+        var m = moment(str, 'YYYY-MM-DD', true); // strict mode
+        return m.isValid() ? m : null;
+    }
+    var defaultStart = moment().startOf('isoWeek');
+    var defaultEnd   = moment().endOf('isoWeek');
+
+    var start = defaultStart, end = defaultEnd;
+    if (rawRange && rawRange.indexOf('_') !== -1) {
+        var parts = rawRange.split('_');
+        var ps = parseSafe(parts[0]);
+        var pe = parseSafe(parts[1]);
+        if (ps && pe) { start = ps; end = pe; }
+        else {
+            // Invalid dates in URL → clean up the address bar
+            var cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete('date_range');
+            window.history.replaceState({}, '', cleanUrl);
+        }
+    }
+
+    function cb(s, e) {
+        if (!s.isValid() || !e.isValid()) return;
+        $('#reportrange span').html(s.format('MMMM D, YYYY') + ' – ' + e.format('MMMM D, YYYY'));
+        var v = s.format('YYYY-MM-DD') + '_' + e.format('YYYY-MM-DD');
+        var url = new URL(window.location.href);
+        url.searchParams.set('date_range', v);
+        window.history.pushState({}, '', url);
         $('#date_range').val(v);
     }
+
     $('#reportrange').daterangepicker({
-        startDate: start, endDate: end,
-        ranges: { 'Today': [moment(), moment()], 'Yesterday': [moment().subtract(1,'days'), moment().subtract(1,'days')], 'Last 7 Days': [moment().subtract(6,'days'), moment()], 'Last 30 Days': [moment().subtract(29,'days'), moment()], 'This Week': [moment().startOf('isoWeek'), moment().endOf('isoWeek')], 'This Month': [moment().startOf('month'), moment().endOf('month')], 'Last Month': [moment().subtract(1,'month').startOf('month'), moment().subtract(1,'month').endOf('month')] }
+        startDate: start,
+        endDate: end,
+        ranges: {
+            'Today':      [moment(), moment()],
+            'Yesterday':  [moment().subtract(1,'days'), moment().subtract(1,'days')],
+            'Last 7 Days':[moment().subtract(6,'days'), moment()],
+            'Last 30 Days':[moment().subtract(29,'days'), moment()],
+            'This Week':  [moment().startOf('isoWeek'), moment().endOf('isoWeek')],
+            'This Month': [moment().startOf('month'), moment().endOf('month')],
+            'Last Month': [moment().subtract(1,'month').startOf('month'), moment().subtract(1,'month').endOf('month')]
+        }
     }, cb);
-    if (selectedDateRange) { var parts = selectedDateRange.split('_'); cb(moment(parts[0]), moment(parts[1])); } else { cb(start, end); }
+
+    cb(start, end);
 });
 
 document.addEventListener('DOMContentLoaded', function() {
