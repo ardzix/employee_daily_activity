@@ -6,16 +6,122 @@
 
 {% block extra_css %}
 <style>
-    .daterangepicker { background: var(--bg-elevated); border-color: var(--border-color); border-radius: 8px; color: var(--text-color); }
-    .daterangepicker .ranges li { color: var(--text-secondary); }
-    .daterangepicker .ranges li:hover, .daterangepicker .ranges li.active { background: var(--ant-primary); color: #fff; border-radius: 4px; }
-    .daterangepicker td.in-range { background-color: var(--ant-primary-bg); color: var(--text-color); }
-    .daterangepicker td.active { background-color: var(--ant-primary) !important; color: #fff !important; }
-    .daterangepicker .calendar-table { background: var(--bg-elevated); border-color: var(--border-color); }
-    .daterangepicker .calendar-table td, .daterangepicker .calendar-table th { color: var(--text-color); }
-    .daterangepicker td.off { color: var(--text-tertiary); }
-    .daterangepicker td:hover { background-color: var(--ant-primary-bg-hover) !important; }
-    .daterangepicker:before, .daterangepicker:after { border-bottom-color: var(--border-color); }
+    /* ── Date range picker — full theme override ─────────────── */
+    .daterangepicker {
+        background: var(--bg-elevated) !important;
+        border-color: var(--border-color) !important;
+        border-radius: 8px;
+        color: var(--text-color) !important;
+        box-shadow: 0 6px 24px rgba(0,0,0,.35);
+    }
+    /* Arrow tips */
+    .daterangepicker:before { border-bottom-color: var(--border-color) !important; }
+    .daterangepicker:after  { border-bottom-color: var(--bg-elevated)  !important; }
+
+    /* Calendar table wrapper */
+    .daterangepicker .calendar-table {
+        background: var(--bg-elevated) !important;
+        border-color: var(--border-color) !important;
+    }
+    .daterangepicker .calendar-table table { background: transparent !important; }
+
+    /* ALL td & th — reset background & color so library defaults don't bleed through */
+    .daterangepicker td,
+    .daterangepicker th {
+        background: transparent !important;
+        color: var(--text-color) !important;
+        border-radius: 4px;
+    }
+
+    /* Day-of-week header row */
+    .daterangepicker .calendar-table th,
+    .daterangepicker th.month { color: var(--text-secondary) !important; }
+
+    /* Prev / Next nav buttons */
+    .daterangepicker th.prev,
+    .daterangepicker th.next {
+        color: var(--text-secondary) !important;
+    }
+    .daterangepicker th.prev:hover,
+    .daterangepicker th.next:hover { background: var(--bg-fill) !important; }
+
+    /* Dates that belong to adjacent months */
+    .daterangepicker td.off,
+    .daterangepicker td.off.in-range,
+    .daterangepicker td.off.start-date,
+    .daterangepicker td.off.end-date {
+        background: transparent !important;
+        color: var(--text-tertiary) !important;
+        opacity: 0.4;
+    }
+
+    /* In-range highlight */
+    .daterangepicker td.in-range {
+        background: var(--ant-primary-bg) !important;
+        color: var(--text-color) !important;
+    }
+
+    /* Selected start / end */
+    .daterangepicker td.active,
+    .daterangepicker td.active.start-date,
+    .daterangepicker td.active.end-date {
+        background: var(--ant-primary) !important;
+        color: #fff !important;
+    }
+
+    /* Hover on regular cells */
+    .daterangepicker td:not(.off):not(.active):hover {
+        background: var(--bg-fill) !important;
+        color: var(--text-heading) !important;
+    }
+
+    /* Today highlight */
+    .daterangepicker td.today:not(.active) {
+        font-weight: 700;
+        color: var(--ant-primary) !important;
+    }
+
+    /* Disabled dates */
+    .daterangepicker td.disabled,
+    .daterangepicker option.disabled { color: var(--text-tertiary) !important; opacity: 0.4; }
+
+    /* Month/Year selects inside header */
+    .daterangepicker select.monthselect,
+    .daterangepicker select.yearselect {
+        background: var(--bg-fill) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 4px;
+    }
+
+    /* Ranges sidebar */
+    .daterangepicker .ranges ul { background: transparent !important; }
+    .daterangepicker .ranges li {
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+        border-radius: 4px;
+    }
+    .daterangepicker .ranges li:hover { background: var(--bg-fill) !important; color: var(--text-heading) !important; }
+    .daterangepicker .ranges li.active { background: var(--ant-primary) !important; color: #fff !important; }
+
+    /* Footer (Cancel / Apply buttons row) */
+    .daterangepicker .drp-buttons {
+        background: var(--bg-elevated) !important;
+        border-top: 1px solid var(--border-color) !important;
+    }
+    .daterangepicker .drp-selected {
+        color: var(--text-secondary) !important;
+    }
+    .daterangepicker .cancelBtn {
+        background: var(--bg-fill) !important;
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+    }
+    .daterangepicker .applyBtn {
+        background: var(--ant-primary) !important;
+        border-color: var(--ant-primary) !important;
+        color: #fff !important;
+    }
     /* ── Leaflet popup — follow theme ───────────────────────── */
     .leaflet-popup-content-wrapper {
         background: var(--bg-elevated) !important;
