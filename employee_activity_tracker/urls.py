@@ -20,6 +20,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
+from drf_spectacular.views import SpectacularRedocView, SpectacularSwaggerView
+from employee_activity_tracker.openapi import openapi_schema
 from authentication.views import try_sso_session_login
 
 
@@ -36,6 +38,9 @@ def root_redirect(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/schema/', openapi_schema, name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('auth/', include('authentication.urls')),
     path('activities/', include('activities.urls')),
     path('dashboard/', include('dashboard.urls')),

@@ -6,6 +6,8 @@ app_name = 'authentication'
 urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('api/login/', views.api_login, name='api_login'),
+    path('bnk/login/', views.api_bearer_login, name='api_bearer_login'),
+    path('bnk/mfa/verify/', views.api_bearer_mfa_verify, name='api_bearer_mfa_verify'),
     path('api/google-login/', views.api_google_login, name='api_google_login'),
     path('api/register/', views.api_register, name='api_register'),
     path('api/verify-email/', views.api_verify_email, name='api_verify_email'),
@@ -21,6 +23,7 @@ urlpatterns = [
     path('api/passkeys/login/begin/', views.api_passkeys_login_begin, name='api_passkeys_login_begin'),
     path('api/passkeys/login/complete/', views.api_passkeys_login_complete, name='api_passkeys_login_complete'),
     path('api/token/refresh/', views.refresh_token_view, name='token_refresh'),
+    path('api/profile/', views.api_profile, name='api_profile'),
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
 ] 

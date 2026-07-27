@@ -25,4 +25,9 @@ urlpatterns = [
     path('api/check-in/', views.check_in_api, name='check_in_api'),
     path('api/check-out/', views.check_out_api, name='check_out_api'),
     path('api/status/', views.activity_status_api, name='activity_status_api'),
+    path('api/history/', views.activity_history_api, name='activity_history_api'),
+    path('bnk/check-in/', views.check_in_bearer_api, name='check_in_bearer_api'),
+    path('bnk/check-out/', views.check_out_bearer_api, name='check_out_bearer_api'),
+    path('bnk/status/', views.activity_status_bearer_api, name='activity_status_bearer_api'),
+    path('bnk/history/', views.activity_history_bearer_api, name='activity_history_bearer_api'),
 ] 

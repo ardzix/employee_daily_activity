@@ -4,10 +4,76 @@ from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
 from django.db import transaction
+from django.http import QueryDict
+from django.views.decorators.csrf import csrf_exempt
+from authentication.api_auth import bearer_token_required
 from .models import DailyActivity, ActivityGoal, PlannedActivity, DailyGoal, AdditionalActivity
 from datetime import date, datetime
 import json
 import pytz
+
+
+def _apply_json_body_to_post(request):
+    if 'application/json' not in request.META.get('CONTENT_TYPE', ''):
+        return
+
+    try:
+        data = json.loads(request.body or b'{}')
+    except json.JSONDecodeError:
+        return
+
+    post_data = QueryDict('', mutable=True)
+    for key, value in data.items():
+        if isinstance(value, (dict, list)):
+            post_data[key] = json.dumps(value)
+        elif value is None:
+            post_data[key] = ''
+        else:
+            post_data[key] = str(value)
+    request.POST = post_data
+
+
+def _get_bearer_scope(request):
+    if not hasattr(request, 'bearer_token'):
+        return {}, None
+
+    org_id = getattr(request, 'bearer_org_id', None)
+    tenant_id = getattr(request, 'bearer_tenant_id', None)
+
+    if not org_id:
+        return None, JsonResponse({'error': 'org_id is required in bearer token'}, status=400)
+
+    if not tenant_id:
+        return None, JsonResponse({'error': 'tenant_id query parameter is required'}, status=400)
+
+    return {
+        'org_id': org_id,
+        'tenant_id': tenant_id,
+    }, None
+
+
+@csrf_exempt
+@bearer_token_required
+def check_in_bearer_api(request):
+    _apply_json_body_to_post(request)
+    return check_in_api.__wrapped__(request)
+
+
+@csrf_exempt
+@bearer_token_required
+def check_out_bearer_api(request):
+    _apply_json_body_to_post(request)
+    return check_out_api.__wrapped__(request)
+
+
+@bearer_token_required
+def activity_status_bearer_api(request):
+    return activity_status_api.__wrapped__(request)
+
+
+@bearer_token_required
+def activity_history_bearer_api(request):
+    return activity_history_api.__wrapped__(request)
 
 
 @login_required
@@ -15,6 +81,10 @@ def check_in_api(request):
     """Check-in API for all users"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    scope, scope_error = _get_bearer_scope(request)
+    if scope_error:
+        return scope_error
     
     today = date.today()
     jakarta_tz = pytz.timezone('Asia/Jakarta')
@@ -38,9 +108,17 @@ def check_in_api(request):
         date=today,
         defaults={
             'status': 'pending',
-            'attendance_status': 'on_time'
+            'attendance_status': 'on_time',
+            **scope,
         }
     )
+
+    if scope and (
+        daily_activity.org_id != scope['org_id']
+        or daily_activity.tenant_id != scope['tenant_id']
+    ):
+        daily_activity.org_id = scope['org_id']
+        daily_activity.tenant_id = scope['tenant_id']
 
     # Check if already checked in
     if daily_activity.checkin_time:
@@ -111,6 +189,7 @@ def check_in_api(request):
         for i, activity_data in enumerate(planned_activities_list):
             PlannedActivity.objects.create(
                 daily_activity=daily_activity,
+                **scope,
                 title=activity_data.get('title', ''),
                 description=activity_data.get('description', ''),
                 priority=activity_data.get('priority', 2),
@@ -122,6 +201,7 @@ def check_in_api(request):
         for i, goal_data in enumerate(daily_goals_list):
             DailyGoal.objects.create(
                 daily_activity=daily_activity,
+                **scope,
                 title=goal_data.get('title', ''),
                 description=goal_data.get('description', ''),
                 priority=goal_data.get('priority', 2),
@@ -144,6 +224,10 @@ def check_out_api(request):
     """Check-out API for all users"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    scope, scope_error = _get_bearer_scope(request)
+    if scope_error:
+        return scope_error
     
     today = date.today()
     jakarta_tz = pytz.timezone('Asia/Jakarta')
@@ -162,7 +246,7 @@ def check_out_api(request):
         }, status=400)
     
     try:
-        daily_activity = DailyActivity.objects.get(user=request.user, date=today)
+        daily_activity = DailyActivity.objects.get(user=request.user, date=today, **scope)
     except DailyActivity.DoesNotExist:
         return JsonResponse({'error': 'Please check in first'}, status=400)
     
@@ -281,6 +365,7 @@ def check_out_api(request):
         for i, additional_activity in enumerate(additional_activities_list):
             AdditionalActivity.objects.create(
                 daily_activity=daily_activity,
+                **scope,
                 title=additional_activity.get('title', ''),
                 description=additional_activity.get('description', ''),
                 category=additional_activity.get('category', 'other'),
@@ -310,10 +395,14 @@ def check_out_api(request):
 @login_required
 def activity_status_api(request):
     """Get activity status for users"""
+    scope, scope_error = _get_bearer_scope(request)
+    if scope_error:
+        return scope_error
+
     today = date.today()
     
     try:
-        daily_activity = DailyActivity.objects.get(user=request.user, date=today)
+        daily_activity = DailyActivity.objects.get(user=request.user, date=today, **scope)
         
         # Get planned activities and goals
         planned_activities = list(daily_activity.planned_activities.values(
@@ -359,6 +448,117 @@ def activity_status_api(request):
         }
     
     return JsonResponse(status)
+
+
+def _format_duration(duration):
+    if not duration:
+        return None
+
+    total_seconds = int(duration.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    return {
+        'seconds': total_seconds,
+        'display': f'{hours}h {minutes}m',
+    }
+
+
+def _serialize_daily_activity(activity):
+    return {
+        'id': activity.id,
+        'org_id': activity.org_id,
+        'tenant_id': activity.tenant_id,
+        'date': activity.date.isoformat(),
+        'status': activity.status,
+        'status_display': activity.get_status_display(),
+        'attendance_status': activity.attendance_status,
+        'attendance_status_display': activity.get_attendance_status_display(),
+        'checkin_time': activity.checkin_time.isoformat() if activity.checkin_time else None,
+        'checkout_time': activity.checkout_time.isoformat() if activity.checkout_time else None,
+        'checkin_location': activity.checkin_location,
+        'checkout_location': activity.checkout_location,
+        'morning_problems': activity.morning_problems,
+        'afternoon_problems': activity.afternoon_problems,
+        'notes': activity.notes,
+        'work_duration': _format_duration(activity.work_duration),
+        'planned_activities': [
+            {
+                'id': planned_activity.id,
+                'title': planned_activity.title,
+                'description': planned_activity.description,
+                'status': planned_activity.status,
+                'status_display': planned_activity.get_status_display(),
+                'priority': planned_activity.priority,
+                'priority_display': planned_activity.get_priority_display(),
+                'order': planned_activity.order,
+                'reasons': planned_activity.reasons,
+            }
+            for planned_activity in activity.planned_activities.all()
+        ],
+        'daily_goals': [
+            {
+                'id': goal.id,
+                'title': goal.title,
+                'description': goal.description,
+                'status': goal.status,
+                'status_display': goal.get_status_display(),
+                'priority': goal.priority,
+                'priority_display': goal.get_priority_display(),
+                'target_value': goal.target_value,
+                'achieved_value': goal.achieved_value,
+                'completion_percentage': goal.completion_percentage,
+                'order': goal.order,
+                'reasons': goal.reasons,
+            }
+            for goal in activity.daily_goals.all()
+        ],
+        'additional_activities': [
+            {
+                'id': additional_activity.id,
+                'title': additional_activity.title,
+                'description': additional_activity.description,
+                'category': additional_activity.category,
+                'category_display': additional_activity.get_category_display(),
+                'status': additional_activity.status,
+                'status_display': additional_activity.get_status_display(),
+                'order': additional_activity.order,
+                'impact_on_planned_work': additional_activity.impact_on_planned_work,
+            }
+            for additional_activity in activity.additional_activities.all()
+        ],
+        'counts': {
+            'planned_activities': activity.planned_activities.count(),
+            'daily_goals': activity.daily_goals.count(),
+            'additional_activities': activity.additional_activities.count(),
+        },
+    }
+
+
+@login_required
+def activity_history_api(request):
+    """Get activity history for the authenticated user."""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    scope, scope_error = _get_bearer_scope(request)
+    if scope_error:
+        return scope_error
+
+    try:
+        limit = int(request.GET.get('limit', 30))
+    except (TypeError, ValueError):
+        limit = 30
+    limit = max(1, min(limit, 100))
+
+    activities = DailyActivity.objects.filter(user=request.user, **scope).prefetch_related(
+        'planned_activities', 'daily_goals', 'additional_activities', 'goals'
+    ).order_by('-date')[:limit]
+
+    return JsonResponse({
+        'success': True,
+        'count': len(activities),
+        'results': [_serialize_daily_activity(activity) for activity in activities],
+    })
 
 
 @login_required

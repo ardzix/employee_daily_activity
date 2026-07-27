@@ -24,6 +24,8 @@ class Company(models.Model):
     
     # Status
     is_active = models.BooleanField(default=True)
+    org_id = models.CharField(max_length=100, blank=True, null=True)
+    tenant_id = models.CharField(max_length=100, blank=True, null=True)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -67,6 +69,8 @@ class Employee(models.Model):
     
     # Company Assignment
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='employees')
+    org_id = models.CharField(max_length=100, blank=True, null=True)
+    tenant_id = models.CharField(max_length=100, blank=True, null=True)
     
     # Work Configuration
     work_type = models.CharField(max_length=10, choices=WORK_TYPE_CHOICES, default='onsite')

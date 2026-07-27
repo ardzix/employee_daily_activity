@@ -34,6 +34,8 @@ class DailyActivity(models.Model):
     # User and Date
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_activities')
     date = models.DateField()
+    org_id = models.CharField(max_length=100, blank=True, null=True)
+    tenant_id = models.CharField(max_length=100, blank=True, null=True)
     
     # Status
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
@@ -184,6 +186,8 @@ class PlannedActivity(models.Model):
     ]
     
     daily_activity = models.ForeignKey(DailyActivity, on_delete=models.CASCADE, related_name='planned_activities')
+    org_id = models.CharField(max_length=100, blank=True, null=True)
+    tenant_id = models.CharField(max_length=100, blank=True, null=True)
     title = models.CharField(max_length=200, help_text="Brief description of the planned activity")
     description = models.TextField(blank=True, help_text="Detailed description if needed")
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
@@ -239,6 +243,8 @@ class DailyGoal(models.Model):
     ]
     
     daily_activity = models.ForeignKey(DailyActivity, on_delete=models.CASCADE, related_name='daily_goals')
+    org_id = models.CharField(max_length=100, blank=True, null=True)
+    tenant_id = models.CharField(max_length=100, blank=True, null=True)
     title = models.CharField(max_length=200, help_text="Brief description of the goal")
     description = models.TextField(blank=True, help_text="Detailed description of the goal")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -300,6 +306,8 @@ class AdditionalActivity(models.Model):
     ]
     
     daily_activity = models.ForeignKey(DailyActivity, on_delete=models.CASCADE, related_name='additional_activities')
+    org_id = models.CharField(max_length=100, blank=True, null=True)
+    tenant_id = models.CharField(max_length=100, blank=True, null=True)
     title = models.CharField(max_length=200, help_text="Brief description of the additional activity")
     description = models.TextField(blank=True, help_text="Detailed description of what was done")
     category = models.CharField(max_length=15, choices=CATEGORY_CHOICES, default='other', help_text="Category of additional activity")
@@ -341,6 +349,8 @@ class ActivityGoal(models.Model):
     ]
     
     daily_activity = models.ForeignKey(DailyActivity, on_delete=models.CASCADE, related_name='goals')
+    org_id = models.CharField(max_length=100, blank=True, null=True)
+    tenant_id = models.CharField(max_length=100, blank=True, null=True)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')

@@ -407,7 +407,134 @@ def api_login(request):
         return JsonResponse({'error': 'Invalid JSON data provided'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Authentication failed: {str(e)}'}, status=500)
-    
+
+
+def _bearer_token_response(access_token, refresh_token):
+    user = authenticate_with_token(access_token)
+    if not user:
+        return JsonResponse({'error': 'Failed to authenticate token. Please contact support.'}, status=401)
+
+    return JsonResponse({
+        'success': True,
+        'token_type': 'Bearer',
+        'access': access_token,
+        'refresh': refresh_token,
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'sso_id': user.sso_id,
+            'full_name': user.get_full_name(),
+            'has_employee_profile': hasattr(user, 'employee_profile'),
+        },
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_bearer_login(request):
+    """Login for API clients that use Authorization: Bearer <access>."""
+    try:
+        data = json.loads(request.body or b'{}')
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            return JsonResponse({'error': 'Email and password are required'}, status=400)
+
+        try:
+            sso_response = requests.post(
+                f"{settings.SSO_BASE_URL}/api/auth/login/",
+                json={'email': email, 'password': password},
+                headers={'Content-Type': 'application/json'},
+                timeout=15
+            )
+        except requests.exceptions.Timeout:
+            return JsonResponse({'error': 'Authentication service timeout. Please try again later.'}, status=503)
+        except requests.exceptions.ConnectionError:
+            return JsonResponse({'error': 'Cannot connect to authentication service. Please check your internet connection.'}, status=503)
+        except Exception as e:
+            return JsonResponse({'error': f'Authentication service error: {str(e)}'}, status=503)
+
+        if sso_response.status_code == 200:
+            response_data = sso_response.json()
+            if response_data.get('mfa_required'):
+                pre_auth = _mfa_pre_auth_token_from_sso(response_data)
+                if not pre_auth:
+                    return JsonResponse({
+                        'error': 'Login service did not return an MFA pre-auth token. Contact support or try again.',
+                        'mfa_required': True,
+                    }, status=502)
+                return JsonResponse({
+                    'mfa_required': True,
+                    'token': pre_auth,
+                    'email': email,
+                    'message': response_data.get('message') or 'MFA is required. Please provide your MFA token.',
+                })
+
+            access_token = response_data.get('access')
+            refresh_token = response_data.get('refresh')
+            if access_token and refresh_token:
+                return _bearer_token_response(access_token, refresh_token)
+
+            return JsonResponse({'error': 'Invalid authentication response from SSO service'}, status=500)
+
+        try:
+            response_data = sso_response.json()
+        except ValueError:
+            response_data = {'error': sso_response.text or 'Login failed'}
+        return JsonResponse(response_data, status=sso_response.status_code)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data provided'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Authentication failed: {str(e)}'}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_bearer_mfa_verify(request):
+    """MFA verify for API clients that use Authorization: Bearer <access>."""
+    try:
+        data = json.loads(request.body or b'{}')
+        token = data.get('token') or data.get('pre_auth_token')
+        mfa_token = data.get('mfa_token') or data.get('totp') or data.get('code')
+
+        if not token or not mfa_token:
+            return JsonResponse({'error': 'Token and MFA token are required'}, status=400)
+
+        try:
+            sso_response = requests.post(
+                f"{settings.SSO_BASE_URL}/api/auth/mfa/verify/",
+                json={'token': token, 'mfa_token': mfa_token},
+                headers={'Content-Type': 'application/json'},
+                timeout=15
+            )
+        except requests.exceptions.Timeout:
+            return JsonResponse({'error': 'MFA verification service timeout. Please try again later.'}, status=503)
+        except requests.exceptions.ConnectionError:
+            return JsonResponse({'error': 'Cannot connect to MFA verification service. Please check your internet connection.'}, status=503)
+        except Exception as e:
+            return JsonResponse({'error': f'MFA verification service error: {str(e)}'}, status=503)
+
+        if sso_response.status_code == 200:
+            response_data = sso_response.json()
+            access_token = response_data.get('access')
+            refresh_token = response_data.get('refresh')
+            if access_token and refresh_token:
+                return _bearer_token_response(access_token, refresh_token)
+
+            return JsonResponse({'error': 'Invalid MFA verification response from SSO service'}, status=500)
+
+        try:
+            response_data = sso_response.json()
+        except ValueError:
+            response_data = {'error': sso_response.text or 'MFA verification failed'}
+        return JsonResponse(response_data, status=sso_response.status_code)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data provided'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'MFA verification failed: {str(e)}'}, status=500)
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_google_login(request):
@@ -673,6 +800,91 @@ def profile_view(request):
         'account_portal_profile_url': settings.ACCOUNT_PORTAL_PROFILE_URL,
     }
     return render(request, 'authentication/profile.html', context)
+
+
+def _time_value(value):
+    return value.strftime('%H:%M') if value else None
+
+
+def _date_value(value):
+    return value.isoformat() if value else None
+
+
+@login_required
+def api_profile(request):
+    """Return the authenticated user's profile data."""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    request.session.pop(PROFILE_REMINDER_SESSION_KEY, None)
+    sso_profile = fetch_sso_user_profile(request)
+
+    display_full_name = (sso_profile.get('full_name') or '').strip()
+    if not display_full_name:
+        display_full_name = request.user.get_full_name().strip()
+    if not display_full_name:
+        display_full_name = sso_profile.get('user_name') or request.user.email
+
+    employee = getattr(request.user, 'employee_profile', None)
+    employee_data = None
+    if employee:
+        company = employee.company
+        manager = employee.manager
+        employee_data = {
+            'id': employee.id,
+            'employee_id': employee.employee_id,
+            'full_name': employee.full_name,
+            'phone': employee.phone,
+            'position': employee.position,
+            'department': employee.department,
+            'work_type': employee.work_type,
+            'work_type_display': employee.get_work_type_display(),
+            'employment_status': employee.employment_status,
+            'employment_status_display': employee.get_employment_status_display(),
+            'hire_date': _date_value(employee.hire_date),
+            'termination_date': _date_value(employee.termination_date),
+            'work_start_time': _time_value(employee.work_start_time),
+            'work_end_time': _time_value(employee.work_end_time),
+            'effective_work_start_time': _time_value(employee.effective_work_start_time),
+            'effective_work_end_time': _time_value(employee.effective_work_end_time),
+            'company': {
+                'id': company.id,
+                'name': company.name,
+                'code': company.code,
+                'timezone': company.timezone,
+                'work_start_time': _time_value(company.work_start_time),
+                'work_end_time': _time_value(company.work_end_time),
+                'is_active': company.is_active,
+            },
+            'manager': {
+                'id': manager.id,
+                'employee_id': manager.employee_id,
+                'full_name': manager.full_name,
+            } if manager else None,
+        }
+
+    return JsonResponse({
+        'success': True,
+        'user': {
+            'id': request.user.id,
+            'email': request.user.email,
+            'username': request.user.username,
+            'sso_id': request.user.sso_id,
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'full_name': request.user.get_full_name(),
+            'display_full_name': display_full_name,
+            'is_staff': request.user.is_staff,
+            'is_superuser': request.user.is_superuser,
+            'is_active': request.user.is_active,
+            'date_joined': request.user.date_joined.isoformat() if request.user.date_joined else None,
+            'last_login': request.user.last_login.isoformat() if request.user.last_login else None,
+            'has_employee_profile': employee is not None,
+        },
+        'employee': employee_data,
+        'sso_profile': sso_profile,
+        'account_portal_profile_url': settings.ACCOUNT_PORTAL_PROFILE_URL,
+    })
 
 
 def refresh_token_view(request):

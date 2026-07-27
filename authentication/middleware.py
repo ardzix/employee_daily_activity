@@ -48,6 +48,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
         skip_paths = [
             '/',  # Root URL redirect
             '/auth/login/',
+            '/auth/bnk/',
             '/auth/api/login/',
             '/auth/api/google-login/',
             '/auth/api/mfa/verify/',
@@ -55,6 +56,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             '/auth/api/verify-email/',
             '/auth/api/resend-email-otp/',
             '/auth/logout/',
+            '/activities/bnk/',
             '/admin/',
         ]
         

@@ -15,6 +15,8 @@ class User(AbstractUser):
     sso_access_token = models.TextField(blank=True, null=True, help_text="Current SSO access token")
     sso_refresh_token = models.TextField(blank=True, null=True, help_text="Current SSO refresh token")
     sso_token_expires_at = models.DateTimeField(blank=True, null=True, help_text="When the SSO token expires")
+    org_id = models.CharField(max_length=100, blank=True, null=True)
+    tenant_id = models.CharField(max_length=100, blank=True, null=True)
     
     # Override username to use email for login
     USERNAME_FIELD = 'email'
