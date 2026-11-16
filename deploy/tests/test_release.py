@@ -2,6 +2,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+from subprocess import CompletedProcess
 import unittest
 from unittest.mock import patch
 
@@ -37,10 +38,12 @@ class ReleaseTests(unittest.TestCase):
     def test_migration_failure_never_updates_the_existing_service(self):
         with patch.object(release, "service", return_value=self.old), patch.object(release, "containers", return_value=["old"]), \
              patch.object(release, "run", side_effect=self.docker) as run, \
-             patch.object(release, "wait_task", side_effect=RuntimeError("migration failed")), patch.object(release.subprocess, "run"):
+             patch.object(release, "wait_task", side_effect=RuntimeError("migration failed")), \
+             patch.object(release.subprocess, "run", return_value=CompletedProcess([], 0, "synthetic diagnostic", "")):
             with self.assertRaisesRegex(RuntimeError, "migration failed"):
                 release.roll(self.sha, self.folder)
         self.assertFalse(any(call.args[0][:3] == ["docker", "service", "update"] for call in run.call_args_list))
+        self.assertIn("synthetic diagnostic", (self.folder / "migration-error.json").read_text())
 
     def test_roll_preserves_database_and_exposes_only_the_runtime_pointer(self):
         with patch.object(release, "service", return_value=self.old), patch.object(release, "containers", return_value=["old"]), \
