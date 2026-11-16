@@ -31,7 +31,7 @@ def try_sso_session_login(request):
     """
     if request.user.is_authenticated:
         return
-    access = request.session.get('access_token')
+    access = getattr(request, 'sso_access_token', None)
     if not access:
         return
     user = authenticate_with_token(access)
@@ -725,7 +725,7 @@ def refresh_token_view(request):
 @login_required
 @require_http_methods(["GET"])
 def api_mfa_status(request):
-    access_token = request.session.get('access_token')
+    access_token = getattr(request, 'sso_access_token', None)
     if not access_token:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     try:
@@ -743,7 +743,7 @@ def api_mfa_status(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_mfa_set(request):
-    access_token = request.session.get('access_token')
+    access_token = getattr(request, 'sso_access_token', None)
     if not access_token:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     try:
@@ -761,7 +761,7 @@ def api_mfa_set(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_mfa_disable(request):
-    access_token = request.session.get('access_token')
+    access_token = getattr(request, 'sso_access_token', None)
     if not access_token:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     try:
@@ -782,7 +782,7 @@ def api_mfa_disable(request):
 @login_required
 @require_http_methods(["GET"])
 def api_passkeys_list(request):
-    access_token = request.session.get('access_token')
+    access_token = getattr(request, 'sso_access_token', None)
     if not access_token:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     try:
@@ -800,7 +800,7 @@ def api_passkeys_list(request):
 @login_required
 @require_http_methods(["GET"])
 def api_passkeys_register_begin(request):
-    access_token = request.session.get('access_token')
+    access_token = getattr(request, 'sso_access_token', None)
     if not access_token:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     try:
@@ -820,7 +820,7 @@ def api_passkeys_register_begin(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_passkeys_register_complete(request):
-    access_token = request.session.get('access_token')
+    access_token = getattr(request, 'sso_access_token', None)
     if not access_token:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     sso_cookies = request.session.pop('sso_passkey_reg_cookies', {})
@@ -842,7 +842,7 @@ def api_passkeys_register_complete(request):
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def api_passkeys_delete(request, passkey_id):
-    access_token = request.session.get('access_token')
+    access_token = getattr(request, 'sso_access_token', None)
     if not access_token:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     try:

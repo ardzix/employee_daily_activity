@@ -56,7 +56,7 @@ def fetch_sso_user_profile(request) -> Dict[str, str]:
     if not user or not user.is_authenticated:
         return dict(EMPTY_PROFILE)
 
-    access = request.session.get('access_token')
+    access = getattr(request, 'sso_access_token', None)
     if not access:
         return dict(EMPTY_PROFILE)
 
