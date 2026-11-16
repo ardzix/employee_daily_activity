@@ -14,6 +14,7 @@ import time
 SERVICE = "employee_activity_tracker"
 REPOSITORY = "ardzix/employee_activity_tracker"
 SOURCE = Path("/root/Project/employee_daily_activity")
+DIAGNOSTICS = None
 
 
 def run(args, **kwargs):
@@ -21,7 +22,10 @@ def run(args, **kwargs):
     if result.returncode:
         # Docker diagnostics can echo secret-valued command arguments. Preserve
         # them privately; the console receives only the failed program name.
-        raise RuntimeError("Release gate failed: " + args[0])
+        if DIAGNOSTICS is not None:
+            save(DIAGNOSTICS / ("gate-error-" + os.urandom(4).hex() + ".json"),
+                 {"program": args[0], "stdout": result.stdout[-24000:], "stderr": result.stderr[-24000:]})
+        raise RuntimeError("Release gate failed: " + args[0] + "; private diagnostics retained")
     return result.stdout
 
 
@@ -180,4 +184,5 @@ if __name__ == "__main__":
         raise SystemExit("Expected {build,roll,verify} FULL_MAIN_SHA")
     folder = Path("/root/arnatech-releases/clockin-" + commit[:12])
     folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+    DIAGNOSTICS = folder
     globals()[mode](commit, folder)
