@@ -73,7 +73,7 @@ def build(commit, folder):
         run(["docker", "build", "--label", "org.opencontainers.image.revision=" + commit, "-t", tag, str(context)])
         checks = run(["docker", "run", "--rm", "--network", "none", "-e", "USE_POSTGRES=False", "-e", "DEBUG=False",
                       "-e", "SECRET_KEY=isolated-clockin-test-only", "--entrypoint", "python", tag,
-                      "manage.py", "test", "authentication.test_central_sso", "--settings=employee_activity_tracker.test_settings"])
+                      "manage.py", "test", "authentication.test_central_sso", "activities.test_location_migration", "--settings=employee_activity_tracker.test_settings"])
         run(["docker", "run", "--rm", "--network", "none", "--entrypoint", "python", tag,
              "-m", "unittest", "discover", "-s", "deploy/tests", "-v"])
         with tempfile.TemporaryDirectory(prefix="clockin-registry-") as auth:
@@ -130,6 +130,13 @@ def roll(commit, folder):
         wait_task(migration)
         record["migration"] = "complete_exit_0"
         save(folder / "release.json", record)
+    except Exception:
+        try:
+            logs = subprocess.run(["docker", "service", "logs", "--raw", migration], text=True, capture_output=True, timeout=30)
+            save(folder / "migration-error.json", {"stdout": logs.stdout[-24000:], "stderr": logs.stderr[-24000:]})
+        except (OSError, subprocess.SubprocessError):
+            pass  # Diagnostic collection must not hide the original failed gate.
+        raise
     finally:
         subprocess.run(["docker", "service", "rm", migration], capture_output=True)
     update = ["docker", "service", "update", "--with-registry-auth", "--image", record["digest"],
