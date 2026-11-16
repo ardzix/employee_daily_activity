@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+from .runtime_secret import load_runtime_secret
+
+load_runtime_secret()
 
 # Load environment variables from .env file
 load_dotenv()
@@ -57,8 +60,8 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'authentication.middleware.JWTAuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'authentication.central_sso.CentralSSOMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -181,24 +184,19 @@ JWT_ISSUER = os.getenv('JWT_ISSUER', 'sso.arnatech.id')
 # Load public key for JWT verification
 SSO_PUBLIC_KEY = load_sso_public_key()
 
-# Public JWT cookies shared across subdomains (names/behavior aligned with Account portal).
-# Production example: PUBLIC_AUTH_COOKIE_DOMAIN=.arnatech.id
-# Empty: host-only (local dev); no Domain= on Set-Cookie.
-PUBLIC_AUTH_COOKIE_DOMAIN = os.getenv('PUBLIC_AUTH_COOKIE_DOMAIN', '').strip()
+# Central SSO owns authentication. This cookie is host-only and contains a DB session ID.
+CENTRAL_SSO_APP_ORIGIN = os.getenv('PUBLIC_SITE_URL', 'https://clockin.arnatech.id').rstrip('/')
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_NAME = '__Host-arna_clockin'
+SESSION_COOKIE_AGE = 28800
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_DOMAIN = None
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [CENTRAL_SSO_APP_ORIGIN]
 SSO_PUBLIC_ACCESS_COOKIE_NAME = 'arna_sso_access_token'
 SSO_PUBLIC_REFRESH_COOKIE_NAME = 'arna_sso_refresh_token'
-# SameSite for sibling subdomains: Lax is typical; None requires Secure.
-SSO_PUBLIC_COOKIE_SAMESITE = os.getenv('SSO_PUBLIC_COOKIE_SAMESITE', 'Lax')
-# HttpOnly=False so SPAs on other subdomains can read tokens from document.cookie.
-# Set SSO_PUBLIC_COOKIE_HTTPONLY=True to harden (tokens not readable from JS; SPAs must use another channel).
-SSO_PUBLIC_COOKIE_HTTPONLY = os.getenv('SSO_PUBLIC_COOKIE_HTTPONLY', 'False').lower() == 'true'
-
-# Session Configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
-SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
-# Optional: match PUBLIC_AUTH_COOKIE_DOMAIN for cross-subdomain Django session cookies
-SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN', '').strip() or None
+PUBLIC_AUTH_COOKIE_DOMAIN = ''
 
 # Account portal — user edits profile (name, photo, etc.) on SSO; Clock-In is read-only.
 ACCOUNT_PORTAL_PROFILE_URL = os.getenv(
