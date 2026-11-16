@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
 from authentication.views import try_sso_session_login
-from authentication.central_sso import callback
+from authentication.central_sso import callback, admin_sign_in, sign_out
 from authentication.health import live, ready
 
 
@@ -40,6 +40,8 @@ urlpatterns = [
     path('api/auth/callback', callback),
     path('health/live', live),
     path('health/ready', ready),
+    path('admin/login/', admin_sign_in),
+    path('admin/logout/', sign_out),
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
     path('activities/', include('activities.urls')),

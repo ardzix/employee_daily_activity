@@ -141,12 +141,20 @@ def signed_out(request):
     return HttpResponse('<h1>Anda sudah keluar dari Clockin</h1><a href="/auth/login/">Masuk kembali dengan Arna SSO</a>')
 
 
+@require_GET
+def admin_sign_in(request):
+    # Central identity never grants local staff privileges implicitly.
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect("/admin/")
+    return HttpResponse("Akun ini tidak memiliki akses admin Clockin.", status=403)
+
+
 class CentralSSOMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        public = ("/auth/login/", "/auth/logout/", "/auth/signed-out/", "/api/auth/callback", "/static/", "/media/", "/admin/", "/health/")
+        public = ("/auth/login/", "/auth/logout/", "/auth/signed-out/", "/api/auth/callback", "/static/", "/media/", "/health/")
         if any(request.path.startswith(path) for path in public) or request.path == "/favicon.ico":
             return self.get_response(request)
         try:

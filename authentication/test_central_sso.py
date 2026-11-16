@@ -80,3 +80,18 @@ class CentralClockinTests(TestCase):
     def test_local_credential_login_routes_are_disabled(self):
         for path in ["/auth/api/login/", "/auth/api/google-login/", "/auth/api/mfa/verify/"]:
             self.assertEqual(Client().post(path, {"email": "unused", "password": "unused"}, secure=True).status_code, 302)
+
+    @patch("authentication.central_sso.requests.post")
+    def test_admin_uses_central_identity_without_granting_staff_privileges(self, post):
+        self.assertTrue(Client().get("/admin/login/", secure=True)["Location"].startswith("/auth/login/"))
+        client = Client()
+        session = client.session
+        session[SESSION_KEY] = "s"*64
+        session.save()
+        post.return_value = self.response({"access": "server-only-jwt", "profile": PROFILE})
+        self.assertEqual(client.get("/admin/login/", secure=True).status_code, 403)
+        user = get_user_model().objects.get(sso_id=PROFILE["user_id"])
+        self.assertFalse(user.is_staff)
+        user.is_staff = True
+        user.save(update_fields=["is_staff"])
+        self.assertEqual(client.get("/admin/login/", secure=True)["Location"], "/admin/")
