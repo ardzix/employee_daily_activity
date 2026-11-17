@@ -693,7 +693,7 @@
                         <label class="ant-label"><i class="fas fa-list-ul" style="margin-right:6px;color:var(--ant-primary);"></i>What do you plan to do today? *</label>
                         <div id="planned-activities-container" style="display:flex;flex-direction:column;gap:8px;">
                             <div class="activity-row planned-activity-item">
-                                <input type="text" name="planned_activity_title_1" required class="ant-input row-input-main" placeholder="Enter planned activity...">
+                                <input type="text" maxlength="200" name="planned_activity_title_1" required class="ant-input row-input-main" placeholder="Enter planned activity (max 200 characters)...">
                                 <select name="planned_activity_priority_1" class="ant-input row-select">
                                     <option value="1">Low</option>
                                     <option value="2" selected>Medium</option>
@@ -715,8 +715,8 @@
                         <label class="ant-label"><i class="fas fa-bullseye" style="margin-right:6px;color:var(--ant-success);"></i>Daily Goals *</label>
                         <div id="daily-goals-container" style="display:flex;flex-direction:column;gap:8px;">
                             <div class="goal-row daily-goal-item">
-                                <input type="text" name="daily_goal_title_1" required class="ant-input row-input-main" placeholder="Enter daily goal...">
-                                <input type="text" name="daily_goal_target_1" class="ant-input row-input-target" placeholder="Target">
+                                <input type="text" maxlength="200" name="daily_goal_title_1" required class="ant-input row-input-main" placeholder="Enter daily goal (max 200 characters)...">
+                                <input type="text" maxlength="100" name="daily_goal_target_1" class="ant-input row-input-target" placeholder="Target">
                                 <select name="daily_goal_priority_1" class="ant-input row-select">
                                     <option value="1">Low</option>
                                     <option value="2" selected>Medium</option>
@@ -876,15 +876,15 @@
 
         function activityRowHTML(idx) {
             return '<div class="activity-row planned-activity-item">' +
-                '<input type="text" name="planned_activity_title_' + idx + '" required class="ant-input row-input-main" placeholder="Enter planned activity...">' +
+                '<input type="text" maxlength="200" name="planned_activity_title_' + idx + '" required class="ant-input row-input-main" placeholder="Enter planned activity (max 200 characters)...">' +
                 '<select name="planned_activity_priority_' + idx + '" class="ant-input row-select">' +
                 '<option value="1">Low</option><option value="2" selected>Medium</option><option value="3">High</option><option value="4">Critical</option></select>' +
                 '<button type="button" class="remove-activity ant-btn ant-btn-ghost ant-btn-sm row-del-btn" style="color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>';
         }
         function goalRowHTML(idx) {
             return '<div class="goal-row daily-goal-item">' +
-                '<input type="text" name="daily_goal_title_' + idx + '" required class="ant-input row-input-main" placeholder="Enter daily goal...">' +
-                '<input type="text" name="daily_goal_target_' + idx + '" class="ant-input row-input-target" placeholder="Target">' +
+                '<input type="text" maxlength="200" name="daily_goal_title_' + idx + '" required class="ant-input row-input-main" placeholder="Enter daily goal (max 200 characters)...">' +
+                '<input type="text" maxlength="100" name="daily_goal_target_' + idx + '" class="ant-input row-input-target" placeholder="Target">' +
                 '<select name="daily_goal_priority_' + idx + '" class="ant-input row-select">' +
                 '<option value="1">Low</option><option value="2" selected>Medium</option><option value="3">High</option><option value="4">Critical</option></select>' +
                 '<button type="button" class="remove-goal ant-btn ant-btn-ghost ant-btn-sm row-del-btn" style="color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>';
@@ -926,7 +926,7 @@
                 '<span style="font-weight:600;color:var(--text-heading);">Additional Activity #' + n + '</span>' +
                 '<button type="button" class="remove-additional-activity ant-btn ant-btn-ghost ant-btn-sm" style="color:var(--ant-error);border-color:var(--ant-error);"><i class="fas fa-trash"></i></button></div>' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
-                '<input type="text" name="additional_activity_title_' + n + '" required class="ant-input" placeholder="Activity title...">' +
+                '<input type="text" maxlength="200" name="additional_activity_title_' + n + '" required class="ant-input" placeholder="Activity title...">' +
                 '<select name="additional_activity_category_' + n + '" class="ant-input">' +
                 '<option value="urgent">Urgent Task</option><option value="meeting">Unplanned Meeting</option>' +
                 '<option value="support">Support/Help</option><option value="research">Research</option>' +
@@ -1101,7 +1101,7 @@
                     } else if (data.redirect) {
                         window.location.href = data.redirect;
                     } else {
-                        showNotification(data.error || 'Check-in failed', 'error');
+                        showNotification(data.detail || data.error || 'Check-in failed', 'error');
                     }
                 })
                 .catch(function () { showNotification('Network error. Please try again.', 'error'); })
@@ -1176,7 +1176,7 @@
                             } else if (data.redirect) {
                                 window.location.href = data.redirect;
                             } else {
-                                showNotification(data.error || 'Check-out failed', 'error');
+                                showNotification(data.detail || data.error || 'Check-out failed', 'error');
                             }
                         })
                         .catch(function () { showNotification('Network error. Please try again.', 'error'); })
