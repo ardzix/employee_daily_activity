@@ -73,7 +73,7 @@ def build(commit, folder):
         run(["docker", "build", "--label", "org.opencontainers.image.revision=" + commit, "-t", tag, str(context)])
         checks = run(["docker", "run", "--rm", "--network", "none", "-e", "USE_POSTGRES=False", "-e", "DEBUG=False",
                       "-e", "SECRET_KEY=isolated-clockin-test-only", "--entrypoint", "python", tag,
-                      "manage.py", "test", "authentication.test_central_sso", "activities.test_location_migration", "--settings=employee_activity_tracker.test_settings"])
+                      "manage.py", "test", "authentication.test_central_sso", "activities.test_location_migration", "activities.test_attendance_validation", "--settings=employee_activity_tracker.test_settings"])
         run(["docker", "run", "--rm", "--network", "none", "--entrypoint", "python", tag,
              "-m", "unittest", "discover", "-s", "deploy/tests", "-v"])
         with tempfile.TemporaryDirectory(prefix="clockin-registry-") as auth:

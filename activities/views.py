@@ -8,135 +8,65 @@ from .models import DailyActivity, ActivityGoal, PlannedActivity, DailyGoal, Add
 from datetime import date, datetime
 import json
 import pytz
+from .input_validation import (AttendanceInputError, PlannedActivityInput, DailyGoalInput,
+    AdditionalActivityInput, validate_entries, validate_location)
+
+
+def attendance_input_error(error):
+    # Keep the existing human-readable error field for older clients.
+    return JsonResponse({"success": False, "error": str(error), "detail": str(error),
+                         "fields": error.fields}, status=400)
 
 
 @login_required
 def check_in_api(request):
-    """Check-in API for all users"""
+    """Validate all check-in input before writing attendance or child records."""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
+
     today = date.today()
     jakarta_tz = pytz.timezone('Asia/Jakarta')
-
-    # Get location data
-    lat = request.POST.get('lat')
-    long = request.POST.get('long')
-    location = None
-    if lat and long:
-        location = f"{lat},{long}"
-
-    if not location:
-        return JsonResponse({
-            "success": False,
-            "error": "Location is required. Please allow location access."
-        }, status=400)
-    
-    # Get or create daily activity for the user
-    daily_activity, created = DailyActivity.objects.get_or_create(
-        user=request.user,
-        date=today,
-        defaults={
-            'status': 'pending',
-            'attendance_status': 'on_time'
-        }
-    )
-
-    # Check if already checked in
-    if daily_activity.checkin_time:
-        return JsonResponse({'error': 'You have already checked in today'}, status=400)
-    
-
-    # Get form data
-    planned_activities_data = request.POST.get('planned_activities', '').strip()
-    daily_goals_data = request.POST.get('daily_goals', '').strip()
-    morning_problems = request.POST.get('morning_problems', '').strip()
-    
-    # Try to parse as JSON first (for API calls), then fall back to text parsing
-    planned_activities_list = []
-    daily_goals_list = []
-    
+    lat, long = request.POST.get('lat'), request.POST.get('long')
+    if not lat or not long:
+        return JsonResponse({'success': False, 'error': 'Location is required. Please allow location access.'}, status=400)
     try:
-        # Try to parse as JSON
-        if planned_activities_data.startswith('[') or planned_activities_data.startswith('{'):
-            planned_activities_list = json.loads(planned_activities_data)
-        else:
-            # Parse as text - split by newlines
-            planned_activities_list = [{'title': line.strip()} for line in planned_activities_data.split('\n') if line.strip()]
-    except:
-        # Fall back to text parsing
-        planned_activities_list = [{'title': line.strip()} for line in planned_activities_data.split('\n') if line.strip()]
-    
-    try:
-        # Try to parse as JSON
-        if daily_goals_data.startswith('[') or daily_goals_data.startswith('{'):
-            daily_goals_list = json.loads(daily_goals_data)
-        else:
-            # Parse as text - split by newlines
-            daily_goals_list = [{'title': line.strip()} for line in daily_goals_data.split('\n') if line.strip()]
-    except:
-        # Fall back to text parsing
-        daily_goals_list = [{'title': line.strip()} for line in daily_goals_data.split('\n') if line.strip()]
-    
-    # Validate required fields
+        location = validate_location(f"{lat},{long}")
+        planned_activities_list = validate_entries(request.POST.get('planned_activities', ''),
+            PlannedActivityInput, 'planned_activities', 'Planned activity')
+        daily_goals_list = validate_entries(request.POST.get('daily_goals', ''),
+            DailyGoalInput, 'daily_goals', 'Daily goal')
+    except AttendanceInputError as error:
+        return attendance_input_error(error)
     if not planned_activities_list:
         return JsonResponse({'error': 'Please add at least one planned activity for today'}, status=400)
-    
     if not daily_goals_list:
         return JsonResponse({'error': 'Please set at least one goal for today'}, status=400)
-    
-    with transaction.atomic():
-        # Record check-in with data
-        daily_activity.checkin_time = timezone.now()
-        daily_activity.morning_problems = morning_problems
 
-        if location:
-            daily_activity.checkin_location = location
-        
-        # Determine if late (only if user has employee profile)
+    with transaction.atomic():
+        # Lock an existing row so concurrent retries cannot create duplicate plans.
+        daily_activity, created = DailyActivity.objects.select_for_update().get_or_create(
+            user=request.user, date=today,
+            defaults={'status': 'pending', 'attendance_status': 'on_time'})
+        if daily_activity.checkin_time:
+            return JsonResponse({'error': 'You have already checked in today'}, status=400)
+
+        daily_activity.checkin_time = timezone.now()
+        daily_activity.morning_problems = request.POST.get('morning_problems', '').strip()
+        daily_activity.checkin_location = location
         if hasattr(request.user, 'employee_profile'):
             checkin_time_local = daily_activity.checkin_time.astimezone(jakarta_tz)
             expected_time = jakarta_tz.localize(
-                datetime.combine(today, request.user.employee_profile.effective_work_start_time)
-            )
-            
-            if checkin_time_local > expected_time:
-                daily_activity.attendance_status = 'late'
-            else:
-                daily_activity.attendance_status = 'on_time'
-        
+                datetime.combine(today, request.user.employee_profile.effective_work_start_time))
+            daily_activity.attendance_status = 'late' if checkin_time_local > expected_time else 'on_time'
         daily_activity.save()
-        
-        # Create PlannedActivity objects
-        for i, activity_data in enumerate(planned_activities_list):
-            PlannedActivity.objects.create(
-                daily_activity=daily_activity,
-                title=activity_data.get('title', ''),
-                description=activity_data.get('description', ''),
-                priority=activity_data.get('priority', 2),
-                order=i + 1,
-                estimated_duration=activity_data.get('estimated_duration', None)
-            )
-        
-        # Create DailyGoal objects
-        for i, goal_data in enumerate(daily_goals_list):
-            DailyGoal.objects.create(
-                daily_activity=daily_activity,
-                title=goal_data.get('title', ''),
-                description=goal_data.get('description', ''),
-                priority=goal_data.get('priority', 2),
-                target_value=goal_data.get('target_value', ''),
-                order=i + 1
-            )
-    
-    return JsonResponse({
-        'success': True,
-        'message': 'Checked in successfully!',
-        'time': timezone.now().strftime('%H:%M'),
-        'location': daily_activity.checkin_location,
-        'planned_activities_count': len(planned_activities_list),
-        'daily_goals_count': len(daily_goals_list)
-    })
+        for index, activity in enumerate(planned_activities_list, start=1):
+            PlannedActivity.objects.create(daily_activity=daily_activity, order=index, **activity)
+        for index, goal in enumerate(daily_goals_list, start=1):
+            DailyGoal.objects.create(daily_activity=daily_activity, order=index, **goal)
+
+    return JsonResponse({'success': True, 'message': 'Checked in successfully!',
+        'time': timezone.now().strftime('%H:%M'), 'location': daily_activity.checkin_location,
+        'planned_activities_count': len(planned_activities_list), 'daily_goals_count': len(daily_goals_list)})
 
 
 @login_required
@@ -198,6 +128,13 @@ def check_out_api(request):
         if additional_activities_text:
             additional_activities_list = [{'title': line.strip()} for line in additional_activities_text.split('\n') if line.strip()]
     
+    try:
+        location = validate_location(location)
+        additional_activities_list = validate_entries(json.dumps(additional_activities_list),
+            AdditionalActivityInput, 'additional_activities', 'Additional activity')
+    except AttendanceInputError as error:
+        return attendance_input_error(error)
+
     # Validate that all activities and goals have been updated
     planned_activities = daily_activity.planned_activities.all()
     daily_goals = daily_activity.daily_goals.all()
